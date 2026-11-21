@@ -30,3 +30,7 @@ One line each: date, who, decision, why. Newest at the bottom.
 - 2026-11-21, Ignjat: Server image based on eclipse-temurin:21-jre. Why: official, patched, has a shell for debugging and the health check.
 - 2026-11-21, Ignjat: The server terminates TLS itself on 8443 with the keystore in a Docker volume; plain HTTP only on the host. Why: the pinned fingerprint is exactly the server's, no proxy to configure.
 - 2026-11-21, Ignjat: A compose backup service runs pg_dump nightly and keeps 14 days. Why: backups happen by default; firms copy the folder offsite.
+- 2026-11-21, Ignjat: Each register field stores its provenance in sibling columns (`<field>_label`, `_updated_at`, `_citation` jsonb, `_reason`). Why: plain SQL can filter by provenance, e.g. every AI-suggested value.
+- 2026-11-21, Ignjat: The server uses PostgreSQL only when `DORAI_DB_URL` is set, otherwise fixtures in memory. Why: tests and quick local runs need no database; compose sets the variable.
+- 2026-11-21, Ignjat: The FinPay demo register is seeded on start only when no register is stored. Why: the demo works on a fresh install and a firm's own register is never touched.
+- 2026-11-21, Ignjat: Database tests run on Testcontainers with the compose image `pgvector/pgvector:0.8.7-pg16`. Why: they test the same database as production, jsonb and pgvector included.
