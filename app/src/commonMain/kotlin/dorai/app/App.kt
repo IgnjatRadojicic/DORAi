@@ -12,6 +12,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import dorai.app.auth.LoginActions
 import dorai.app.auth.LoginScreen
 import dorai.app.components.ControlCenterFrame
+import dorai.app.connect.InviteField
 import dorai.app.export.ExportViewModel
 import dorai.app.export.ValidationExportRoute
 import dorai.app.export.rememberWorkspaceFiles
@@ -27,14 +28,19 @@ import dorai.app.shell.shellSections
 import dorai.app.theme.DoraiTheme
 import kotlinx.coroutines.launch
 
+/** An invite link the platform opened the app with. A new object each time, so the same link tapped twice is handled twice. */
+class OpenedInvite(val link: String)
+
 /**
  * Root of the app, shared by desktop and Android.
  * [chrome] is drawn above everything inside the theme, for example the desktop title bar.
+ * [invite] is a `dorai://connect` link the platform opened the app with (Android deep link).
  */
 @Composable
-fun App(chrome: @Composable () -> Unit = {}) {
+fun App(chrome: @Composable () -> Unit = {}, invite: OpenedInvite? = null) {
     val shell = viewModel { ShellViewModel() }
     LaunchedEffect(shell) { shell.connection.watch() }
+    LaunchedEffect(invite) { invite?.let { shell.openInvite(it.link) } }
     val scope = rememberCoroutineScope()
     DoraiTheme(shell.state.theme, shell.state.language) {
         Column(Modifier.fillMaxSize()) {
@@ -56,6 +62,14 @@ fun App(chrome: @Composable () -> Unit = {}) {
                         )
                     },
                     modifier = Modifier.weight(1f),
+                    below = {
+                        InviteField(
+                            state = shell.invite.state,
+                            onToggle = shell.invite::toggle,
+                            onTextChange = shell.invite::onTextChange,
+                            onUse = { scope.launch { shell.openInvite() } },
+                        )
+                    },
                 )
             } else {
                 WorkspaceShell(shell, workspace, onLogout = { scope.launch { shell.logout() } }, Modifier.weight(1f))

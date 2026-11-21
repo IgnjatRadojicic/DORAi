@@ -8,11 +8,12 @@ import com.github.ajalt.clikt.core.parse
 import com.github.ajalt.clikt.core.subcommands
 import com.github.ajalt.clikt.parameters.options.versionOption
 import dorai.shared.Dorai
+import dorai.shared.DoraiBuild
 import kotlin.system.exitProcess
 
 class DoraiCommand : CliktCommand(name = "dorai") {
     init {
-        versionOption("0.1.0")
+        versionOption(DoraiBuild.VERSION)
         subcommands(CheckCommand())
     }
 

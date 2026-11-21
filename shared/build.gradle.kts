@@ -41,3 +41,27 @@ kotlin {
         }
     }
 }
+
+// Generates dorai.shared.DoraiBuild with the product version, so the server, the apps and the CLI
+// know at runtime which version they are.
+val doraiVersion = project.version.toString()
+val doraiBuildDir = layout.buildDirectory.dir("generated/doraiBuild/kotlin")
+val generateDoraiBuild = tasks.register("generateDoraiBuild") {
+    inputs.property("version", doraiVersion)
+    outputs.dir(doraiBuildDir)
+    doLast {
+        val file = doraiBuildDir.get().file("dorai/shared/DoraiBuild.kt").asFile
+        file.parentFile.mkdirs()
+        file.writeText(
+            """
+            |package dorai.shared
+            |
+            |/** Generated from dorai.version in gradle.properties. Do not edit. */
+            |object DoraiBuild {
+            |    const val VERSION = "$doraiVersion"
+            |}
+            |""".trimMargin(),
+        )
+    }
+}
+kotlin.sourceSets.commonMain { kotlin.srcDir(generateDoraiBuild) }

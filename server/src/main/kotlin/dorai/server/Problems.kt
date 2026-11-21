@@ -22,6 +22,8 @@ class ApiProblem(
     val detail: String? = null,
     /** Sent as Retry-After on 429 and 503. */
     val retryAfterSeconds: Long? = null,
+    /** RFC 9457 problem type; most problems need no more than the status. */
+    val type: String = "about:blank",
 ) : RuntimeException(detail ?: title)
 
 private val ProblemJson = ContentType("application", "problem+json")
@@ -30,7 +32,7 @@ fun Application.installProblems() {
     install(StatusPages) {
         exception<ApiProblem> { call, e ->
             e.retryAfterSeconds?.let { call.response.header(HttpHeaders.RetryAfter, it.toString()) }
-            call.respondProblem(e.status, e.title, e.detail)
+            call.respondProblem(e.status, e.title, e.detail, e.type)
         }
         exception<BadRequestException> { call, e ->
             call.respondProblem(HttpStatusCode.BadRequest, "Bad request", e.message)
@@ -49,7 +51,12 @@ fun Application.installProblems() {
     }
 }
 
-suspend fun ApplicationCall.respondProblem(status: HttpStatusCode, title: String, detail: String? = null) {
-    val problem = Problem(title = title, status = status.value, detail = detail, instance = request.path())
+suspend fun ApplicationCall.respondProblem(
+    status: HttpStatusCode,
+    title: String,
+    detail: String? = null,
+    type: String = "about:blank",
+) {
+    val problem = Problem(type = type, title = title, status = status.value, detail = detail, instance = request.path())
     respondText(DoraiJson.encodeToString(problem), ProblemJson, status)
 }

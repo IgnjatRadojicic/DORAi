@@ -54,6 +54,13 @@ class LoginViewModel(private val gateway: LoginGateway) : ViewModel() {
         if (!state.busy) state = state.copy(repeatPassword = password, error = null)
     }
 
+    /** Empty sign-in card, for example after an invite link switched the server. */
+    fun reset() {
+        if (state.busy) return
+        temporaryPassword = null
+        state = LoginState()
+    }
+
     /** Leaves the password change and returns to an empty sign-in card. */
     fun backToSignIn() {
         if (state.busy) return

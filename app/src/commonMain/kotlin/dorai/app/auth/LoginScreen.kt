@@ -39,20 +39,28 @@ class LoginActions(
     val onBack: () -> Unit,
 )
 
-/** Sign-in and temporary password forms in the shared workspace style. */
+/**
+ * Sign-in and temporary password forms in the shared workspace style.
+ * [below] holds the optional invite link field under the sign-in card.
+ */
 @Composable
 fun LoginScreen(
     state: LoginState,
     actions: LoginActions,
     modifier: Modifier = Modifier,
+    below: @Composable () -> Unit = {},
 ) {
     Surface(modifier.fillMaxSize(), color = ProductStyle.colors.background) {
         Box(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp), contentAlignment = Alignment.Center) {
-            ProductPanel(Modifier.widthIn(max = 440.dp)) {
-                when (state.step) {
-                    LoginStep.SIGN_IN -> SignInCard(state, actions)
-                    LoginStep.CHANGE_PASSWORD -> PasswordChangeCard(state, actions)
+            Column(Modifier.widthIn(max = 440.dp), horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                ProductPanel {
+                    when (state.step) {
+                        LoginStep.SIGN_IN -> SignInCard(state, actions)
+                        LoginStep.CHANGE_PASSWORD -> PasswordChangeCard(state, actions)
+                    }
                 }
+                if (state.step == LoginStep.SIGN_IN) below()
             }
         }
     }

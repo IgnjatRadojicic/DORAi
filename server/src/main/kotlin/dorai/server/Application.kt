@@ -23,6 +23,7 @@ import dorai.server.tls.Tls
 import dorai.server.tls.TlsConfig
 import dorai.shared.Dorai
 import dorai.shared.model.DoraiJson
+import dorai.shared.Version
 import dorai.shared.model.Health
 import io.ktor.http.ContentDisposition
 import io.ktor.http.ContentType
@@ -101,6 +102,8 @@ fun Application.module() = module(fixtureServices())
 fun Application.module(services: Services) {
     install(ContentNegotiation) { json(DoraiJson) }
     installProblems()
+    // Before access control: an outdated client hears "update" rather than "log in".
+    install(VersionCheck)
 
     services.auth?.let {
         install(accessControl(it))
@@ -109,7 +112,7 @@ fun Application.module(services: Services) {
 
     routing {
         route(Dorai.API_PREFIX) {
-            get("health") { call.respond(Health(status = "ok", app = Dorai.NAME)) }
+            get("health") { call.respond(Health(status = "ok", app = Dorai.NAME, version = Version.CURRENT.toString())) }
             services.auth?.let { authRoutes(it) }
             scanRoutes(services)
             registerRoutes(services)
