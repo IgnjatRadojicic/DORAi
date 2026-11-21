@@ -1,5 +1,5 @@
 -- Citable chunks of the DORA regulation and the register templates, with their embeddings.
-CREATE EXTENSION IF NOT EXISTS vector;
+-- The vector extension is enabled in V1.
 
 CREATE TABLE regulation_chunks (
     id              BIGSERIAL PRIMARY KEY,

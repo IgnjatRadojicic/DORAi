@@ -12,8 +12,8 @@ import dorai.server.ai.ingest.RegulationChunk
 import dorai.server.ai.ingest.RegulationChunker
 import dorai.server.ai.ingest.RegulationCorpus
 import dorai.server.ai.ingest.RegulationIngestor
-import dorai.server.db.DatabaseConfig
-import dorai.server.db.connectDatabase
+import dorai.server.db.Db
+import dorai.server.db.DbConfig
 import kotlinx.coroutines.test.runTest
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.deleteAll
@@ -205,7 +205,7 @@ class RegulationDatabaseTest {
         private val database: Database by lazy {
             val image = DockerImageName.parse("pgvector/pgvector:0.8.7-pg16").asCompatibleSubstituteFor("postgres")
             val postgres = PostgreSQLContainer(image).apply { start() }
-            connectDatabase(DatabaseConfig(postgres.jdbcUrl, postgres.username, postgres.password))
+            Db.open(DbConfig(postgres.jdbcUrl, postgres.username, postgres.password))
         }
     }
 }

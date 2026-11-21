@@ -8,9 +8,8 @@ import org.jetbrains.exposed.v1.core.DoubleColumnType
 import org.jetbrains.exposed.v1.core.ExpressionWithColumnType
 import org.jetbrains.exposed.v1.core.QueryBuilder
 import org.jetbrains.exposed.v1.core.Table
-import org.postgresql.util.PGobject
 
-/** Table `regulation_chunks` (migration V1). The embedding never leaves the database in a query result. */
+/** Table `regulation_chunks` (migration V2). The embedding never leaves the database in a query result. */
 object RegulationChunksTable : Table("regulation_chunks") {
     val id = long("id").autoIncrement()
     val citationId = text("citation_id")
@@ -33,9 +32,8 @@ class VectorColumnType(private val dimensions: Int) : ColumnType<FloatArray>() {
     override fun valueFromDB(value: Any): FloatArray = when (value) {
         is FloatArray -> value
         is PGvector -> value.toArray()
-        is PGobject -> PGvector(value.value).toArray()
-        is String -> PGvector(value).toArray()
-        else -> error("Unexpected vector value ${value::class}")
+        // The driver hands back a PGobject whose text is the vector literal, for example `[0.1,0.2]`.
+        else -> PGvector(value.toString()).toArray()
     }
 
     override fun notNullValueToDB(value: FloatArray): Any {

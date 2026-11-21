@@ -4,8 +4,9 @@ import dorai.server.ai.AiConfig
 import dorai.server.ai.regulationSearch
 import dorai.server.check.checkRoutes
 import dorai.server.core.Services
-import dorai.server.db.DatabaseConfig
-import dorai.server.db.connectDatabase
+import dorai.server.db.Db
+import dorai.server.db.DbConfig
+import dorai.server.db.postgresServices
 import dorai.server.fixtures.fixtureServices
 import dorai.server.register.registerRoutes
 import dorai.server.review.suggestionRoutes
@@ -30,22 +31,26 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
+import org.slf4j.LoggerFactory
 
 fun main() {
     val port = System.getenv("DORAI_PORT")?.toIntOrNull() ?: 8080
-    val services = serverServices()
-    embeddedServer(Netty, port = port) { module(services) }.start(wait = true)
+    embeddedServer(Netty, port = port) { module(servicesFromEnv()) }.start(wait = true)
 }
 
-/** Phase 1 wiring: fixtures, in-memory storage, no AI. Later phases pass real services. */
+/** PostgreSQL with pgvector regulation search when DORAI_DB_URL is set, otherwise fixtures in memory. */
+fun servicesFromEnv(): Services {
+    val config = DbConfig.fromEnv()
+    if (config == null) {
+        LoggerFactory.getLogger("dorai.server").info("DORAI_DB_URL is not set: running on fixtures in memory.")
+        return fixtureServices()
+    }
+    val database = Db.open(config)
+    return postgresServices(database).copy(regulationSearch = regulationSearch(database, AiConfig.fromEnv()))
+}
+
+/** Fixture wiring: in-memory storage, no AI. Used by tests and by a server started without a database. */
 fun Application.module() = module(fixtureServices())
-
-/** Fixtures, plus regulation search on PostgreSQL with pgvector when `DORAI_DB_URL` is set. */
-private fun serverServices(): Services {
-    val base = fixtureServices()
-    val database = DatabaseConfig.fromEnv()?.let(::connectDatabase) ?: return base
-    return base.copy(regulationSearch = regulationSearch(database, AiConfig.fromEnv()))
-}
 
 fun Application.module(services: Services) {
     install(ContentNegotiation) { json(DoraiJson) }

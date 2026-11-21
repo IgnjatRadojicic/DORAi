@@ -1,13 +1,11 @@
 package dorai.server.ai
 
 import dorai.server.ai.embed.FakeEmbedder
-import dorai.server.db.DatabaseConfig
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
-import kotlin.test.assertNull
 
 class AiConfigTest {
     @Test
@@ -34,17 +32,9 @@ class AiConfigTest {
     }
 
     @Test
-    fun secretsNeverAppearInLogText() {
+    fun theKeyNeverAppearsInLogText() {
         val ai = AiConfig.fromEnv(mapOf("DORAI_AI_PROVIDER" to "openai", "DORAI_AI_OPENAI_KEY" to "test-key-value"))
-        val db = DatabaseConfig("jdbc:postgresql://localhost/dorai", "dorai", "test-password-value")
 
         assertFalse("test-key-value" in ai.toString())
-        assertFalse("test-password-value" in db.toString())
-    }
-
-    @Test
-    fun noDatabaseWithoutUrl() {
-        assertNull(DatabaseConfig.fromEnv(emptyMap()))
-        assertEquals("dorai", DatabaseConfig.fromEnv(mapOf("DORAI_DB_URL" to "jdbc:postgresql://db/dorai"))?.user)
     }
 }

@@ -18,7 +18,6 @@ import dorai.server.core.SuggestionRepository.Decision
 import dorai.shared.model.BusinessFunction
 import dorai.shared.model.Citation
 import dorai.shared.model.CostSource
-import dorai.shared.model.DoraiJson
 import dorai.shared.model.Finding
 import dorai.shared.model.Register
 import dorai.shared.model.Resource
@@ -26,26 +25,23 @@ import dorai.shared.model.ScanMode
 import dorai.shared.model.ServiceType
 import dorai.shared.model.Suggestion
 import dorai.shared.model.SuggestionStatus
-import dorai.shared.model.ValidationReport
-import dorai.shared.rules.InvalidPlanException
-import dorai.shared.rules.PlanChecker
-import dorai.shared.rules.RegisterValidator
+import dorai.shared.rules.RulesPlanChecker
+import dorai.shared.rules.RulesRegisterValidator
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.datetime.LocalDate
-import kotlinx.serialization.json.JsonObject
 import kotlin.time.Clock
 
-/** Phase 1 wiring: FinPay fixtures, in-memory storage, demo findings and an AI that never answers. */
+/** Fixture wiring: FinPay data, in-memory storage, the real rules and validator, and an AI that never answers. */
 fun fixtureServices(data: FixtureData = FixtureData.load()): Services {
-    val costs = data.scan.costs.map { CostEntry(it.resourceId, it.provider, it.month, it.amount, it.currency) }
+    val costs = data.costs
     return Services(
         collectors = data.resources.map { it.provider }.distinct().map { FixtureCollector(it, data.resources) },
         costs = FixtureCostProvider(costs),
         register = InMemoryRegisterRepository(data.register, data.resources, costs),
         suggestions = InMemorySuggestionRepository(data.suggestions),
-        validator = RegisterValidator { ValidationReport(isValid = true, errorCount = 0, warningCount = 0, issues = emptyList()) },
-        planChecker = DemoPlanChecker(data.findingsEastus),
+        validator = RulesRegisterValidator(),
+        planChecker = RulesPlanChecker(),
         demoPlan = data.planEastus.decodeToString(),
         classifier = NoAi,
         functionSuggester = NoAi,
@@ -99,15 +95,6 @@ class InMemorySuggestionRepository(
         val current = items[id] ?: return@withLock Decision.NotFound
         if (current.status != SuggestionStatus.Pending) return@withLock Decision.AlreadyDecided(current)
         current.copy(status = status, decidedAt = clock.now()).also { items[id] = it }.let(Decision::Done)
-    }
-}
-
-/** Accepts any plan JSON and returns the findings the rules produce on the eastus demo plan. */
-class DemoPlanChecker(private val findings: List<Finding>) : PlanChecker {
-    override fun check(planJson: String, register: Register): List<Finding> {
-        val isObject = runCatching { DoraiJson.parseToJsonElement(planJson) is JsonObject }.getOrDefault(false)
-        if (!isObject) throw InvalidPlanException("The plan must be the JSON from `terraform show -json`.")
-        return findings
     }
 }
 

@@ -97,12 +97,13 @@ class ContractTest {
     }
 
     @Test
-    fun checkReturnsTheDemoFindings() = contract { api ->
+    fun checkRunsTheRules() = contract { api ->
         val findings = api.check().ok()
         assertEquals(4, findings.size)
         assertEquals(2, findings.count { it.severity == Severity.High })
 
-        assertEquals(4, api.check("""{"resource_changes":[]}""".encodeToByteArray()).ok().size)
+        assertEquals(0, api.check("""{"resource_changes":[]}""".encodeToByteArray()).ok().size)
+        assertEquals(400, api.check("""{"format_version":"1.2"}""".encodeToByteArray()).failure().problem.status)
         assertEquals(400, api.check("not json".encodeToByteArray()).failure().problem.status)
     }
 
