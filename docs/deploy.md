@@ -62,6 +62,13 @@ cd deploy
 cp .env.example .env    # set DORAI_DB_PASSWORD
 docker compose up -d db
 ```
+Then point the server at it (the password is the one from `.env`):
+```
+DORAI_DB_URL=jdbc:postgresql://localhost:5432/dorai DORAI_DB_PASSWORD=... ./gradlew :server:run
+```
+On start the server runs the Flyway migrations in `server/src/main/resources/db/migration`, and
+loads the FinPay demo register when the database holds no register yet. Without `DORAI_DB_URL` it runs
+on the fixtures in memory and stores nothing.
 Build the image locally from the repository root: `docker build -t ghcr.io/ignjatradojicic/dorai-server:dev .`
 and run it with `DORAI_VERSION=dev`.
 

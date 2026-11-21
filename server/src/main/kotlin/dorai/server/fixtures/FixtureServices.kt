@@ -34,7 +34,7 @@ import kotlin.time.Clock
 
 /** Fixture wiring: FinPay data, in-memory storage, the real rules and validator, and an AI that never answers. */
 fun fixtureServices(data: FixtureData = FixtureData.load()): Services {
-    val costs = data.scan.costs.map { CostEntry(it.resourceId, it.provider, it.month, it.amount, it.currency) }
+    val costs = data.costs
     return Services(
         collectors = data.resources.map { it.provider }.distinct().map { FixtureCollector(it, data.resources) },
         costs = FixtureCostProvider(costs),
