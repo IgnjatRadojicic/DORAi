@@ -23,7 +23,7 @@ data class Services(
     val explainer: FindingExplainer,
     val reportDrafter: ReportDrafter,
     val regulationSearch: RegulationSearch,
-    /** Null until export lands; the export routes then answer 501. */
+    /** Null only on a server built without export; the export routes then answer 501. */
     val exporter: RegisterExporter?,
     /** Null when auth is off (no database): every route is open, as in development. */
     val auth: AuthService? = null,

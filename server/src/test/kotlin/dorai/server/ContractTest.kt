@@ -108,9 +108,12 @@ class ContractTest {
     }
 
     @Test
-    fun exportIsNotAvailableYet() = contract { api ->
-        assertEquals(501, api.exportCsv().failure().problem.status)
-        assertEquals(501, api.exportPdf().failure().problem.status)
+    fun exportFinalNeedsAReadyRegisterDraftAlwaysWorks() = contract { api ->
+        assertEquals(409, api.exportCsv().failure().problem.status)
+        val zip = api.exportCsv(draft = true).ok()
+        assertEquals('P'.code.toByte(), zip[0], "a zip file")
+        val pdf = api.exportPdf().ok()
+        assertEquals("%PDF", pdf.copyOfRange(0, 4).decodeToString())
     }
 
     @Test

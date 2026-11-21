@@ -41,6 +41,7 @@ dependencies {
     implementation(libs.aws.sqs)
     implementation(libs.pgvector)
     implementation(libs.pdfbox)
+    implementation(libs.openpdf)
     implementation(libs.koog.agents)
     implementation(libs.koog.embeddings.llm)
 

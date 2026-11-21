@@ -25,6 +25,9 @@ object RoiReadiness {
         addAll(codeRules(report))
         addAll(uniqueness(report))
         addAll(unconfirmed(register))
+        if (!TaxonomyCodes.verified) {
+            add(warning("taxonomy-unverified", "", "", "Package layout and closed-list codes are not yet checked against the EBA DORA taxonomy release ${TaxonomyCodes.frameworkRelease}.", null))
+        }
         if (register.rows["B_99.01"].isNullOrEmpty()) {
             add(warning("default-definitions", "B_99.01", "C0040", "Definitions are the CIR option labels. Replace them with the entity's own definitions.", null))
         }

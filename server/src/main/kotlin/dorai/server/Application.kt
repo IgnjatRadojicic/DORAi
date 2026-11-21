@@ -1,5 +1,7 @@
 package dorai.server
 
+import dorai.server.register.referenceDate
+import dorai.shared.roi.RoiView
 import dorai.server.ai.AiConfig
 import dorai.server.ai.withAi
 import dorai.server.check.checkRoutes
@@ -120,15 +122,31 @@ fun Application.module(services: Services) {
 private fun Route.exportRoutes(services: Services) = route("export") {
     get("csv") {
         val exporter = services.exporter ?: throw exportUnavailable()
-        call.response.header(HttpHeaders.ContentDisposition, attachment("dorai-register.zip"))
-        call.respondBytes(exporter.csvZip(services.register.register()), ContentType.Application.Zip)
+        val register = services.register.register()
+        val resources = services.register.resources()
+        val date = call.referenceDate()
+        val draft = call.request.queryParameters["draft"] == "true"
+        // The final package only when nothing is missing; a draft shows progress and is named as one.
+        if (!draft) {
+            val view = RoiView.of(register, resources, date)
+            if (!view.ready) {
+                throw ApiProblem(
+                    HttpStatusCode.Conflict,
+                    "Register not ready for export",
+                    "${view.errorCount} errors remain (see GET /api/roi). Ask for a draft with ?draft=true.",
+                )
+            }
+        }
+        val written = exporter.reportPackage(register, resources, date, draft)
+        call.response.header(HttpHeaders.ContentDisposition, attachment(written.fileName))
+        call.respondBytes(written.bytes, ContentType.Application.Zip)
     }
     get("pdf") {
         val exporter = services.exporter ?: throw exportUnavailable()
         val register = services.register.register()
         val findings = services.planChecker.check(services.demoPlan, register)
         call.response.header(HttpHeaders.ContentDisposition, attachment("dorai-report.pdf"))
-        call.respondBytes(exporter.pdf(register, findings), ContentType.Application.Pdf)
+        call.respondBytes(exporter.pdf(register, services.register.resources(), call.referenceDate(), findings), ContentType.Application.Pdf)
     }
 }
 

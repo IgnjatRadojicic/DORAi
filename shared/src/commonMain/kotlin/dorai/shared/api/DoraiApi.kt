@@ -186,8 +186,19 @@ class DoraiApi(
         }
 
     // Export: raw file bytes (zip of EBA CSV files, PDF report)
-    suspend fun exportCsv(): ApiResult<ByteArray> = call { http.get("export/csv") }
-    suspend fun exportPdf(): ApiResult<ByteArray> = call { http.get("export/pdf") }
+    /**
+     * The RoI xBRL-CSV package. The server refuses the final package (409) while readiness errors remain;
+     * [draft] builds it anyway, named as a draft.
+     */
+    suspend fun exportCsv(referenceDate: LocalDate? = null, draft: Boolean = false): ApiResult<ByteArray> = call {
+        http.get("export/csv") {
+            referenceDate?.let { parameter("date", it.toString()) }
+            if (draft) parameter("draft", "true")
+        }
+    }
+
+    suspend fun exportPdf(referenceDate: LocalDate? = null): ApiResult<ByteArray> =
+        call { http.get("export/pdf") { referenceDate?.let { parameter("date", it.toString()) } } }
 
     override fun close() = http.close()
 

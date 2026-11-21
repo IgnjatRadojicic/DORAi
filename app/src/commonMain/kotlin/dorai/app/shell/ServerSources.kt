@@ -54,7 +54,8 @@ class ServerSources(private val api: DoraiApi) {
     /** The client returns only bytes; each endpoint serves one fixed media type, so the format supplies it. */
     val export = ExportSource { format ->
         val result = when (format) {
-            ExportFormat.CSV -> api.exportCsv()
+            // A draft until the register is complete, so the user can always see the package.
+            ExportFormat.CSV -> api.exportCsv(draft = (api.roi() as? ApiResult.Success)?.value?.ready != true)
             ExportFormat.PDF -> api.exportPdf()
         }
         ExportDocument(result.orFail("The export could not be downloaded."), format.mediaType)

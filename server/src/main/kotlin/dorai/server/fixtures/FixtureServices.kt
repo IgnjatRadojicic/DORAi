@@ -1,5 +1,6 @@
 package dorai.server.fixtures
 
+import dorai.server.export.RoiExporter
 import dorai.server.core.AiAnswer
 import dorai.server.core.CloudCollector
 import dorai.server.core.CollectResult
@@ -49,7 +50,7 @@ fun fixtureServices(data: FixtureData = FixtureData.load()): Services {
         explainer = NoAi,
         reportDrafter = NoAi,
         regulationSearch = NoAi,
-        exporter = null,
+        exporter = RoiExporter(),
     )
 }
 
