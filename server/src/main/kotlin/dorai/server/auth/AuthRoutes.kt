@@ -36,6 +36,9 @@ fun Route.authRoutes(auth: AuthService) {
         }
     }
     post("admin/users/{username}/disable") { handle { call.respond(auth.disable(call.parameters["username"].orEmpty())) } }
+    post("admin/users/{username}/revoke") {
+        handle { auth.revokeSessions(call.parameters["username"].orEmpty()); call.respond(HttpStatusCode.NoContent) }
+    }
     get("admin/invites") { call.respond(auth.invites()) }
     post("admin/invites") {
         handle { call.respond(HttpStatusCode.Created, auth.createInvite(call.receive<CreateInviteRequest>().username)) }

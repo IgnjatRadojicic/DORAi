@@ -25,12 +25,6 @@ image:
     owner: Ignjat
     phase: before first release
 
-  - id: healthcheck-http-fallback
-    missing: Once HTTPS ships, decide whether the health check keeps the HTTP fallback on 8080.
-    why: The fallback exists only because the server has no HTTPS yet.
-    owner: Ignjat
-    phase: 3
-
 ci-and-release:
   - id: first-release
     missing: Push the first version tag (for example v0.1.0) so the workflow publishes the image.

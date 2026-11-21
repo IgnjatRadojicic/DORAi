@@ -50,13 +50,27 @@ class AuthService(
 
     // Access tokens
 
-    /** The caller of a request, or null when the token is missing, forged or expired. */
-    fun verify(accessToken: String): Principal? = try {
+    /**
+     * The caller of a request, or null when the token is forged or expired, its session was revoked or
+     * the user is disabled. The role is read from the database, so it is always current.
+     */
+    suspend fun authorize(accessToken: String): Principal? {
+        val (username, session) = decode(accessToken) ?: return null
+        return db.tx {
+            val user = user(username)?.takeUnless { it[Users.disabled] } ?: return@tx null
+            val live = RefreshTokens.selectAll()
+                .where { (RefreshTokens.family eq session) and (RefreshTokens.username eq username) and RefreshTokens.revokedAt.isNull() }
+                .limit(1).any()
+            if (live) Principal(username, user[Users.role]) else null
+        }
+    }
+
+    /** Username and session id of a correctly signed, unexpired token. */
+    private fun decode(accessToken: String): Pair<String, String>? = try {
         val jwt = verifier.verify(accessToken)
-        Principal(jwt.subject, Role.valueOf(jwt.getClaim("role").asString()))
+        val session = jwt.getClaim(SESSION_CLAIM).asString()
+        if (jwt.subject == null || session == null) null else jwt.subject to session
     } catch (_: JWTVerificationException) {
-        null
-    } catch (_: IllegalArgumentException) {
         null
     }
 
@@ -136,12 +150,19 @@ class AuthService(
 
     suspend fun createUser(username: String, role: Role, temporaryPassword: String?): CreatedUser = db.tx { create(username, role, temporaryPassword) }
 
-    /** Blocks logins and refreshes at once; an access token already issued runs out within its 15 minutes. */
+    /** Blocks the user and ends every session at once, including access tokens already issued. */
     suspend fun disable(username: String): User = db.tx {
         val name = Usernames.normalize(username)
         if (Users.update({ Users.username eq name }) { it[disabled] = true } == 0) throw AuthException(404, "No user '$name'.")
         revokeAll(name)
         user(name)!!.toUser()
+    }
+
+    /** Signs the user out everywhere at once; they can log in again. */
+    suspend fun revokeSessions(username: String): Unit = db.tx {
+        val name = Usernames.normalize(username)
+        if (user(name) == null) throw AuthException(404, "No user '$name'.")
+        revokeAll(name)
     }
 
     suspend fun invites(): List<Invite> = db.tx { Invites.selectAll().orderBy(Invites.createdAt).map { it.toInvite() } }
@@ -232,6 +253,7 @@ class AuthService(
             .withIssuer(ISSUER)
             .withSubject(user[Users.username])
             .withClaim("role", user[Users.role].name)
+            .withClaim(SESSION_CLAIM, family)
             .withIssuedAt(now.toJavaInstant())
             .withExpiresAt(accessExpires.toJavaInstant())
             .sign(algorithm)
@@ -252,6 +274,7 @@ class AuthService(
 
     private companion object {
         const val ISSUER = "dorai"
+        const val SESSION_CLAIM = "sid"
         const val SESSION_ENDED = "Your session has ended. Log in again."
         val log = LoggerFactory.getLogger(AuthService::class.java)
     }

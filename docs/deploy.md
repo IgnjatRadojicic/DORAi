@@ -37,8 +37,9 @@ Data lives in two Docker volumes: `db-data` (database) and `server-data` (TLS ke
 The admin creates users in the app (or `POST /api/admin/users`) with a role: viewer (read), reviewer
 (scan, check, review suggestions, export) or admin (users and invites). Each new user gets a temporary
 password and an invite link valid for 72 hours; send them through different channels. Access tokens
-last 15 minutes, sessions 30 days. Disabling a user ends their sessions at once; an access token already
-issued stops working within its 15 minutes.
+last 15 minutes, sessions 30 days. Disabling a user, or revoking their sessions
+(`POST /api/admin/users/{username}/revoke`, which signs them out everywhere but lets them log in again),
+takes effect on their next call. The server checks the session on every API call.
 
 The invite link pins the certificate fingerprint. If `tls/keystore.p12` in the `server-data` volume is
 deleted, the server makes a new certificate and every app must connect again with a new invite.

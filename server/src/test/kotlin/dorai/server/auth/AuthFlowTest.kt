@@ -140,17 +140,56 @@ class AuthFlowTest {
         dan.changePassword("dan", created.temporaryPassword, "dan password 2026").ok()
         val refresh = store.load()!!.refreshToken
 
+        assertTrue(dan.validation().ok().isValid)
         assertTrue(admin.disableUser("dan").ok().disabled)
+        // The access token dan already holds stops working at once, not after 15 minutes.
+        assertEquals(401, dan.validation().status())
+        assertNull(store.load())
         assertEquals(401, dan.login("dan", "dan password 2026").status())
         assertEquals(401, runCatching { auth.refresh(refresh) }.exceptionOrNull().let { (it as AuthException).status })
 
         val adminStore = MemoryTokenStore()
         val again = api(adminStore)
         again.login("admin", "admin password 2026").ok()
-        val adminRefresh = adminStore.load()!!.refreshToken
+        val adminTokens = adminStore.load()!!
         again.logout().ok()
         assertNull(adminStore.load())
-        assertEquals(401, runCatching { auth.refresh(adminRefresh) }.exceptionOrNull().let { (it as AuthException).status })
+        assertEquals(401, runCatching { auth.refresh(adminTokens.refreshToken) }.exceptionOrNull().let { (it as AuthException).status })
+        // A copy of the access token from the ended session is useless too; the admin's other session is not.
+        assertNull(auth.authorize(adminTokens.accessToken))
+        assertTrue(admin.users().ok().isNotEmpty())
+    }
+
+    @Test
+    fun anAdminCanRevokeEverySessionOfAUser() = flow { auth ->
+        val admin = admin(auth)
+        val created = admin.createUser(CreateUserRequest("eve", Role.Reviewer, temporaryPassword = "temporary pass 1")).ok()
+        val laptop = MemoryTokenStore()
+        api(laptop).changePassword("eve", created.temporaryPassword, "eve password 2026").ok()
+        val phone = MemoryTokenStore()
+        api(phone).login("eve", "eve password 2026").ok()
+        val tokens = listOf(laptop.load()!!, phone.load()!!)
+        tokens.forEach { assertNotNull(auth.authorize(it.accessToken)) }
+
+        admin.revokeSessions("eve").ok()
+        tokens.forEach { assertNull(auth.authorize(it.accessToken)) }
+        assertEquals(401, api(laptop).validation().status())
+        assertEquals(404, admin.revokeSessions("nobody").status())
+
+        // Unlike disabling, eve can simply log in again.
+        val again = MemoryTokenStore()
+        assertFalse(api(again).login("eve", "eve password 2026").ok().passwordChangeRequired)
+        assertTrue(api(again).validation().ok().isValid)
+    }
+
+    @Test
+    fun tokensWithoutASessionOrSignedElsewhereAreRejected() = flow { auth ->
+        admin(auth)
+        val forged = com.auth0.jwt.JWT.create().withIssuer("dorai").withSubject("admin").withClaim("role", "Admin")
+            .withExpiresAt(java.time.Instant.now().plusSeconds(600))
+        assertNull(auth.authorize(forged.sign(com.auth0.jwt.algorithms.Algorithm.HMAC256(config.jwtSecret))))
+        assertNull(auth.authorize(forged.withClaim("sid", "x").sign(com.auth0.jwt.algorithms.Algorithm.HMAC256("y".repeat(40)))))
+        assertNull(auth.authorize("not a token"))
     }
 
     @Test

@@ -113,6 +113,8 @@ class DoraiApi(
     suspend fun users(): ApiResult<List<User>> = call { http.get("admin/users") }
     suspend fun createUser(request: CreateUserRequest): ApiResult<CreatedUser> = call { http.post("admin/users") { json(request) } }
     suspend fun disableUser(username: String): ApiResult<User> = call { http.post("admin/users/$username/disable") }
+    /** Signs the user out on every device at once; they can log in again. */
+    suspend fun revokeSessions(username: String): ApiResult<Unit> = call { http.post("admin/users/$username/revoke") }
     suspend fun invites(): ApiResult<List<Invite>> = call { http.get("admin/invites") }
     suspend fun createInvite(username: String): ApiResult<Invite> = call { http.post("admin/invites") { json(CreateInviteRequest(username)) } }
 

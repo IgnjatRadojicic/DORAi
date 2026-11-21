@@ -40,6 +40,7 @@ class AccessTest {
     fun adminRoutesAndUnknownWrites() {
         assertEquals(Role.Admin, role(Get, "/admin/users"))
         assertEquals(Role.Admin, role(Post, "/admin/users/bob/disable"))
+        assertEquals(Role.Admin, role(Post, "/admin/users/bob/revoke"))
         assertEquals(Role.Admin, role(Post, "/admin/invites"))
         // A write nobody added to the table is closed by default; reads are for viewers.
         assertEquals(Role.Admin, role(Post, "/something-new"))

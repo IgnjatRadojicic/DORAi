@@ -39,7 +39,8 @@ private val PrincipalKey = AttributeKey<Principal>("dorai.principal")
 val ApplicationCall.principal: Principal? get() = attributes.getOrNull(PrincipalKey)
 
 /**
- * Checks every API call against [Access]: 401 without a valid access token, 403 when the role is too low.
+ * Checks every API call against [Access]: 401 without a valid access token or with a revoked session,
+ * 403 when the role is too low.
  * Only API paths are checked; the health check and static files stay open.
  */
 fun accessControl(auth: AuthService) = createApplicationPlugin("DoraiAccess") {
@@ -49,7 +50,7 @@ fun accessControl(auth: AuthService) = createApplicationPlugin("DoraiAccess") {
         val required = Access.required(call.request.httpMethod, path) ?: return@onCall
 
         val token = call.request.headers["Authorization"]?.takeIf { it.startsWith("Bearer ", ignoreCase = true) }?.substring(7)?.trim()
-        val principal = token?.let(auth::verify)
+        val principal = token?.let { auth.authorize(it) }
             ?: throw ApiProblem(HttpStatusCode.Unauthorized, "Not logged in", "Log in to use this server.")
         if (principal.role < required) {
             throw ApiProblem(HttpStatusCode.Forbidden, "Not allowed", "This needs the ${required.name.lowercase()} role.")
