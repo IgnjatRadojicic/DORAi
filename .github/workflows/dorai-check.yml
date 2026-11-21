@@ -1,0 +1,31 @@
+name: dorai check
+
+# Runs this repo's own action on the FinPay example. On main the plan has no changes, so the check passes;
+# the demo pull request replaces examples/finpay/plan.json with the eastus plan and gets the High findings.
+on:
+  pull_request:
+    paths:
+      - examples/**
+      - action.yml
+      - cli/**
+      - shared/src/commonMain/kotlin/dorai/shared/rules/**
+      - .github/workflows/dorai-check.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: dorai-check-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./
+        with:
+          plan: examples/finpay/plan.json
+          register: examples/finpay/register.json

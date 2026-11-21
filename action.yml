@@ -1,0 +1,92 @@
+name: DORAi check
+description: Checks a Terraform plan against the DORA register and posts the findings as one pull request comment.
+
+inputs:
+  plan:
+    description: Terraform plan JSON (terraform show -json plan.bin > plan.json).
+    required: true
+  register:
+    description: Register JSON, as GET /api/register on the DORAi server returns it.
+    required: true
+  comment:
+    description: Post or update the pull request comment ("true" or "false").
+    default: "true"
+  github-token:
+    description: Token for the comment; needs pull-requests write.
+    default: ${{ github.token }}
+
+outputs:
+  exit-code:
+    description: 0 no High findings, 1 High findings, 2 bad input.
+    value: ${{ steps.check.outputs.exit-code }}
+  report:
+    description: Path of the Markdown report.
+    value: ${{ steps.check.outputs.report }}
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-java@v4
+      with:
+        distribution: temurin
+        java-version: 21
+
+    - uses: gradle/actions/setup-gradle@v4
+
+    - name: Build the dorai CLI
+      shell: bash
+      run: '"$GITHUB_ACTION_PATH/gradlew" -p "$GITHUB_ACTION_PATH" :cli:installDist --console=plain -q'
+
+    - name: Check the plan
+      id: check
+      shell: bash
+      env:
+        PLAN: ${{ inputs.plan }}
+        REGISTER: ${{ inputs.register }}
+      run: |
+        dorai="$GITHUB_ACTION_PATH/cli/build/install/dorai/bin/dorai"
+        report="$RUNNER_TEMP/dorai-check.md"
+        set +e
+        "$dorai" check "$PLAN" --register "$REGISTER" --format text
+        code=$?
+        if [ "$code" -ne 2 ]; then
+          "$dorai" check "$PLAN" --register "$REGISTER" --format markdown --output "$report"
+        fi
+        set -e
+        echo "exit-code=$code" >> "$GITHUB_OUTPUT"
+        if [ -f "$report" ]; then
+          echo "report=$report" >> "$GITHUB_OUTPUT"
+          cat "$report" >> "$GITHUB_STEP_SUMMARY"
+        fi
+
+    - name: Post or update the pull request comment
+      if: inputs.comment == 'true' && github.event.pull_request.number && steps.check.outputs.report
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+        REPO: ${{ github.repository }}
+        PR: ${{ github.event.pull_request.number }}
+        REPORT: ${{ steps.check.outputs.report }}
+      run: |
+        marker='<!-- dorai-check -->'
+        id=$(gh api "repos/$REPO/issues/$PR/comments" --paginate \
+          --jq ".[] | select(.user.type == \"Bot\" and (.body | startswith(\"$marker\"))) | .id" | head -n 1)
+        body=$(jq -Rs '{body: .}' < "$REPORT")
+        if [ -n "$id" ]; then
+          echo "$body" | gh api -X PATCH "repos/$REPO/issues/comments/$id" --input - > /dev/null \
+            || echo "::warning::Could not update the DORAi comment (does the token have pull-requests write?)."
+        else
+          echo "$body" | gh api -X POST "repos/$REPO/issues/$PR/comments" --input - > /dev/null \
+            || echo "::warning::Could not post the DORAi comment (does the token have pull-requests write?)."
+        fi
+
+    - name: Fail on High findings or bad input
+      shell: bash
+      env:
+        CODE: ${{ steps.check.outputs.exit-code }}
+      run: |
+        case "$CODE" in
+          0) echo "No High findings." ;;
+          1) echo "::error::High DORA findings: update the register or get the change approved."; exit 1 ;;
+          *) echo "::error::dorai check could not read its input (exit $CODE)."; exit "$CODE" ;;
+        esac
