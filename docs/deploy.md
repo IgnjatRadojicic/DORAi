@@ -77,6 +77,9 @@ on the subscriptions, an AWS IAM user or role with read-only access to tagging a
 - If a cloud cannot be scanned, the scan fails with 502 and the stored inventory stays as it was.
   If cost is unavailable, the scan continues without that cloud's cost.
 - Cost of deleted resources is ignored in the concentration report.
+- **Scheduled scans**: `DORAI_SCAN_EVERY=24h` (any duration of at least 1h, for example `6h` or `PT12H`) scans in
+  the background on that interval, the first run one interval after the start. A failed run is logged and the
+  stored inventory stays; the next run is on time. Unset or `off` means scans run only from the app.
 
 ### AI settings (`DORAI_AI_PROVIDER`)
 - `fake` (default) answers offline from fixed keyword rules, with no key and no outbound traffic. Its

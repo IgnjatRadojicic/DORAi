@@ -48,6 +48,9 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import org.slf4j.LoggerFactory
+import dorai.server.scan.ScanSchedule
+import dorai.server.scan.runScan
+import kotlinx.coroutines.launch
 
 fun main() {
     val log = LoggerFactory.getLogger("dorai.server")
@@ -69,7 +72,19 @@ fun main() {
                 sslConnector(keyStore, Tls.ALIAS, { tls.password.toCharArray() }, { tls.password.toCharArray() }) { this.port = tls.port }
             }
         },
-        module = { module(services) },
+        module = {
+            module(services)
+            ScanSchedule.fromEnv()?.let { every ->
+                log.info("Scheduled scan every {}.", every)
+                // Application is a coroutine scope: the loop stops with the server.
+                launch {
+                    ScanSchedule.loop(every, { runScan(services) }) { result ->
+                        result.onSuccess { log.info("Scheduled scan: {} resources ({}).", it.resourceCount, it.mode) }
+                            .onFailure { log.warn("Scheduled scan failed: {}", it.message) }
+                    }
+                }
+            }
+        },
     ).start(wait = true)
 }
 
