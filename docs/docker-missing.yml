@@ -31,12 +31,6 @@ server:
     owner: Ignjat (decision)
     phase: 3
 
-  - id: live-collectors
-    missing: With DORAI_DATA_SOURCE=live, read the standard AZURE_* and AWS_* variables and scan.
-    why: .env.example already reserves the names; collectors are not written yet.
-    owner: Ignjat
-    phase: 4
-
   - id: llm-settings
     missing: Names of the LLM settings (endpoint, key, model, Azure OpenAI or OpenAI) for DORAI_AI=real,
       added to deploy/.env.example and docs/deploy.md.

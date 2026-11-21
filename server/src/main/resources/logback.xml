@@ -4,6 +4,8 @@
             <pattern>%d{HH:mm:ss.SSS} %-5level %logger{30} - %msg%n</pattern>
         </encoder>
     </appender>
+    <!-- The Azure SDK logs every credential it tries at INFO. -->
+    <logger name="com.azure" level="WARN" />
     <root level="INFO">
         <appender-ref ref="STDOUT" />
     </root>

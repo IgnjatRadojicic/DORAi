@@ -3,10 +3,13 @@ package dorai.server
 import dorai.server.ai.AiConfig
 import dorai.server.ai.regulationSearch
 import dorai.server.check.checkRoutes
+import dorai.server.collect.LiveConfig
+import dorai.server.collect.withLiveScan
 import dorai.server.core.Services
 import dorai.server.db.Db
 import dorai.server.db.DbConfig
 import dorai.server.db.postgresServices
+import dorai.server.fixtures.FixtureData
 import dorai.server.fixtures.fixtureServices
 import dorai.server.register.registerRoutes
 import dorai.server.review.suggestionRoutes
@@ -38,15 +41,24 @@ fun main() {
     embeddedServer(Netty, port = port) { module(servicesFromEnv()) }.start(wait = true)
 }
 
-/** PostgreSQL with pgvector regulation search when DORAI_DB_URL is set, otherwise fixtures in memory. */
+/**
+ * Storage: PostgreSQL with pgvector regulation search when DORAI_DB_URL is set, otherwise fixtures in memory.
+ * Scan: the firm's clouds when DORAI_DATA_SOURCE=live, otherwise the FinPay fixtures.
+ */
 fun servicesFromEnv(): Services {
-    val config = DbConfig.fromEnv()
-    if (config == null) {
-        LoggerFactory.getLogger("dorai.server").info("DORAI_DB_URL is not set: running on fixtures in memory.")
-        return fixtureServices()
+    val log = LoggerFactory.getLogger("dorai.server")
+    val data = FixtureData.load()
+    val db = DbConfig.fromEnv()
+    val base = if (db == null) {
+        log.info("DORAI_DB_URL is not set: running on fixtures in memory.")
+        fixtureServices(data)
+    } else {
+        val database = Db.open(db)
+        postgresServices(database, data).copy(regulationSearch = regulationSearch(database, AiConfig.fromEnv()))
     }
-    val database = Db.open(config)
-    return postgresServices(database).copy(regulationSearch = regulationSearch(database, AiConfig.fromEnv()))
+    val live = LiveConfig.fromEnv() ?: return base
+    log.info("Live scan of {}{}.", live.clouds, live.awsEndpoint?.let { " (AWS through $it)" } ?: "")
+    return base.withLiveScan(live, data.costs)
 }
 
 /** Fixture wiring: in-memory storage, no AI. Used by tests and by a server started without a database. */

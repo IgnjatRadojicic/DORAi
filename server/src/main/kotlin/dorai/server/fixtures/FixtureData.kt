@@ -1,5 +1,7 @@
 package dorai.server.fixtures
 
+import dorai.server.collect.cloudResource
+import dorai.server.collect.withMonthlyCost
 import dorai.server.core.CostEntry
 import dorai.shared.model.BusinessFunction
 import dorai.shared.model.ChangeAction
@@ -21,9 +23,6 @@ import kotlinx.datetime.LocalDate
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.doubleOrNull
-import kotlin.math.roundToLong
-import dorai.shared.rules.Regions
-import dorai.shared.rules.ServiceTypeTable
 import kotlin.time.Instant
 
 /**
@@ -36,8 +35,8 @@ class FixtureData(
     val planEastus: ByteArray,
     val suggestions: List<Suggestion>,
 ) {
-    val resources: List<Resource> = scan.resources.map { it.toResource(scan.costs) }
     val costs: List<CostEntry> = scan.costs.map { CostEntry(it.resourceId, it.provider, it.month, it.amount, it.currency) }
+    val resources: List<Resource> = scan.resources.map { it.toResource() }.withMonthlyCost(costs)
 
     companion object {
         fun load(): FixtureData = FixtureData(
@@ -87,28 +86,8 @@ data class CostSeed(
     val currency: String,
 )
 
-private fun ResourceSeed.toResource(costs: List<CostSeed>): Resource {
-    val own = costs.filter { it.resourceId == id }
-    return Resource(
-        id = id,
-        name = name,
-        type = type,
-        provider = provider,
-        location = location,
-        country = Regions.countryOf(location),
-        serviceType = ServiceTypeTable.find(type)?.code,
-        source = source,
-        changeAction = changeAction,
-        tags = tags,
-        redundancy = redundancy,
-        functionId = tags.entries.firstOrNull { it.key.equals("dora-function", ignoreCase = true) }?.value,
-        contractId = tags.entries.firstOrNull { it.key.equals("dora-contract", ignoreCase = true) }?.value,
-        monthlyCost = if (own.isEmpty()) null else round2(own.sumOf { it.amount } / own.map { it.month }.distinct().size),
-        currency = own.firstOrNull()?.currency,
-    )
-}
-
-internal fun round2(value: Double): Double = (value * 100).roundToLong() / 100.0
+private fun ResourceSeed.toResource() =
+    cloudResource(id, name, type, provider, location, tags, redundancy, source, changeAction)
 
 // Seed format of finpay-register.json: values may be numbers, labels are written "HumanConfirmed"
 
