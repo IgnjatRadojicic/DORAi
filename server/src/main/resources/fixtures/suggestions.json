@@ -1,0 +1,68 @@
+[
+  {
+    "id": "6f1c2b8e-3d4a-4c1e-9b7a-1a2b3c4d5e01",
+    "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.CognitiveServices/accounts/lang-finpay-fraud-2udl",
+    "resourceName": "lang-finpay-fraud-2udl",
+    "kind": "ServiceType",
+    "value": "S18",
+    "reason": "Managed language AI service consumed as a platform, so it fits platform as a service rather than infrastructure.",
+    "citations": [
+      {
+        "id": "its-2024-2956-annex-iii-s18",
+        "regulation": "Commission Implementing Regulation (EU) 2024/2956",
+        "article": "Annex III",
+        "paragraph": "S18",
+        "excerpt": "Type of ICT services: cloud computing services, platform as a service.",
+        "score": 0.51
+      }
+    ],
+    "confidence": 0.82,
+    "status": "Pending",
+    "createdAt": "2026-11-11T15:00:00Z",
+    "decidedAt": null
+  },
+  {
+    "id": "6f1c2b8e-3d4a-4c1e-9b7a-1a2b3c4d5e02",
+    "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Storage/storageAccounts/stfinpayanalytics2udl",
+    "resourceName": "stfinpayanalytics2udl",
+    "kind": "BusinessFunction",
+    "value": "F5",
+    "reason": "The name and the missing payment tags point to the internal analytics function, which is not critical.",
+    "citations": [
+      {
+        "id": "dora-art-28-3",
+        "regulation": "Regulation (EU) 2022/2554 (DORA)",
+        "article": "Article 28",
+        "paragraph": "3",
+        "excerpt": "Financial entities shall maintain and update at entity level, and at sub-consolidated and consolidated levels, a register of information in relation to all contractual arrangements on the use of ICT services provided by ICT third-party service providers.",
+        "score": 0.48
+      }
+    ],
+    "confidence": 0.64,
+    "status": "Pending",
+    "createdAt": "2026-11-11T15:00:00Z",
+    "decidedAt": null
+  },
+  {
+    "id": "6f1c2b8e-3d4a-4c1e-9b7a-1a2b3c4d5e03",
+    "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.OperationalInsights/workspaces/log-finpay",
+    "resourceName": "log-finpay",
+    "kind": "BusinessFunction",
+    "value": "F1",
+    "reason": "The workspace collects logs from the payment API in the same resource group, so it supports card payment processing.",
+    "citations": [
+      {
+        "id": "its-2024-2956-b-06-01",
+        "regulation": "Commission Implementing Regulation (EU) 2024/2956",
+        "article": "Template B_06.01",
+        "paragraph": null,
+        "excerpt": "Functions identification: the functions of the financial entity supported by ICT services provided by ICT third-party service providers.",
+        "score": 0.46
+      }
+    ],
+    "confidence": 0.57,
+    "status": "Pending",
+    "createdAt": "2026-11-11T15:00:00Z",
+    "decidedAt": null
+  }
+]

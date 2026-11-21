@@ -9,6 +9,10 @@ One line each: date, who, decision, why. Newest at the bottom.
 - 2026-11-21, team: Admin sets a temporary password that must be changed at first login; roles admin, reviewer, viewer. Why: simple, no external identity provider needed.
 - 2026-11-21, Ignjat: Rules, validator and Terraform plan reader live in `shared` (`dorai.shared.rules`). Why: server and CLI must produce identical findings.
 - 2026-11-21, Ignjat: compileSdk 37 (Compose 1.12 requires it), targetSdk 36, minSdk 26. Why: library requirement; target stays on the stable runtime behaviour.
+- 2026-11-21, Ignjat: Contract keeps the established field names and JSON values; Kotlin types drop any suffix (`Finding`, `Resource`). Why: fixtures parse as they are and every lane works from the same shapes.
+- 2026-11-21, Ignjat: Dates use `kotlinx-datetime` (`LocalDate`) and `kotlin.time.Instant`; money is `Double`, the server rounds to 2 decimals before sending. Why: plain JSON numbers, and `BigDecimal` is not available in common code.
+- 2026-11-21, Ignjat: `DoraiApi` returns a sealed `ApiResult` (success or problem details) and never throws for HTTP or network errors. Why: screens must handle the error case explicitly.
+- 2026-11-21, Ignjat: Phase 1 server serves the FinPay demo data (a fictional firm) from `server/src/main/resources/fixtures`; suggestions are decided in memory. Why: the apps and AI can start before the database exists.
 - 2026-11-21, Ignjat: Password hashing with password4j (Argon2id). Why: pure Java, sane defaults, no native library to ship.
 - 2026-11-21, Ignjat: AWS collectors use the AWS SDK for Kotlin. Why: coroutine-native, fits Ktor and Koog.
 - 2026-11-21, Ignjat: Exposed DSL only, no DAO. Why: fewer moving parts.
@@ -19,6 +23,9 @@ One line each: date, who, decision, why. Newest at the bottom.
 - 2026-11-21, Ignjat: File dialogs with FileKit. Why: one Compose API for desktop and Android, no platform code.
 - 2026-11-21, Ignjat: Server generates a self-signed TLS keystore on first start (ktor-network-tls-certificates) unless one is configured. Why: zero setup for firms and the demo; the fingerprint goes in the invite link.
 - 2026-11-21, Ignjat: ViewModel and Flow tests use Turbine. Why: short, readable assertions on StateFlow emissions.
+- 2026-11-21, Ignjat: Service interfaces live in `dorai.server.core` (collectors, cost, repositories, AI, exporter) and `dorai.shared.rules` (plan checker, validator); routes call only these. Why: each lane replaces a fixture or fake behind an interface without touching routes or other lanes.
+- 2026-11-21, Ignjat: Wiring by hand through one `Services` data class, no DI framework. Why: a dozen dependencies don't need a container, and tests swap one piece with `copy`.
+- 2026-11-21, Ignjat: AI services return `AiAnswer` (answer with at least one citation, insufficient evidence, or failed). Why: the type itself enforces the cite-or-say-so rule.
 - 2026-11-21, Ignjat: Firms run the server with Docker Compose (`deploy/`); CI publishes the image to GHCR on version tags for amd64 and arm64. Why: firms pull a tagged image and need no source or JDK.
 - 2026-11-21, Ignjat: Server image based on eclipse-temurin:21-jre. Why: official, patched, has a shell for debugging and the health check.
 - 2026-11-21, Ignjat: The server terminates TLS itself on 8443 with the keystore in a Docker volume; plain HTTP only on the host. Why: the pinned fingerprint is exactly the server's, no proxy to configure.

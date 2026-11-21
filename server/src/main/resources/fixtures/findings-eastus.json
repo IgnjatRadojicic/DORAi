@@ -1,0 +1,66 @@
+[
+  {
+    "ruleId": "critical-function",
+    "severity": "High",
+    "title": "Critical function at risk",
+    "resourceAddress": "aws_db_instance.payments_replica",
+    "templates": [
+      "B_06.01"
+    ],
+    "detail": "finpay-payments-replica supports F1 Card payment processing (critical) and is placed outside the EU/EEA (US).",
+    "location": "us-east-1 (US)",
+    "functionId": "F1",
+    "citation": null,
+    "explanation": null,
+    "functionName": "Card payment processing",
+    "criticalFunction": true
+  },
+  {
+    "ruleId": "data-location",
+    "severity": "High",
+    "title": "Data location outside EU/EEA",
+    "resourceAddress": "aws_db_instance.payments_replica",
+    "templates": [
+      "B_02.02"
+    ],
+    "detail": "finpay-payments-replica would store data in US, outside the EU/EEA.",
+    "location": "us-east-1 (US)",
+    "functionId": "F1",
+    "citation": null,
+    "explanation": null,
+    "functionName": "Card payment processing",
+    "criticalFunction": true
+  },
+  {
+    "ruleId": "new-service-type",
+    "severity": "Medium",
+    "title": "New service in contract",
+    "resourceAddress": "aws_db_instance.payments_replica",
+    "templates": [
+      "B_02.02"
+    ],
+    "detail": "C2 has no S18 service for F1: add a B_02.02 row for finpay-payments-replica.",
+    "location": "us-east-1 (US)",
+    "functionId": "F1",
+    "citation": null,
+    "explanation": null,
+    "functionName": "Card payment processing",
+    "criticalFunction": true
+  },
+  {
+    "ruleId": "untagged",
+    "severity": "Medium",
+    "title": "Untagged resource",
+    "resourceAddress": "aws_s3_bucket.exports",
+    "templates": [
+      "B_02.02"
+    ],
+    "detail": "finpay-exports has no dora-function and dora-contract tag, so it cannot be linked to a contract and function in the register.",
+    "location": "eu-central-1 (DE)",
+    "functionId": null,
+    "citation": null,
+    "explanation": null,
+    "functionName": null,
+    "criticalFunction": false
+  }
+]

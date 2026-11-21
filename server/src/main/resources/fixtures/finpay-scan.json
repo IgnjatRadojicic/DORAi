@@ -1,0 +1,1904 @@
+{
+  "scannedAt": "2026-11-11T14:52:25Z",
+  "costSource": "fixture",
+  "resources": [
+    {
+      "id": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.CognitiveServices/accounts/lang-finpay-fraud-2udl",
+      "name": "lang-finpay-fraud-2udl",
+      "type": "microsoft.cognitiveservices/accounts",
+      "provider": "Azure",
+      "location": "swedencentral",
+      "source": "Live",
+      "changeAction": "None",
+      "tags": {
+        "dora-contract": "C1",
+        "dora-function": "F3",
+        "env": "prod",
+        "project": "finpay"
+      },
+      "redundancy": "Unknown"
+    },
+    {
+      "id": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.DBforPostgreSQL/flexibleServers/psql-finpay-payments-2udl",
+      "name": "psql-finpay-payments-2udl",
+      "type": "microsoft.dbforpostgresql/flexibleservers",
+      "provider": "Azure",
+      "location": "italynorth",
+      "source": "Live",
+      "changeAction": "None",
+      "tags": {
+        "dora-contract": "C1",
+        "dora-function": "F1",
+        "env": "prod",
+        "project": "finpay"
+      },
+      "redundancy": "Local"
+    },
+    {
+      "id": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.KeyVault/vaults/kv-finpay-2udl",
+      "name": "kv-finpay-2udl",
+      "type": "microsoft.keyvault/vaults",
+      "provider": "Azure",
+      "location": "germanywestcentral",
+      "source": "Live",
+      "changeAction": "None",
+      "tags": {
+        "dora-contract": "C1",
+        "dora-function": "F1",
+        "env": "prod",
+        "project": "finpay"
+      },
+      "redundancy": "Unknown"
+    },
+    {
+      "id": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.OperationalInsights/workspaces/log-finpay",
+      "name": "log-finpay",
+      "type": "microsoft.operationalinsights/workspaces",
+      "provider": "Azure",
+      "location": "germanywestcentral",
+      "source": "Live",
+      "changeAction": "None",
+      "tags": {
+        "env": "prod",
+        "project": "finpay"
+      },
+      "redundancy": "Unknown"
+    },
+    {
+      "id": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.ServiceBus/namespaces/sb-finpay-2udl",
+      "name": "sb-finpay-2udl",
+      "type": "microsoft.servicebus/namespaces",
+      "provider": "Azure",
+      "location": "germanywestcentral",
+      "source": "Live",
+      "changeAction": "None",
+      "tags": {
+        "dora-contract": "C1",
+        "dora-function": "F1",
+        "env": "prod",
+        "project": "finpay"
+      },
+      "redundancy": "Unknown"
+    },
+    {
+      "id": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Storage/storageAccounts/stfinpayanalytics2udl",
+      "name": "stfinpayanalytics2udl",
+      "type": "microsoft.storage/storageaccounts",
+      "provider": "Azure",
+      "location": "germanywestcentral",
+      "source": "Live",
+      "changeAction": "None",
+      "tags": {
+        "env": "prod",
+        "project": "finpay"
+      },
+      "redundancy": "Local"
+    },
+    {
+      "id": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Storage/storageAccounts/stfinpaydr2udl",
+      "name": "stfinpaydr2udl",
+      "type": "microsoft.storage/storageaccounts",
+      "provider": "Azure",
+      "location": "swedencentral",
+      "source": "Live",
+      "changeAction": "None",
+      "tags": {
+        "dora-contract": "C1",
+        "dora-function": "F1",
+        "env": "prod",
+        "project": "finpay"
+      },
+      "redundancy": "Local"
+    },
+    {
+      "id": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Storage/storageAccounts/stfinpayfunc2udl",
+      "name": "stfinpayfunc2udl",
+      "type": "microsoft.storage/storageaccounts",
+      "provider": "Azure",
+      "location": "germanywestcentral",
+      "source": "Live",
+      "changeAction": "None",
+      "tags": {
+        "dora-contract": "C1",
+        "dora-function": "F3",
+        "env": "prod",
+        "project": "finpay"
+      },
+      "redundancy": "Local"
+    },
+    {
+      "id": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Storage/storageAccounts/stfinpaykyc2udl",
+      "name": "stfinpaykyc2udl",
+      "type": "microsoft.storage/storageaccounts",
+      "provider": "Azure",
+      "location": "germanywestcentral",
+      "source": "Live",
+      "changeAction": "None",
+      "tags": {
+        "dora-contract": "C1",
+        "dora-function": "F2",
+        "env": "prod",
+        "project": "finpay"
+      },
+      "redundancy": "Local"
+    },
+    {
+      "id": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Storage/storageAccounts/stfinpaypayments2udl",
+      "name": "stfinpaypayments2udl",
+      "type": "microsoft.storage/storageaccounts",
+      "provider": "Azure",
+      "location": "germanywestcentral",
+      "source": "Live",
+      "changeAction": "None",
+      "tags": {
+        "dora-contract": "C1",
+        "dora-function": "F1",
+        "env": "prod",
+        "project": "finpay"
+      },
+      "redundancy": "Local"
+    },
+    {
+      "id": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Web/serverFarms/asp-finpay",
+      "name": "asp-finpay",
+      "type": "microsoft.web/serverfarms",
+      "provider": "Azure",
+      "location": "italynorth",
+      "source": "Live",
+      "changeAction": "None",
+      "tags": {
+        "dora-contract": "C1",
+        "dora-function": "F1",
+        "env": "prod",
+        "project": "finpay"
+      },
+      "redundancy": "Unknown"
+    },
+    {
+      "id": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Web/serverFarms/asp-finpay-func",
+      "name": "asp-finpay-func",
+      "type": "microsoft.web/serverfarms",
+      "provider": "Azure",
+      "location": "swedencentral",
+      "source": "Live",
+      "changeAction": "None",
+      "tags": {
+        "dora-contract": "C1",
+        "dora-function": "F3",
+        "env": "prod",
+        "project": "finpay"
+      },
+      "redundancy": "Unknown"
+    },
+    {
+      "id": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Web/sites/app-finpay-onboarding-2udl",
+      "name": "app-finpay-onboarding-2udl",
+      "type": "microsoft.web/sites",
+      "provider": "Azure",
+      "location": "italynorth",
+      "source": "Live",
+      "changeAction": "None",
+      "tags": {
+        "dora-contract": "C1",
+        "dora-function": "F2",
+        "env": "prod",
+        "project": "finpay"
+      },
+      "redundancy": "Unknown"
+    },
+    {
+      "id": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Web/sites/app-finpay-payments-api-2udl",
+      "name": "app-finpay-payments-api-2udl",
+      "type": "microsoft.web/sites",
+      "provider": "Azure",
+      "location": "italynorth",
+      "source": "Live",
+      "changeAction": "None",
+      "tags": {
+        "dora-contract": "C1",
+        "dora-function": "F1",
+        "env": "prod",
+        "project": "finpay"
+      },
+      "redundancy": "Unknown"
+    },
+    {
+      "id": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Web/sites/func-finpay-fraud-2udl",
+      "name": "func-finpay-fraud-2udl",
+      "type": "microsoft.web/sites",
+      "provider": "Azure",
+      "location": "swedencentral",
+      "source": "Live",
+      "changeAction": "None",
+      "tags": {
+        "dora-contract": "C1",
+        "dora-function": "F3",
+        "env": "prod",
+        "project": "finpay"
+      },
+      "redundancy": "Unknown"
+    },
+    {
+      "id": "arn:aws:s3:::finpay-statements",
+      "name": "finpay-statements",
+      "type": "s3:bucket",
+      "provider": "AWS",
+      "location": "eu-central-1",
+      "source": "Live",
+      "changeAction": "None",
+      "tags": {
+        "dora-function": "F4",
+        "env": "prod",
+        "dora-contract": "C2",
+        "project": "finpay"
+      },
+      "redundancy": "Zone"
+    },
+    {
+      "id": "arn:aws:dynamodb:eu-central-1:000000000000:table/finpay-statements-index",
+      "name": "finpay-statements-index",
+      "type": "dynamodb:table",
+      "provider": "AWS",
+      "location": "eu-central-1",
+      "source": "Live",
+      "changeAction": "None",
+      "tags": {
+        "project": "finpay",
+        "dora-function": "F4",
+        "dora-contract": "C2",
+        "env": "prod"
+      },
+      "redundancy": "Zone"
+    },
+    {
+      "id": "arn:aws:lambda:eu-central-1:000000000000:function:finpay-statement-renderer",
+      "name": "finpay-statement-renderer",
+      "type": "lambda:function",
+      "provider": "AWS",
+      "location": "eu-central-1",
+      "source": "Live",
+      "changeAction": "None",
+      "tags": {
+        "env": "prod",
+        "dora-function": "F4",
+        "project": "finpay",
+        "dora-contract": "C2"
+      },
+      "redundancy": "Zone"
+    },
+    {
+      "id": "arn:aws:sqs:eu-central-1:000000000000:finpay-statement-jobs",
+      "name": "finpay-statement-jobs",
+      "type": "sqs:queue",
+      "provider": "AWS",
+      "location": "eu-central-1",
+      "source": "Live",
+      "changeAction": "None",
+      "tags": {
+        "dora-contract": "C2",
+        "env": "prod",
+        "dora-function": "F4",
+        "project": "finpay"
+      },
+      "redundancy": "Zone"
+    }
+  ],
+  "costs": [
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.CognitiveServices/accounts/lang-finpay-fraud-2udl",
+      "provider": "Azure",
+      "month": "2025-11-01",
+      "amount": 265.1,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.CognitiveServices/accounts/lang-finpay-fraud-2udl",
+      "provider": "Azure",
+      "month": "2025-12-01",
+      "amount": 227.27,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.CognitiveServices/accounts/lang-finpay-fraud-2udl",
+      "provider": "Azure",
+      "month": "2026-01-01",
+      "amount": 242.66,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.CognitiveServices/accounts/lang-finpay-fraud-2udl",
+      "provider": "Azure",
+      "month": "2026-02-01",
+      "amount": 239.47,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.CognitiveServices/accounts/lang-finpay-fraud-2udl",
+      "provider": "Azure",
+      "month": "2026-03-01",
+      "amount": 271.07,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.CognitiveServices/accounts/lang-finpay-fraud-2udl",
+      "provider": "Azure",
+      "month": "2026-04-01",
+      "amount": 267.39,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.CognitiveServices/accounts/lang-finpay-fraud-2udl",
+      "provider": "Azure",
+      "month": "2026-05-01",
+      "amount": 280.66,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.CognitiveServices/accounts/lang-finpay-fraud-2udl",
+      "provider": "Azure",
+      "month": "2026-06-01",
+      "amount": 231.08,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.CognitiveServices/accounts/lang-finpay-fraud-2udl",
+      "provider": "Azure",
+      "month": "2026-07-01",
+      "amount": 251.71,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.CognitiveServices/accounts/lang-finpay-fraud-2udl",
+      "provider": "Azure",
+      "month": "2026-08-01",
+      "amount": 227.56,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.CognitiveServices/accounts/lang-finpay-fraud-2udl",
+      "provider": "Azure",
+      "month": "2026-09-01",
+      "amount": 239.19,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.CognitiveServices/accounts/lang-finpay-fraud-2udl",
+      "provider": "Azure",
+      "month": "2026-10-01",
+      "amount": 256.84,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.DBforPostgreSQL/flexibleServers/psql-finpay-payments-2udl",
+      "provider": "Azure",
+      "month": "2025-11-01",
+      "amount": 1257.54,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.DBforPostgreSQL/flexibleServers/psql-finpay-payments-2udl",
+      "provider": "Azure",
+      "month": "2025-12-01",
+      "amount": 1316.2,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.DBforPostgreSQL/flexibleServers/psql-finpay-payments-2udl",
+      "provider": "Azure",
+      "month": "2026-01-01",
+      "amount": 1469.79,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.DBforPostgreSQL/flexibleServers/psql-finpay-payments-2udl",
+      "provider": "Azure",
+      "month": "2026-02-01",
+      "amount": 1434.05,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.DBforPostgreSQL/flexibleServers/psql-finpay-payments-2udl",
+      "provider": "Azure",
+      "month": "2026-03-01",
+      "amount": 1323.56,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.DBforPostgreSQL/flexibleServers/psql-finpay-payments-2udl",
+      "provider": "Azure",
+      "month": "2026-04-01",
+      "amount": 1449.14,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.DBforPostgreSQL/flexibleServers/psql-finpay-payments-2udl",
+      "provider": "Azure",
+      "month": "2026-05-01",
+      "amount": 1524.11,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.DBforPostgreSQL/flexibleServers/psql-finpay-payments-2udl",
+      "provider": "Azure",
+      "month": "2026-06-01",
+      "amount": 1250.71,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.DBforPostgreSQL/flexibleServers/psql-finpay-payments-2udl",
+      "provider": "Azure",
+      "month": "2026-07-01",
+      "amount": 1522.88,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.DBforPostgreSQL/flexibleServers/psql-finpay-payments-2udl",
+      "provider": "Azure",
+      "month": "2026-08-01",
+      "amount": 1486.22,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.DBforPostgreSQL/flexibleServers/psql-finpay-payments-2udl",
+      "provider": "Azure",
+      "month": "2026-09-01",
+      "amount": 1364.36,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.DBforPostgreSQL/flexibleServers/psql-finpay-payments-2udl",
+      "provider": "Azure",
+      "month": "2026-10-01",
+      "amount": 1301.44,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.KeyVault/vaults/kv-finpay-2udl",
+      "provider": "Azure",
+      "month": "2025-11-01",
+      "amount": 81.74,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.KeyVault/vaults/kv-finpay-2udl",
+      "provider": "Azure",
+      "month": "2025-12-01",
+      "amount": 70.77,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.KeyVault/vaults/kv-finpay-2udl",
+      "provider": "Azure",
+      "month": "2026-01-01",
+      "amount": 66.46,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.KeyVault/vaults/kv-finpay-2udl",
+      "provider": "Azure",
+      "month": "2026-02-01",
+      "amount": 66.53,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.KeyVault/vaults/kv-finpay-2udl",
+      "provider": "Azure",
+      "month": "2026-03-01",
+      "amount": 79.8,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.KeyVault/vaults/kv-finpay-2udl",
+      "provider": "Azure",
+      "month": "2026-04-01",
+      "amount": 75.49,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.KeyVault/vaults/kv-finpay-2udl",
+      "provider": "Azure",
+      "month": "2026-05-01",
+      "amount": 79.09,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.KeyVault/vaults/kv-finpay-2udl",
+      "provider": "Azure",
+      "month": "2026-06-01",
+      "amount": 77.72,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.KeyVault/vaults/kv-finpay-2udl",
+      "provider": "Azure",
+      "month": "2026-07-01",
+      "amount": 74.3,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.KeyVault/vaults/kv-finpay-2udl",
+      "provider": "Azure",
+      "month": "2026-08-01",
+      "amount": 82.02,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.KeyVault/vaults/kv-finpay-2udl",
+      "provider": "Azure",
+      "month": "2026-09-01",
+      "amount": 71.51,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.KeyVault/vaults/kv-finpay-2udl",
+      "provider": "Azure",
+      "month": "2026-10-01",
+      "amount": 74.57,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.OperationalInsights/workspaces/log-finpay",
+      "provider": "Azure",
+      "month": "2025-11-01",
+      "amount": 110.45,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.OperationalInsights/workspaces/log-finpay",
+      "provider": "Azure",
+      "month": "2025-12-01",
+      "amount": 105.27,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.OperationalInsights/workspaces/log-finpay",
+      "provider": "Azure",
+      "month": "2026-01-01",
+      "amount": 111.25,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.OperationalInsights/workspaces/log-finpay",
+      "provider": "Azure",
+      "month": "2026-02-01",
+      "amount": 104.26,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.OperationalInsights/workspaces/log-finpay",
+      "provider": "Azure",
+      "month": "2026-03-01",
+      "amount": 107.39,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.OperationalInsights/workspaces/log-finpay",
+      "provider": "Azure",
+      "month": "2026-04-01",
+      "amount": 91.2,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.OperationalInsights/workspaces/log-finpay",
+      "provider": "Azure",
+      "month": "2026-05-01",
+      "amount": 95.68,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.OperationalInsights/workspaces/log-finpay",
+      "provider": "Azure",
+      "month": "2026-06-01",
+      "amount": 97.19,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.OperationalInsights/workspaces/log-finpay",
+      "provider": "Azure",
+      "month": "2026-07-01",
+      "amount": 92.04,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.OperationalInsights/workspaces/log-finpay",
+      "provider": "Azure",
+      "month": "2026-08-01",
+      "amount": 95.8,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.OperationalInsights/workspaces/log-finpay",
+      "provider": "Azure",
+      "month": "2026-09-01",
+      "amount": 92.56,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.OperationalInsights/workspaces/log-finpay",
+      "provider": "Azure",
+      "month": "2026-10-01",
+      "amount": 96.91,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.ServiceBus/namespaces/sb-finpay-2udl",
+      "provider": "Azure",
+      "month": "2025-11-01",
+      "amount": 156.5,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.ServiceBus/namespaces/sb-finpay-2udl",
+      "provider": "Azure",
+      "month": "2025-12-01",
+      "amount": 146.65,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.ServiceBus/namespaces/sb-finpay-2udl",
+      "provider": "Azure",
+      "month": "2026-01-01",
+      "amount": 146.84,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.ServiceBus/namespaces/sb-finpay-2udl",
+      "provider": "Azure",
+      "month": "2026-02-01",
+      "amount": 141.0,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.ServiceBus/namespaces/sb-finpay-2udl",
+      "provider": "Azure",
+      "month": "2026-03-01",
+      "amount": 143.09,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.ServiceBus/namespaces/sb-finpay-2udl",
+      "provider": "Azure",
+      "month": "2026-04-01",
+      "amount": 167.45,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.ServiceBus/namespaces/sb-finpay-2udl",
+      "provider": "Azure",
+      "month": "2026-05-01",
+      "amount": 156.95,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.ServiceBus/namespaces/sb-finpay-2udl",
+      "provider": "Azure",
+      "month": "2026-06-01",
+      "amount": 155.53,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.ServiceBus/namespaces/sb-finpay-2udl",
+      "provider": "Azure",
+      "month": "2026-07-01",
+      "amount": 139.6,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.ServiceBus/namespaces/sb-finpay-2udl",
+      "provider": "Azure",
+      "month": "2026-08-01",
+      "amount": 159.9,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.ServiceBus/namespaces/sb-finpay-2udl",
+      "provider": "Azure",
+      "month": "2026-09-01",
+      "amount": 139.32,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.ServiceBus/namespaces/sb-finpay-2udl",
+      "provider": "Azure",
+      "month": "2026-10-01",
+      "amount": 147.17,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Storage/storageAccounts/stfinpayanalytics2udl",
+      "provider": "Azure",
+      "month": "2025-11-01",
+      "amount": 138.34,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Storage/storageAccounts/stfinpayanalytics2udl",
+      "provider": "Azure",
+      "month": "2025-12-01",
+      "amount": 127.95,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Storage/storageAccounts/stfinpayanalytics2udl",
+      "provider": "Azure",
+      "month": "2026-01-01",
+      "amount": 125.48,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Storage/storageAccounts/stfinpayanalytics2udl",
+      "provider": "Azure",
+      "month": "2026-02-01",
+      "amount": 129.28,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Storage/storageAccounts/stfinpayanalytics2udl",
+      "provider": "Azure",
+      "month": "2026-03-01",
+      "amount": 133.98,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Storage/storageAccounts/stfinpayanalytics2udl",
+      "provider": "Azure",
+      "month": "2026-04-01",
+      "amount": 131.99,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Storage/storageAccounts/stfinpayanalytics2udl",
+      "provider": "Azure",
+      "month": "2026-05-01",
+      "amount": 115.74,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Storage/storageAccounts/stfinpayanalytics2udl",
+      "provider": "Azure",
+      "month": "2026-06-01",
+      "amount": 109.89,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Storage/storageAccounts/stfinpayanalytics2udl",
+      "provider": "Azure",
+      "month": "2026-07-01",
+      "amount": 118.31,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Storage/storageAccounts/stfinpayanalytics2udl",
+      "provider": "Azure",
+      "month": "2026-08-01",
+      "amount": 116.89,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Storage/storageAccounts/stfinpayanalytics2udl",
+      "provider": "Azure",
+      "month": "2026-09-01",
+      "amount": 115.2,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Storage/storageAccounts/stfinpayanalytics2udl",
+      "provider": "Azure",
+      "month": "2026-10-01",
+      "amount": 136.95,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Storage/storageAccounts/stfinpaydr2udl",
+      "provider": "Azure",
+      "month": "2025-11-01",
+      "amount": 126.11,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Storage/storageAccounts/stfinpaydr2udl",
+      "provider": "Azure",
+      "month": "2025-12-01",
+      "amount": 110.52,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Storage/storageAccounts/stfinpaydr2udl",
+      "provider": "Azure",
+      "month": "2026-01-01",
+      "amount": 119.98,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Storage/storageAccounts/stfinpaydr2udl",
+      "provider": "Azure",
+      "month": "2026-02-01",
+      "amount": 112.77,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Storage/storageAccounts/stfinpaydr2udl",
+      "provider": "Azure",
+      "month": "2026-03-01",
+      "amount": 127.17,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Storage/storageAccounts/stfinpaydr2udl",
+      "provider": "Azure",
+      "month": "2026-04-01",
+      "amount": 114.52,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Storage/storageAccounts/stfinpaydr2udl",
+      "provider": "Azure",
+      "month": "2026-05-01",
+      "amount": 109.14,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Storage/storageAccounts/stfinpaydr2udl",
+      "provider": "Azure",
+      "month": "2026-06-01",
+      "amount": 108.63,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Storage/storageAccounts/stfinpaydr2udl",
+      "provider": "Azure",
+      "month": "2026-07-01",
+      "amount": 117.37,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Storage/storageAccounts/stfinpaydr2udl",
+      "provider": "Azure",
+      "month": "2026-08-01",
+      "amount": 109.08,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Storage/storageAccounts/stfinpaydr2udl",
+      "provider": "Azure",
+      "month": "2026-09-01",
+      "amount": 118.01,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Storage/storageAccounts/stfinpaydr2udl",
+      "provider": "Azure",
+      "month": "2026-10-01",
+      "amount": 126.7,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Storage/storageAccounts/stfinpayfunc2udl",
+      "provider": "Azure",
+      "month": "2025-11-01",
+      "amount": 25.07,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Storage/storageAccounts/stfinpayfunc2udl",
+      "provider": "Azure",
+      "month": "2025-12-01",
+      "amount": 23.96,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Storage/storageAccounts/stfinpayfunc2udl",
+      "provider": "Azure",
+      "month": "2026-01-01",
+      "amount": 28.76,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Storage/storageAccounts/stfinpayfunc2udl",
+      "provider": "Azure",
+      "month": "2026-02-01",
+      "amount": 25.75,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Storage/storageAccounts/stfinpayfunc2udl",
+      "provider": "Azure",
+      "month": "2026-03-01",
+      "amount": 23.17,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Storage/storageAccounts/stfinpayfunc2udl",
+      "provider": "Azure",
+      "month": "2026-04-01",
+      "amount": 22.9,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Storage/storageAccounts/stfinpayfunc2udl",
+      "provider": "Azure",
+      "month": "2026-05-01",
+      "amount": 23.28,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Storage/storageAccounts/stfinpayfunc2udl",
+      "provider": "Azure",
+      "month": "2026-06-01",
+      "amount": 26.47,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Storage/storageAccounts/stfinpayfunc2udl",
+      "provider": "Azure",
+      "month": "2026-07-01",
+      "amount": 27.49,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Storage/storageAccounts/stfinpayfunc2udl",
+      "provider": "Azure",
+      "month": "2026-08-01",
+      "amount": 25.21,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Storage/storageAccounts/stfinpayfunc2udl",
+      "provider": "Azure",
+      "month": "2026-09-01",
+      "amount": 23.0,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Storage/storageAccounts/stfinpayfunc2udl",
+      "provider": "Azure",
+      "month": "2026-10-01",
+      "amount": 24.94,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Storage/storageAccounts/stfinpaykyc2udl",
+      "provider": "Azure",
+      "month": "2025-11-01",
+      "amount": 110.23,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Storage/storageAccounts/stfinpaykyc2udl",
+      "provider": "Azure",
+      "month": "2025-12-01",
+      "amount": 99.19,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Storage/storageAccounts/stfinpaykyc2udl",
+      "provider": "Azure",
+      "month": "2026-01-01",
+      "amount": 109.63,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Storage/storageAccounts/stfinpaykyc2udl",
+      "provider": "Azure",
+      "month": "2026-02-01",
+      "amount": 107.03,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Storage/storageAccounts/stfinpaykyc2udl",
+      "provider": "Azure",
+      "month": "2026-03-01",
+      "amount": 86.95,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Storage/storageAccounts/stfinpaykyc2udl",
+      "provider": "Azure",
+      "month": "2026-04-01",
+      "amount": 103.72,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Storage/storageAccounts/stfinpaykyc2udl",
+      "provider": "Azure",
+      "month": "2026-05-01",
+      "amount": 102.79,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Storage/storageAccounts/stfinpaykyc2udl",
+      "provider": "Azure",
+      "month": "2026-06-01",
+      "amount": 99.37,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Storage/storageAccounts/stfinpaykyc2udl",
+      "provider": "Azure",
+      "month": "2026-07-01",
+      "amount": 92.99,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Storage/storageAccounts/stfinpaykyc2udl",
+      "provider": "Azure",
+      "month": "2026-08-01",
+      "amount": 101.83,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Storage/storageAccounts/stfinpaykyc2udl",
+      "provider": "Azure",
+      "month": "2026-09-01",
+      "amount": 89.32,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Storage/storageAccounts/stfinpaykyc2udl",
+      "provider": "Azure",
+      "month": "2026-10-01",
+      "amount": 96.95,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Storage/storageAccounts/stfinpaypayments2udl",
+      "provider": "Azure",
+      "month": "2025-11-01",
+      "amount": 130.01,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Storage/storageAccounts/stfinpaypayments2udl",
+      "provider": "Azure",
+      "month": "2025-12-01",
+      "amount": 145.79,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Storage/storageAccounts/stfinpaypayments2udl",
+      "provider": "Azure",
+      "month": "2026-01-01",
+      "amount": 143.33,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Storage/storageAccounts/stfinpaypayments2udl",
+      "provider": "Azure",
+      "month": "2026-02-01",
+      "amount": 124.0,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Storage/storageAccounts/stfinpaypayments2udl",
+      "provider": "Azure",
+      "month": "2026-03-01",
+      "amount": 131.49,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Storage/storageAccounts/stfinpaypayments2udl",
+      "provider": "Azure",
+      "month": "2026-04-01",
+      "amount": 121.33,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Storage/storageAccounts/stfinpaypayments2udl",
+      "provider": "Azure",
+      "month": "2026-05-01",
+      "amount": 144.49,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Storage/storageAccounts/stfinpaypayments2udl",
+      "provider": "Azure",
+      "month": "2026-06-01",
+      "amount": 143.16,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Storage/storageAccounts/stfinpaypayments2udl",
+      "provider": "Azure",
+      "month": "2026-07-01",
+      "amount": 125.11,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Storage/storageAccounts/stfinpaypayments2udl",
+      "provider": "Azure",
+      "month": "2026-08-01",
+      "amount": 135.86,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Storage/storageAccounts/stfinpaypayments2udl",
+      "provider": "Azure",
+      "month": "2026-09-01",
+      "amount": 134.91,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Storage/storageAccounts/stfinpaypayments2udl",
+      "provider": "Azure",
+      "month": "2026-10-01",
+      "amount": 120.52,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Web/serverFarms/asp-finpay",
+      "provider": "Azure",
+      "month": "2025-11-01",
+      "amount": 177.31,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Web/serverFarms/asp-finpay",
+      "provider": "Azure",
+      "month": "2025-12-01",
+      "amount": 168.38,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Web/serverFarms/asp-finpay",
+      "provider": "Azure",
+      "month": "2026-01-01",
+      "amount": 177.95,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Web/serverFarms/asp-finpay",
+      "provider": "Azure",
+      "month": "2026-02-01",
+      "amount": 168.02,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Web/serverFarms/asp-finpay",
+      "provider": "Azure",
+      "month": "2026-03-01",
+      "amount": 146.81,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Web/serverFarms/asp-finpay",
+      "provider": "Azure",
+      "month": "2026-04-01",
+      "amount": 159.76,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Web/serverFarms/asp-finpay",
+      "provider": "Azure",
+      "month": "2026-05-01",
+      "amount": 147.56,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Web/serverFarms/asp-finpay",
+      "provider": "Azure",
+      "month": "2026-06-01",
+      "amount": 183.98,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Web/serverFarms/asp-finpay",
+      "provider": "Azure",
+      "month": "2026-07-01",
+      "amount": 181.96,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Web/serverFarms/asp-finpay",
+      "provider": "Azure",
+      "month": "2026-08-01",
+      "amount": 180.08,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Web/serverFarms/asp-finpay",
+      "provider": "Azure",
+      "month": "2026-09-01",
+      "amount": 159.09,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Web/serverFarms/asp-finpay",
+      "provider": "Azure",
+      "month": "2026-10-01",
+      "amount": 149.1,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Web/serverFarms/asp-finpay-func",
+      "provider": "Azure",
+      "month": "2025-11-01",
+      "amount": 54.23,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Web/serverFarms/asp-finpay-func",
+      "provider": "Azure",
+      "month": "2025-12-01",
+      "amount": 55.05,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Web/serverFarms/asp-finpay-func",
+      "provider": "Azure",
+      "month": "2026-01-01",
+      "amount": 44.77,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Web/serverFarms/asp-finpay-func",
+      "provider": "Azure",
+      "month": "2026-02-01",
+      "amount": 49.55,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Web/serverFarms/asp-finpay-func",
+      "provider": "Azure",
+      "month": "2026-03-01",
+      "amount": 44.58,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Web/serverFarms/asp-finpay-func",
+      "provider": "Azure",
+      "month": "2026-04-01",
+      "amount": 52.83,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Web/serverFarms/asp-finpay-func",
+      "provider": "Azure",
+      "month": "2026-05-01",
+      "amount": 52.89,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Web/serverFarms/asp-finpay-func",
+      "provider": "Azure",
+      "month": "2026-06-01",
+      "amount": 45.28,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Web/serverFarms/asp-finpay-func",
+      "provider": "Azure",
+      "month": "2026-07-01",
+      "amount": 49.42,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Web/serverFarms/asp-finpay-func",
+      "provider": "Azure",
+      "month": "2026-08-01",
+      "amount": 50.31,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Web/serverFarms/asp-finpay-func",
+      "provider": "Azure",
+      "month": "2026-09-01",
+      "amount": 46.91,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Web/serverFarms/asp-finpay-func",
+      "provider": "Azure",
+      "month": "2026-10-01",
+      "amount": 54.18,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Web/sites/app-finpay-onboarding-2udl",
+      "provider": "Azure",
+      "month": "2025-11-01",
+      "amount": 289.98,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Web/sites/app-finpay-onboarding-2udl",
+      "provider": "Azure",
+      "month": "2025-12-01",
+      "amount": 274.99,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Web/sites/app-finpay-onboarding-2udl",
+      "provider": "Azure",
+      "month": "2026-01-01",
+      "amount": 298.21,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Web/sites/app-finpay-onboarding-2udl",
+      "provider": "Azure",
+      "month": "2026-02-01",
+      "amount": 311.73,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Web/sites/app-finpay-onboarding-2udl",
+      "provider": "Azure",
+      "month": "2026-03-01",
+      "amount": 274.24,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Web/sites/app-finpay-onboarding-2udl",
+      "provider": "Azure",
+      "month": "2026-04-01",
+      "amount": 282.08,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Web/sites/app-finpay-onboarding-2udl",
+      "provider": "Azure",
+      "month": "2026-05-01",
+      "amount": 330.54,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Web/sites/app-finpay-onboarding-2udl",
+      "provider": "Azure",
+      "month": "2026-06-01",
+      "amount": 306.05,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Web/sites/app-finpay-onboarding-2udl",
+      "provider": "Azure",
+      "month": "2026-07-01",
+      "amount": 291.04,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Web/sites/app-finpay-onboarding-2udl",
+      "provider": "Azure",
+      "month": "2026-08-01",
+      "amount": 296.67,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Web/sites/app-finpay-onboarding-2udl",
+      "provider": "Azure",
+      "month": "2026-09-01",
+      "amount": 268.56,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Web/sites/app-finpay-onboarding-2udl",
+      "provider": "Azure",
+      "month": "2026-10-01",
+      "amount": 275.91,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Web/sites/app-finpay-payments-api-2udl",
+      "provider": "Azure",
+      "month": "2025-11-01",
+      "amount": 367.4,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Web/sites/app-finpay-payments-api-2udl",
+      "provider": "Azure",
+      "month": "2025-12-01",
+      "amount": 390.36,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Web/sites/app-finpay-payments-api-2udl",
+      "provider": "Azure",
+      "month": "2026-01-01",
+      "amount": 357.5,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Web/sites/app-finpay-payments-api-2udl",
+      "provider": "Azure",
+      "month": "2026-02-01",
+      "amount": 356.59,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Web/sites/app-finpay-payments-api-2udl",
+      "provider": "Azure",
+      "month": "2026-03-01",
+      "amount": 342.9,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Web/sites/app-finpay-payments-api-2udl",
+      "provider": "Azure",
+      "month": "2026-04-01",
+      "amount": 394.29,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Web/sites/app-finpay-payments-api-2udl",
+      "provider": "Azure",
+      "month": "2026-05-01",
+      "amount": 357.39,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Web/sites/app-finpay-payments-api-2udl",
+      "provider": "Azure",
+      "month": "2026-06-01",
+      "amount": 419.45,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Web/sites/app-finpay-payments-api-2udl",
+      "provider": "Azure",
+      "month": "2026-07-01",
+      "amount": 415.25,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Web/sites/app-finpay-payments-api-2udl",
+      "provider": "Azure",
+      "month": "2026-08-01",
+      "amount": 342.89,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Web/sites/app-finpay-payments-api-2udl",
+      "provider": "Azure",
+      "month": "2026-09-01",
+      "amount": 358.22,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Web/sites/app-finpay-payments-api-2udl",
+      "provider": "Azure",
+      "month": "2026-10-01",
+      "amount": 397.76,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Web/sites/func-finpay-fraud-2udl",
+      "provider": "Azure",
+      "month": "2025-11-01",
+      "amount": 195.9,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Web/sites/func-finpay-fraud-2udl",
+      "provider": "Azure",
+      "month": "2025-12-01",
+      "amount": 191.76,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Web/sites/func-finpay-fraud-2udl",
+      "provider": "Azure",
+      "month": "2026-01-01",
+      "amount": 232.31,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Web/sites/func-finpay-fraud-2udl",
+      "provider": "Azure",
+      "month": "2026-02-01",
+      "amount": 213.91,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Web/sites/func-finpay-fraud-2udl",
+      "provider": "Azure",
+      "month": "2026-03-01",
+      "amount": 208.94,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Web/sites/func-finpay-fraud-2udl",
+      "provider": "Azure",
+      "month": "2026-04-01",
+      "amount": 224.69,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Web/sites/func-finpay-fraud-2udl",
+      "provider": "Azure",
+      "month": "2026-05-01",
+      "amount": 225.85,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Web/sites/func-finpay-fraud-2udl",
+      "provider": "Azure",
+      "month": "2026-06-01",
+      "amount": 194.7,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Web/sites/func-finpay-fraud-2udl",
+      "provider": "Azure",
+      "month": "2026-07-01",
+      "amount": 189.98,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Web/sites/func-finpay-fraud-2udl",
+      "provider": "Azure",
+      "month": "2026-08-01",
+      "amount": 206.84,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Web/sites/func-finpay-fraud-2udl",
+      "provider": "Azure",
+      "month": "2026-09-01",
+      "amount": 206.47,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Web/sites/func-finpay-fraud-2udl",
+      "provider": "Azure",
+      "month": "2026-10-01",
+      "amount": 208.65,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "arn:aws:s3:::finpay-statements",
+      "provider": "AWS",
+      "month": "2025-11-01",
+      "amount": 176.97,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "arn:aws:s3:::finpay-statements",
+      "provider": "AWS",
+      "month": "2025-12-01",
+      "amount": 174.73,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "arn:aws:s3:::finpay-statements",
+      "provider": "AWS",
+      "month": "2026-01-01",
+      "amount": 187.24,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "arn:aws:s3:::finpay-statements",
+      "provider": "AWS",
+      "month": "2026-02-01",
+      "amount": 151.58,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "arn:aws:s3:::finpay-statements",
+      "provider": "AWS",
+      "month": "2026-03-01",
+      "amount": 163.83,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "arn:aws:s3:::finpay-statements",
+      "provider": "AWS",
+      "month": "2026-04-01",
+      "amount": 161.28,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "arn:aws:s3:::finpay-statements",
+      "provider": "AWS",
+      "month": "2026-05-01",
+      "amount": 182.31,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "arn:aws:s3:::finpay-statements",
+      "provider": "AWS",
+      "month": "2026-06-01",
+      "amount": 157.63,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "arn:aws:s3:::finpay-statements",
+      "provider": "AWS",
+      "month": "2026-07-01",
+      "amount": 155.28,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "arn:aws:s3:::finpay-statements",
+      "provider": "AWS",
+      "month": "2026-08-01",
+      "amount": 165.68,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "arn:aws:s3:::finpay-statements",
+      "provider": "AWS",
+      "month": "2026-09-01",
+      "amount": 164.61,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "arn:aws:s3:::finpay-statements",
+      "provider": "AWS",
+      "month": "2026-10-01",
+      "amount": 158.86,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "arn:aws:dynamodb:eu-central-1:000000000000:table/finpay-statements-index",
+      "provider": "AWS",
+      "month": "2025-11-01",
+      "amount": 196.49,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "arn:aws:dynamodb:eu-central-1:000000000000:table/finpay-statements-index",
+      "provider": "AWS",
+      "month": "2025-12-01",
+      "amount": 230.28,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "arn:aws:dynamodb:eu-central-1:000000000000:table/finpay-statements-index",
+      "provider": "AWS",
+      "month": "2026-01-01",
+      "amount": 206.19,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "arn:aws:dynamodb:eu-central-1:000000000000:table/finpay-statements-index",
+      "provider": "AWS",
+      "month": "2026-02-01",
+      "amount": 227.17,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "arn:aws:dynamodb:eu-central-1:000000000000:table/finpay-statements-index",
+      "provider": "AWS",
+      "month": "2026-03-01",
+      "amount": 211.57,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "arn:aws:dynamodb:eu-central-1:000000000000:table/finpay-statements-index",
+      "provider": "AWS",
+      "month": "2026-04-01",
+      "amount": 186.49,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "arn:aws:dynamodb:eu-central-1:000000000000:table/finpay-statements-index",
+      "provider": "AWS",
+      "month": "2026-05-01",
+      "amount": 234.09,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "arn:aws:dynamodb:eu-central-1:000000000000:table/finpay-statements-index",
+      "provider": "AWS",
+      "month": "2026-06-01",
+      "amount": 225.9,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "arn:aws:dynamodb:eu-central-1:000000000000:table/finpay-statements-index",
+      "provider": "AWS",
+      "month": "2026-07-01",
+      "amount": 232.57,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "arn:aws:dynamodb:eu-central-1:000000000000:table/finpay-statements-index",
+      "provider": "AWS",
+      "month": "2026-08-01",
+      "amount": 230.43,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "arn:aws:dynamodb:eu-central-1:000000000000:table/finpay-statements-index",
+      "provider": "AWS",
+      "month": "2026-09-01",
+      "amount": 226.53,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "arn:aws:dynamodb:eu-central-1:000000000000:table/finpay-statements-index",
+      "provider": "AWS",
+      "month": "2026-10-01",
+      "amount": 192.29,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "arn:aws:lambda:eu-central-1:000000000000:function:finpay-statement-renderer",
+      "provider": "AWS",
+      "month": "2025-11-01",
+      "amount": 140.05,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "arn:aws:lambda:eu-central-1:000000000000:function:finpay-statement-renderer",
+      "provider": "AWS",
+      "month": "2025-12-01",
+      "amount": 130.88,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "arn:aws:lambda:eu-central-1:000000000000:function:finpay-statement-renderer",
+      "provider": "AWS",
+      "month": "2026-01-01",
+      "amount": 137.2,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "arn:aws:lambda:eu-central-1:000000000000:function:finpay-statement-renderer",
+      "provider": "AWS",
+      "month": "2026-02-01",
+      "amount": 125.65,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "arn:aws:lambda:eu-central-1:000000000000:function:finpay-statement-renderer",
+      "provider": "AWS",
+      "month": "2026-03-01",
+      "amount": 136.45,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "arn:aws:lambda:eu-central-1:000000000000:function:finpay-statement-renderer",
+      "provider": "AWS",
+      "month": "2026-04-01",
+      "amount": 156.9,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "arn:aws:lambda:eu-central-1:000000000000:function:finpay-statement-renderer",
+      "provider": "AWS",
+      "month": "2026-05-01",
+      "amount": 132.61,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "arn:aws:lambda:eu-central-1:000000000000:function:finpay-statement-renderer",
+      "provider": "AWS",
+      "month": "2026-06-01",
+      "amount": 150.11,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "arn:aws:lambda:eu-central-1:000000000000:function:finpay-statement-renderer",
+      "provider": "AWS",
+      "month": "2026-07-01",
+      "amount": 139.02,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "arn:aws:lambda:eu-central-1:000000000000:function:finpay-statement-renderer",
+      "provider": "AWS",
+      "month": "2026-08-01",
+      "amount": 137.94,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "arn:aws:lambda:eu-central-1:000000000000:function:finpay-statement-renderer",
+      "provider": "AWS",
+      "month": "2026-09-01",
+      "amount": 155.96,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "arn:aws:lambda:eu-central-1:000000000000:function:finpay-statement-renderer",
+      "provider": "AWS",
+      "month": "2026-10-01",
+      "amount": 157.23,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "arn:aws:sqs:eu-central-1:000000000000:finpay-statement-jobs",
+      "provider": "AWS",
+      "month": "2025-11-01",
+      "amount": 58.46,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "arn:aws:sqs:eu-central-1:000000000000:finpay-statement-jobs",
+      "provider": "AWS",
+      "month": "2025-12-01",
+      "amount": 60.71,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "arn:aws:sqs:eu-central-1:000000000000:finpay-statement-jobs",
+      "provider": "AWS",
+      "month": "2026-01-01",
+      "amount": 52.91,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "arn:aws:sqs:eu-central-1:000000000000:finpay-statement-jobs",
+      "provider": "AWS",
+      "month": "2026-02-01",
+      "amount": 54.87,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "arn:aws:sqs:eu-central-1:000000000000:finpay-statement-jobs",
+      "provider": "AWS",
+      "month": "2026-03-01",
+      "amount": 64.18,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "arn:aws:sqs:eu-central-1:000000000000:finpay-statement-jobs",
+      "provider": "AWS",
+      "month": "2026-04-01",
+      "amount": 58.78,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "arn:aws:sqs:eu-central-1:000000000000:finpay-statement-jobs",
+      "provider": "AWS",
+      "month": "2026-05-01",
+      "amount": 58.27,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "arn:aws:sqs:eu-central-1:000000000000:finpay-statement-jobs",
+      "provider": "AWS",
+      "month": "2026-06-01",
+      "amount": 61.12,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "arn:aws:sqs:eu-central-1:000000000000:finpay-statement-jobs",
+      "provider": "AWS",
+      "month": "2026-07-01",
+      "amount": 51.56,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "arn:aws:sqs:eu-central-1:000000000000:finpay-statement-jobs",
+      "provider": "AWS",
+      "month": "2026-08-01",
+      "amount": 58.85,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "arn:aws:sqs:eu-central-1:000000000000:finpay-statement-jobs",
+      "provider": "AWS",
+      "month": "2026-09-01",
+      "amount": 57.73,
+      "currency": "EUR"
+    },
+    {
+      "resourceId": "arn:aws:sqs:eu-central-1:000000000000:finpay-statement-jobs",
+      "provider": "AWS",
+      "month": "2026-10-01",
+      "amount": 62.56,
+      "currency": "EUR"
+    }
+  ]
+}
