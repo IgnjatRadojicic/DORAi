@@ -37,7 +37,7 @@ object TestPostgres {
         transaction(db) {
             exec(
                 "TRUNCATE financial_entities, providers, business_functions, contracts, contract_services, " +
-                    "resources, cost_entries, suggestions RESTART IDENTITY",
+                    "resources, cost_entries, suggestions, users, refresh_tokens, invites RESTART IDENTITY",
             )
         }
         return db
