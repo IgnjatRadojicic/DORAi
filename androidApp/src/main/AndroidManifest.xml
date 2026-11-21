@@ -5,6 +5,7 @@
 
     <application
         android:label="DORAi"
+        android:networkSecurityConfig="@xml/network_security_config"
         android:theme="@android:style/Theme.Material.Light.NoActionBar">
         <activity
             android:name=".MainActivity"
