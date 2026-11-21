@@ -67,6 +67,7 @@ Rules (each with tests):
 | GET | `/register`, `/validation`, `/concentration` | viewer |
 | GET | `/roi?date=yyyy-mm-dd` (the 15 RoI templates and what is missing before export) | viewer |
 | PUT, DELETE | `/register/providers/{id}`, `/register/contracts/{id}`, `/register/functions/{id}`, `/register/rows/{template}/{id}` | reviewer |
+| POST | `/register/providers/{id}/lei-lookup` (GLEIF values as suggestions; off with `DORAI_GLEIF=off`) | reviewer |
 | PUT | `/register/entity`, and `/register/rows/B_99.01/{id}` (definitions) | admin |
 | GET | `/suggestions` | viewer |
 | POST | `/suggestions/generate`, `/suggestions/{id}/accept`, `/suggestions/{id}/reject` | reviewer |

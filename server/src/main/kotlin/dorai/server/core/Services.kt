@@ -1,5 +1,6 @@
 package dorai.server.core
 
+import dorai.server.register.lei.LeiDirectory
 import dorai.server.auth.AuthService
 
 import dorai.shared.rules.PlanChecker
@@ -27,4 +28,6 @@ data class Services(
     val exporter: RegisterExporter?,
     /** Null when auth is off (no database): every route is open, as in development. */
     val auth: AuthService? = null,
+    /** The public LEI register (GLEIF); null turns the provider lookup off (answers 501). */
+    val leiDirectory: LeiDirectory? = null,
 )

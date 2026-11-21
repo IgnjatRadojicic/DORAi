@@ -1,5 +1,6 @@
 package dorai.shared.api
 
+import dorai.shared.model.LeiLookupResult
 import kotlinx.datetime.LocalDate
 import io.ktor.http.encodeURLPathPart
 import io.ktor.client.request.delete
@@ -145,6 +146,9 @@ class DoraiApi(
     suspend fun putEntity(entity: FinancialEntity): ApiResult<FinancialEntity> = call { http.put("register/entity") { json(entity) } }
     suspend fun putProvider(provider: Provider): ApiResult<Provider> = call { http.put("register/providers/${provider.id.encodeURLPathPart()}") { json(provider) } }
     suspend fun deleteProvider(id: String): ApiResult<Unit> = call { http.delete("register/providers/${id.encodeURLPathPart()}") }
+
+    /** Looks the provider up in GLEIF; the values arrive as suggestions to review. */
+    suspend fun leiLookup(providerId: String): ApiResult<LeiLookupResult> = call { http.post("register/providers/${providerId.encodeURLPathPart()}/lei-lookup") }
     suspend fun putContract(contract: Contract): ApiResult<Contract> = call { http.put("register/contracts/${contract.id.encodeURLPathPart()}") { json(contract) } }
     suspend fun deleteContract(id: String): ApiResult<Unit> = call { http.delete("register/contracts/${id.encodeURLPathPart()}") }
     suspend fun putFunction(function: BusinessFunction): ApiResult<BusinessFunction> = call { http.put("register/functions/${function.id.encodeURLPathPart()}") { json(function) } }

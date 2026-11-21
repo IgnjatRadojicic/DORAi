@@ -169,7 +169,7 @@ object RoiTables {
                 put("B_05.01.0020", providerCodeType(p))
                 put("B_05.01.0050", confirmed(p.name))
                 if (p.name.all { it.code < 0x250 }) put("B_05.01.0060", derived(p.name))
-                put("B_05.01.0080", field(p.headquartersCountry))
+                put("B_05.01.0080", field(p.roi["B_05.01.0080"]) ?: field(p.headquartersCountry))
                 if (contracts.isNotEmpty() && costs.size == contracts.size) {
                     put("B_05.01.0100", derived(money(costs.sum())))
                     put("B_05.01.0090", derived(currency))

@@ -1,5 +1,6 @@
 package dorai.server
 
+import dorai.server.register.lei.GleifDirectory
 import dorai.server.register.referenceDate
 import dorai.shared.roi.RoiView
 import dorai.server.ai.AiConfig
@@ -89,9 +90,11 @@ fun servicesFromEnv(fingerprint: String? = null, defaultPublicUrl: String = "htt
         auth.bootstrap()
         postgresServices(db, data).copy(auth = auth).withAi(db, AiConfig.fromEnv())
     }
-    val live = LiveConfig.fromEnv() ?: return base
+    val gleif = System.getenv("DORAI_GLEIF").equals("off", ignoreCase = true)
+    val withLei = if (gleif) base else base.copy(leiDirectory = GleifDirectory(System.getenv("DORAI_GLEIF_URL") ?: GleifDirectory.DEFAULT_URL))
+    val live = LiveConfig.fromEnv() ?: return withLei
     log.info("Live scan of {}{}.", live.clouds, live.awsEndpoint?.let { " (AWS through $it)" } ?: "")
-    return base.withLiveScan(live, data.costs)
+    return withLei.withLiveScan(live, data.costs)
 }
 
 /** Fixture wiring: in-memory storage, no AI. Used by tests and by a server started without a database. */

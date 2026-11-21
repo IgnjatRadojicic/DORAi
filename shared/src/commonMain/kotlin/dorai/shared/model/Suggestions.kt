@@ -3,6 +3,10 @@ package dorai.shared.model
 import kotlinx.serialization.Serializable
 import kotlin.time.Instant
 
+/** What a GLEIF lookup for one provider did: how many suggestions it added, and why (or why none). */
+@Serializable
+data class LeiLookupResult(val added: Int, val message: String)
+
 /** An AI proposal a reviewer accepts or rejects. */
 @Serializable
 data class Suggestion(

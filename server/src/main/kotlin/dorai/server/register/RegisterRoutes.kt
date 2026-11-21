@@ -1,5 +1,8 @@
 package dorai.server.register
 
+import io.ktor.server.routing.post
+import kotlinx.coroutines.CancellationException
+import dorai.server.register.lei.LeiLookup
 import dorai.server.ApiProblem
 import dorai.server.auth.principal
 import dorai.server.core.Services
@@ -40,6 +43,21 @@ fun Route.registerRoutes(services: Services) {
         route("providers/{id}") {
             put { call.respond(editor.putProvider(call.id(), call.receive<Provider>(), call.who())) }
             delete { editor.deleteProvider(call.id()); call.respond(HttpStatusCode.NoContent) }
+            post("lei-lookup") {
+                val directory = services.leiDirectory
+                    ?: throw ApiProblem(HttpStatusCode.NotImplemented, "LEI lookup is off", "Set DORAI_GLEIF_URL or remove DORAI_GLEIF=off.")
+                val provider = services.register.register().providers.find { it.id == call.id() }
+                    ?: throw ApiProblem(HttpStatusCode.NotFound, "No such provider", "No provider ${call.id()} in the register.")
+                val outcome = try {
+                    LeiLookup(directory).lookup(provider, Clock.System.now())
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    throw ApiProblem(HttpStatusCode.BadGateway, "GLEIF lookup failed", e.message ?: e::class.simpleName)
+                }
+                services.suggestions.add(outcome.suggestions)
+                call.respond(outcome.result)
+            }
         }
         route("contracts/{id}") {
             put { call.respond(editor.putContract(call.id(), call.receive<Contract>(), call.who())) }

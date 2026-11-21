@@ -35,7 +35,8 @@ object VendorChecks {
     private fun matches(a: String, b: String) =
         a == b || (minOf(a.length, b.length) >= 4 && (a.contains(b) || b.contains(a)))
 
-    internal fun normalize(name: String): String =
+    /** Lowercase, no punctuation, no legal form (Ltd, GmbH, N.V.), so names from different sources compare. */
+    fun normalize(name: String): String =
         name.lowercase().replace(Regex("[^a-z0-9 ]"), " ").split(' ')
             .filter { it.isNotBlank() && it !in LEGAL_FORMS }.joinToString(" ")
 
