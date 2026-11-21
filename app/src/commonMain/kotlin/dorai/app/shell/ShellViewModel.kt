@@ -58,7 +58,11 @@ class ShellViewModel(
     address: String = defaultServerAddress,
     private val api: DoraiApi = DoraiApi(address, tokens = MemoryTokenStore()),
     probe: ServerProbe = ServerProbe { api.health() },
-    gateway: LoginGateway = LoginGateway { username, password -> api.login(username, password) },
+    gateway: LoginGateway = object : LoginGateway {
+        override suspend fun login(username: String, password: String) = api.login(username, password)
+        override suspend fun changePassword(username: String, currentPassword: String, newPassword: String) =
+            api.changePassword(username, currentPassword, newPassword)
+    },
 ) : ViewModel() {
     var state by mutableStateOf(ShellState())
         private set
@@ -72,7 +76,15 @@ class ShellViewModel(
 
     /** Runs the login page and opens the platform when the server accepts it. */
     suspend fun login() {
-        val session = login.login() ?: return
+        login.login()?.let(::open)
+    }
+
+    /** Sets the new password after a temporary one and opens the platform with the session it returns. */
+    suspend fun changePassword() {
+        login.changePassword()?.let(::open)
+    }
+
+    private fun open(session: Tokens) {
         workspace = Workspace(session, api)
         state = state.copy(section = Sections.INVENTORY)
     }
