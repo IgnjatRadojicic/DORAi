@@ -1,5 +1,6 @@
 package dorai.app.shell
 
+import dorai.shared.roi.RoiSpec
 import dorai.app.components.EvidenceCitation
 import dorai.app.components.FindingSeverity
 import dorai.app.components.FrontendFailure
@@ -188,9 +189,14 @@ internal fun Suggestion.toReviewSuggestion(functionNames: Map<String, String>) =
     field = when (kind) {
         SuggestionKind.ServiceType -> SuggestionField.SERVICE_TYPE
         SuggestionKind.BusinessFunction -> SuggestionField.BUSINESS_FUNCTION
+        SuggestionKind.RoiValue -> SuggestionField.ROI_VALUE
     },
     value = value,
-    valueLabel = if (kind == SuggestionKind.BusinessFunction) functionNames[value] else null,
+    valueLabel = when (kind) {
+        SuggestionKind.BusinessFunction -> functionNames[value]
+        SuggestionKind.RoiValue -> column?.let { RoiSpec.column(it)?.label(value) }
+        else -> null
+    },
     reason = reason,
     citations = citations.map { it.toEvidence() },
     confidence = confidence,
@@ -199,4 +205,5 @@ internal fun Suggestion.toReviewSuggestion(functionNames: Map<String, String>) =
         SuggestionStatus.Accepted -> ReviewStatus.ACCEPTED
         SuggestionStatus.Rejected -> ReviewStatus.REJECTED
     },
+    fieldLabel = column?.let { c -> RoiSpec.column(c)?.let { "${it.code} ${it.name}" } ?: c },
 )
