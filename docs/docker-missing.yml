@@ -3,21 +3,6 @@
 # Each item: what is missing, why it matters, who owns it, when it lands.
 # Remove an item when it is done.
 
-server:
-  - id: llm-settings
-    missing: Names of the LLM settings (endpoint, key, model, Azure OpenAI or OpenAI) for DORAI_AI=real,
-      added to deploy/.env.example and docs/deploy.md.
-    why: The AI lane decides them; until then the server only runs with the fake model.
-    owner: David
-    phase: 4
-
-  - id: regulation-ingestion
-    missing: A Flyway migration for the regulation tables (pgvector is already enabled in V1), and a way to
-      load the DORA regulation texts into them on a fresh install (command or first-start job).
-    why: AI answers need citations, so an empty vector store means every answer is "insufficient evidence".
-    owner: David
-    phase: 4
-
 image:
   - id: jvm-memory
     missing: Set JAVA_OPTS="-XX:MaxRAMPercentage=75" in the Dockerfile or compose file.
