@@ -1,0 +1,565 @@
+{
+  "entity": {
+    "lei": "FPAY007K3Q9X2M4B8T49",
+    "name": "FinPay Payments B.V.",
+    "country": "NL"
+  },
+  "providers": [
+    {
+      "id": "P1",
+      "name": "Microsoft Ireland Operations Ltd",
+      "lei": {
+        "value": "MSFT005R2W8D6N1C4H70",
+        "provenance": {
+          "label": "HumanConfirmed",
+          "updatedAt": "2026-11-11T00:00:00+00:00",
+          "reason": "Synthetic demo identity from docs/finpay.md; not a real provider LEI."
+        }
+      },
+      "headquartersCountry": {
+        "value": "IE",
+        "provenance": {
+          "label": "HumanConfirmed",
+          "updatedAt": "2026-11-11T00:00:00+00:00",
+          "reason": "FinPay demo baseline."
+        }
+      }
+    },
+    {
+      "id": "P2",
+      "name": "Amazon Web Services EMEA SARL",
+      "lei": {
+        "value": "AMZN003V9J7L5Z2P6G84",
+        "provenance": {
+          "label": "HumanConfirmed",
+          "updatedAt": "2026-11-11T00:00:00+00:00",
+          "reason": "Synthetic demo identity from docs/finpay.md; not a real provider LEI."
+        }
+      },
+      "headquartersCountry": {
+        "value": "LU",
+        "provenance": {
+          "label": "HumanConfirmed",
+          "updatedAt": "2026-11-11T00:00:00+00:00",
+          "reason": "FinPay demo baseline."
+        }
+      }
+    }
+  ],
+  "contracts": [
+    {
+      "id": "C1",
+      "providerId": "P1",
+      "startDate": "2025-01-01",
+      "endDate": null,
+      "annualCost": {
+        "value": 40000.0,
+        "provenance": {
+          "label": "HumanConfirmed",
+          "updatedAt": "2026-11-11T00:00:00+00:00",
+          "reason": "Synthetic annual estimate for the demo baseline, not actual cloud billing."
+        }
+      },
+      "currency": "EUR",
+      "services": [
+        {
+          "id": "C1-S1",
+          "contractId": "C1",
+          "serviceType": {
+            "value": "S18",
+            "provenance": {
+              "label": "HumanConfirmed",
+              "updatedAt": "2026-11-11T00:00:00+00:00",
+              "reason": "compute"
+            }
+          },
+          "functionId": {
+            "value": "F1",
+            "provenance": {
+              "label": "HumanConfirmed",
+              "updatedAt": "2026-11-11T00:00:00+00:00",
+              "reason": "FinPay demo function."
+            }
+          },
+          "dataLocation": {
+            "value": "IT",
+            "provenance": {
+              "label": "HumanConfirmed",
+              "updatedAt": "2026-11-11T00:00:00+00:00"
+            }
+          },
+          "resourceIds": [
+            "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Web/serverFarms/asp-finpay",
+            "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Web/sites/app-finpay-payments-api-2udl"
+          ]
+        },
+        {
+          "id": "C1-S2",
+          "contractId": "C1",
+          "serviceType": {
+            "value": "S18",
+            "provenance": {
+              "label": "HumanConfirmed",
+              "updatedAt": "2026-11-11T00:00:00+00:00",
+              "reason": "key management"
+            }
+          },
+          "functionId": {
+            "value": "F1",
+            "provenance": {
+              "label": "HumanConfirmed",
+              "updatedAt": "2026-11-11T00:00:00+00:00",
+              "reason": "FinPay demo function."
+            }
+          },
+          "dataLocation": {
+            "value": "DE",
+            "provenance": {
+              "label": "HumanConfirmed",
+              "updatedAt": "2026-11-11T00:00:00+00:00"
+            }
+          },
+          "resourceIds": [
+            "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.KeyVault/vaults/kv-finpay-2udl"
+          ]
+        },
+        {
+          "id": "C1-S3",
+          "contractId": "C1",
+          "serviceType": {
+            "value": "S18",
+            "provenance": {
+              "label": "HumanConfirmed",
+              "updatedAt": "2026-11-11T00:00:00+00:00",
+              "reason": "managed database"
+            }
+          },
+          "functionId": {
+            "value": "F1",
+            "provenance": {
+              "label": "HumanConfirmed",
+              "updatedAt": "2026-11-11T00:00:00+00:00",
+              "reason": "FinPay demo function."
+            }
+          },
+          "dataLocation": {
+            "value": "IT",
+            "provenance": {
+              "label": "HumanConfirmed",
+              "updatedAt": "2026-11-11T00:00:00+00:00"
+            }
+          },
+          "resourceIds": [
+            "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.DBforPostgreSQL/flexibleServers/psql-finpay-payments-2udl"
+          ]
+        },
+        {
+          "id": "C1-S4",
+          "contractId": "C1",
+          "serviceType": {
+            "value": "S18",
+            "provenance": {
+              "label": "HumanConfirmed",
+              "updatedAt": "2026-11-11T00:00:00+00:00",
+              "reason": "messaging"
+            }
+          },
+          "functionId": {
+            "value": "F1",
+            "provenance": {
+              "label": "HumanConfirmed",
+              "updatedAt": "2026-11-11T00:00:00+00:00",
+              "reason": "FinPay demo function."
+            }
+          },
+          "dataLocation": {
+            "value": "DE",
+            "provenance": {
+              "label": "HumanConfirmed",
+              "updatedAt": "2026-11-11T00:00:00+00:00"
+            }
+          },
+          "resourceIds": [
+            "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.ServiceBus/namespaces/sb-finpay-2udl"
+          ]
+        },
+        {
+          "id": "C1-S5",
+          "contractId": "C1",
+          "serviceType": {
+            "value": "S17",
+            "provenance": {
+              "label": "HumanConfirmed",
+              "updatedAt": "2026-11-11T00:00:00+00:00",
+              "reason": "storage"
+            }
+          },
+          "functionId": {
+            "value": "F1",
+            "provenance": {
+              "label": "HumanConfirmed",
+              "updatedAt": "2026-11-11T00:00:00+00:00",
+              "reason": "FinPay demo function."
+            }
+          },
+          "dataLocation": {
+            "value": "DE",
+            "provenance": {
+              "label": "HumanConfirmed",
+              "updatedAt": "2026-11-11T00:00:00+00:00"
+            }
+          },
+          "resourceIds": [
+            "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Storage/storageAccounts/stfinpaypayments2udl"
+          ]
+        },
+        {
+          "id": "C1-S6",
+          "contractId": "C1",
+          "serviceType": {
+            "value": "S17",
+            "provenance": {
+              "label": "HumanConfirmed",
+              "updatedAt": "2026-11-11T00:00:00+00:00",
+              "reason": "storage"
+            }
+          },
+          "functionId": {
+            "value": "F1",
+            "provenance": {
+              "label": "HumanConfirmed",
+              "updatedAt": "2026-11-11T00:00:00+00:00",
+              "reason": "FinPay demo function."
+            }
+          },
+          "dataLocation": {
+            "value": "SE",
+            "provenance": {
+              "label": "HumanConfirmed",
+              "updatedAt": "2026-11-11T00:00:00+00:00"
+            }
+          },
+          "resourceIds": [
+            "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Storage/storageAccounts/stfinpaydr2udl"
+          ]
+        },
+        {
+          "id": "C1-S7",
+          "contractId": "C1",
+          "serviceType": {
+            "value": "S18",
+            "provenance": {
+              "label": "HumanConfirmed",
+              "updatedAt": "2026-11-11T00:00:00+00:00",
+              "reason": "compute"
+            }
+          },
+          "functionId": {
+            "value": "F2",
+            "provenance": {
+              "label": "HumanConfirmed",
+              "updatedAt": "2026-11-11T00:00:00+00:00",
+              "reason": "FinPay demo function."
+            }
+          },
+          "dataLocation": {
+            "value": "IT",
+            "provenance": {
+              "label": "HumanConfirmed",
+              "updatedAt": "2026-11-11T00:00:00+00:00"
+            }
+          },
+          "resourceIds": [
+            "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Web/sites/app-finpay-onboarding-2udl"
+          ]
+        },
+        {
+          "id": "C1-S8",
+          "contractId": "C1",
+          "serviceType": {
+            "value": "S17",
+            "provenance": {
+              "label": "HumanConfirmed",
+              "updatedAt": "2026-11-11T00:00:00+00:00",
+              "reason": "storage"
+            }
+          },
+          "functionId": {
+            "value": "F2",
+            "provenance": {
+              "label": "HumanConfirmed",
+              "updatedAt": "2026-11-11T00:00:00+00:00",
+              "reason": "FinPay demo function."
+            }
+          },
+          "dataLocation": {
+            "value": "DE",
+            "provenance": {
+              "label": "HumanConfirmed",
+              "updatedAt": "2026-11-11T00:00:00+00:00"
+            }
+          },
+          "resourceIds": [
+            "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Storage/storageAccounts/stfinpaykyc2udl"
+          ]
+        },
+        {
+          "id": "C1-S9",
+          "contractId": "C1",
+          "serviceType": {
+            "value": "S18",
+            "provenance": {
+              "label": "HumanConfirmed",
+              "updatedAt": "2026-11-11T00:00:00+00:00",
+              "reason": "AI"
+            }
+          },
+          "functionId": {
+            "value": "F3",
+            "provenance": {
+              "label": "HumanConfirmed",
+              "updatedAt": "2026-11-11T00:00:00+00:00",
+              "reason": "FinPay demo function."
+            }
+          },
+          "dataLocation": {
+            "value": "SE",
+            "provenance": {
+              "label": "HumanConfirmed",
+              "updatedAt": "2026-11-11T00:00:00+00:00"
+            }
+          },
+          "resourceIds": [
+            "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.CognitiveServices/accounts/lang-finpay-fraud-2udl"
+          ]
+        },
+        {
+          "id": "C1-S10",
+          "contractId": "C1",
+          "serviceType": {
+            "value": "S18",
+            "provenance": {
+              "label": "HumanConfirmed",
+              "updatedAt": "2026-11-11T00:00:00+00:00",
+              "reason": "compute"
+            }
+          },
+          "functionId": {
+            "value": "F3",
+            "provenance": {
+              "label": "HumanConfirmed",
+              "updatedAt": "2026-11-11T00:00:00+00:00",
+              "reason": "FinPay demo function."
+            }
+          },
+          "dataLocation": {
+            "value": "SE",
+            "provenance": {
+              "label": "HumanConfirmed",
+              "updatedAt": "2026-11-11T00:00:00+00:00"
+            }
+          },
+          "resourceIds": [
+            "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Web/serverFarms/asp-finpay-func",
+            "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Web/sites/func-finpay-fraud-2udl"
+          ]
+        },
+        {
+          "id": "C1-S11",
+          "contractId": "C1",
+          "serviceType": {
+            "value": "S17",
+            "provenance": {
+              "label": "HumanConfirmed",
+              "updatedAt": "2026-11-11T00:00:00+00:00",
+              "reason": "storage"
+            }
+          },
+          "functionId": {
+            "value": "F3",
+            "provenance": {
+              "label": "HumanConfirmed",
+              "updatedAt": "2026-11-11T00:00:00+00:00",
+              "reason": "FinPay demo function."
+            }
+          },
+          "dataLocation": {
+            "value": "DE",
+            "provenance": {
+              "label": "HumanConfirmed",
+              "updatedAt": "2026-11-11T00:00:00+00:00"
+            }
+          },
+          "resourceIds": [
+            "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-finpay-prod/providers/Microsoft.Storage/storageAccounts/stfinpayfunc2udl"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "C2",
+      "providerId": "P2",
+      "startDate": "2025-01-01",
+      "endDate": null,
+      "annualCost": {
+        "value": 7000.0,
+        "provenance": {
+          "label": "HumanConfirmed",
+          "updatedAt": "2026-11-11T00:00:00+00:00",
+          "reason": "Synthetic annual estimate for the demo baseline, not actual cloud billing."
+        }
+      },
+      "currency": "EUR",
+      "services": [
+        {
+          "id": "C2-S1",
+          "contractId": "C2",
+          "serviceType": {
+            "value": "S17",
+            "provenance": {
+              "label": "HumanConfirmed",
+              "updatedAt": "2026-11-11T00:00:00+00:00",
+              "reason": "storage"
+            }
+          },
+          "functionId": {
+            "value": "F4",
+            "provenance": {
+              "label": "HumanConfirmed",
+              "updatedAt": "2026-11-11T00:00:00+00:00",
+              "reason": "FinPay demo function."
+            }
+          },
+          "dataLocation": {
+            "value": "DE",
+            "provenance": {
+              "label": "HumanConfirmed",
+              "updatedAt": "2026-11-11T00:00:00+00:00"
+            }
+          },
+          "resourceIds": [
+            "arn:aws:s3:::finpay-statements"
+          ]
+        },
+        {
+          "id": "C2-S2",
+          "contractId": "C2",
+          "serviceType": {
+            "value": "S18",
+            "provenance": {
+              "label": "HumanConfirmed",
+              "updatedAt": "2026-11-11T00:00:00+00:00",
+              "reason": "serverless"
+            }
+          },
+          "functionId": {
+            "value": "F4",
+            "provenance": {
+              "label": "HumanConfirmed",
+              "updatedAt": "2026-11-11T00:00:00+00:00",
+              "reason": "FinPay demo function."
+            }
+          },
+          "dataLocation": {
+            "value": "DE",
+            "provenance": {
+              "label": "HumanConfirmed",
+              "updatedAt": "2026-11-11T00:00:00+00:00"
+            }
+          },
+          "resourceIds": [
+            "arn:aws:lambda:eu-central-1:000000000000:function:finpay-statement-renderer"
+          ]
+        },
+        {
+          "id": "C2-S3",
+          "contractId": "C2",
+          "serviceType": {
+            "value": "S18",
+            "provenance": {
+              "label": "HumanConfirmed",
+              "updatedAt": "2026-11-11T00:00:00+00:00",
+              "reason": "queue"
+            }
+          },
+          "functionId": {
+            "value": "F4",
+            "provenance": {
+              "label": "HumanConfirmed",
+              "updatedAt": "2026-11-11T00:00:00+00:00",
+              "reason": "FinPay demo function."
+            }
+          },
+          "dataLocation": {
+            "value": "DE",
+            "provenance": {
+              "label": "HumanConfirmed",
+              "updatedAt": "2026-11-11T00:00:00+00:00"
+            }
+          },
+          "resourceIds": [
+            "arn:aws:sqs:eu-central-1:000000000000:finpay-statement-jobs"
+          ]
+        },
+        {
+          "id": "C2-S4",
+          "contractId": "C2",
+          "serviceType": {
+            "value": "S18",
+            "provenance": {
+              "label": "HumanConfirmed",
+              "updatedAt": "2026-11-11T00:00:00+00:00",
+              "reason": "NoSQL"
+            }
+          },
+          "functionId": {
+            "value": "F4",
+            "provenance": {
+              "label": "HumanConfirmed",
+              "updatedAt": "2026-11-11T00:00:00+00:00",
+              "reason": "FinPay demo function."
+            }
+          },
+          "dataLocation": {
+            "value": "DE",
+            "provenance": {
+              "label": "HumanConfirmed",
+              "updatedAt": "2026-11-11T00:00:00+00:00"
+            }
+          },
+          "resourceIds": [
+            "arn:aws:dynamodb:eu-central-1:000000000000:table/finpay-statements-index"
+          ]
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "id": "F1",
+      "name": "Card payment processing",
+      "isCritical": true
+    },
+    {
+      "id": "F2",
+      "name": "Customer onboarding / KYC",
+      "isCritical": true
+    },
+    {
+      "id": "F3",
+      "name": "Fraud detection",
+      "isCritical": true
+    },
+    {
+      "id": "F4",
+      "name": "Customer statements & reporting",
+      "isCritical": false
+    },
+    {
+      "id": "F5",
+      "name": "Internal analytics",
+      "isCritical": false
+    }
+  ],
+  "asOf": "2026-11-11T00:00:00+00:00"
+}
