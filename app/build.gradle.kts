@@ -26,11 +26,13 @@ kotlin {
             implementation(libs.compose.material3)
             implementation(libs.compose.ui.tooling.preview)
             implementation(libs.androidx.lifecycle.viewmodel.compose)
+            implementation(libs.datastore.preferences)
         }
         named("desktopMain") {
             dependencies {
                 implementation(compose.desktop.currentOs)
                 implementation(libs.kotlinx.coroutines.swing)
+                implementation(libs.java.keyring)
             }
         }
         commonTest.dependencies {

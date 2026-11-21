@@ -6,6 +6,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import dorai.shared.Dorai
 import dorai.shared.api.ApiResult
+import dorai.shared.api.CertificateProblem
 import dorai.shared.model.RedeemResponse
 import kotlinx.coroutines.CancellationException
 
@@ -54,10 +55,11 @@ class InviteViewModel(private val gateway: InviteGateway) : ViewModel() {
         val error = try {
             when (val result = gateway.redeem(code)) {
                 is ApiResult.Success -> if (result.value.app == Dorai.NAME) null else NOT_DORAI
-                is ApiResult.Failure -> when (result.problem.status) {
-                    0 -> UNREACHABLE
+                is ApiResult.Failure -> when {
+                    result.problem.type == CertificateProblem.CHANGED -> CERTIFICATE_CHANGED
+                    result.problem.status == 0 -> UNREACHABLE
                     // The server writes these for users, for example "Ask your administrator for a new link."
-                    404, 429 -> result.problem.detail ?: USED_OR_EXPIRED
+                    result.problem.status == 404 || result.problem.status == 429 -> result.problem.detail ?: USED_OR_EXPIRED
                     else -> "The invite could not be used. The server answered with HTTP ${result.problem.status}."
                 }
             }
@@ -75,6 +77,6 @@ class InviteViewModel(private val gateway: InviteGateway) : ViewModel() {
         const val UNREACHABLE = "The server in this invite link did not answer. Check the connection and try again."
         const val USED_OR_EXPIRED = "This invite link was already used or has expired. Ask your administrator for a new one."
         const val NOT_DORAI = "The server in this invite link is not a DORAi server."
-        const val SECURE_NOT_READY = "This app version cannot open secure (https) invite links yet. Ask your administrator."
+        const val CERTIFICATE_CHANGED = "The server's certificate is not the one in your invite link. Ask your administrator for a new invite link."
     }
 }

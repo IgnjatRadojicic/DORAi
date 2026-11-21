@@ -4,7 +4,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import dorai.app.connect.InviteViewModel
 import dorai.shared.api.ApiResult
+import dorai.shared.api.CertificateProblem
 import dorai.shared.model.LoginResponse
 import dorai.shared.model.Problem
 import dorai.shared.model.Tokens
@@ -140,7 +142,9 @@ class LoginViewModel(private val gateway: LoginGateway) : ViewModel() {
         UNREACHABLE
     }
 
-    private fun Problem.toMessage(unauthorized: String): String = when (status) {
+    private fun Problem.toMessage(unauthorized: String): String = if (type == CertificateProblem.CHANGED) {
+        InviteViewModel.CERTIFICATE_CHANGED
+    } else when (status) {
         0 -> UNREACHABLE
         // The server writes these for users: wrong password, lockout time, or which password rule failed.
         400 -> detail ?: "The new password was not accepted."

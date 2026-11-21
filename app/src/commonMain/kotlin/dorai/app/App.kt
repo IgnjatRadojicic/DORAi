@@ -21,6 +21,7 @@ import dorai.app.findings.FindingsRoute
 import dorai.app.inventory.InventoryRoute
 import dorai.app.review.ReviewRoute
 import dorai.app.shell.AccountBar
+import dorai.app.shell.AppStorage
 import dorai.app.shell.LogoutButton
 import dorai.app.shell.Sections
 import dorai.app.shell.ShellViewModel
@@ -36,18 +37,24 @@ class OpenedInvite(val link: String)
  * Root of the app, shared by desktop and Android.
  * [chrome] is drawn above everything inside the theme, for example the desktop title bar.
  * [invite] is a `dorai://connect` link the platform opened the app with (Android deep link).
+ * [storage] keeps the server, settings and session between starts; the platform builds it.
  */
 @Composable
-fun App(chrome: @Composable () -> Unit = {}, invite: OpenedInvite? = null) {
-    val shell = viewModel { ShellViewModel() }
+fun App(chrome: @Composable () -> Unit = {}, invite: OpenedInvite? = null, storage: AppStorage = AppStorage.inMemory()) {
+    val shell = viewModel { ShellViewModel(storage = storage) }
+    LaunchedEffect(shell) { shell.restore() }
     LaunchedEffect(shell) { shell.connection.watch() }
-    LaunchedEffect(invite) { invite?.let { shell.openInvite(it.link) } }
+    // After restore, so the saved server never replaces the one in the link.
+    LaunchedEffect(invite, shell.ready) { if (shell.ready) invite?.let { shell.openInvite(it.link) } }
     val scope = rememberCoroutineScope()
     DoraiTheme(shell.state.theme, shell.state.language) {
         Column(Modifier.fillMaxSize()) {
             chrome()
             val workspace = shell.workspace
-            if (workspace == null) {
+            if (!shell.ready) {
+                // A moment while the saved session is read; neither page flashes before it.
+                Box(Modifier.weight(1f).fillMaxSize())
+            } else if (workspace == null) {
                 val login = shell.login
                 LoginScreen(
                     state = login.state,

@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import dorai.app.auth.LoginGateway
+import dorai.app.auth.SavedTokenStore
 import dorai.app.auth.LoginViewModel
 import dorai.app.components.AppLanguage
 import dorai.app.components.WorkspaceSection
@@ -12,6 +13,8 @@ import dorai.app.components.matijaSections
 import dorai.app.connect.ConnectionViewModel
 import dorai.app.connect.InviteGateway
 import dorai.app.connect.InviteViewModel
+import dorai.app.connect.SavedSettings
+import dorai.app.connect.ServerLink
 import dorai.app.connect.ServerProbe
 import dorai.app.connect.defaultServerAddress
 import dorai.app.findings.FindingsViewModel
@@ -21,9 +24,11 @@ import dorai.app.theme.ThemeMode
 import dorai.app.validation.ValidationViewModel
 import dorai.app.roi.RoiViewModel
 import dorai.shared.api.DoraiApi
-import dorai.shared.api.MemoryTokenStore
+import dorai.shared.api.TokenStore
 import dorai.shared.model.Role
 import dorai.shared.model.Tokens
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 object Sections {
     const val INVENTORY = "inventory"
@@ -59,13 +64,16 @@ class Workspace(val session: Tokens, api: DoraiApi) {
 }
 
 /**
- * Root state of the app: server, connection, login, section, theme and language. Kept in memory for now.
- * The server starts as the development address and changes when an invite link is opened.
+ * Root state of the app: server, connection, login, section, theme and language.
+ * [restore] puts back what [storage] kept from the last run, including a session that is still valid;
+ * until then the server is [address] (the development address). An invite link changes it.
  * Tests replace [openApi] and the server calls ([probe], [gateway], [invites]); by default they go to the current server.
  */
 class ShellViewModel(
     address: String = defaultServerAddress,
-    private val openApi: (String) -> DoraiApi = { DoraiApi(it, tokens = MemoryTokenStore()) },
+    private val storage: AppStorage = AppStorage.inMemory(),
+    private val openApi: (ServerLink, TokenStore) -> DoraiApi =
+        { server, tokens -> DoraiApi(server.address, tokens = tokens, fingerprint = server.fingerprint) },
     probe: ServerProbe? = null,
     gateway: LoginGateway? = null,
     invites: InviteGateway? = null,
@@ -77,8 +85,18 @@ class ShellViewModel(
     var workspace by mutableStateOf<Workspace?>(null)
         private set
 
+    /** False until [restore] has run; the app shows neither login nor workspace before. */
+    var ready by mutableStateOf(false)
+        private set
+
+    /** Forgetting the tokens (logout, or a refresh the server refused) always ends on the login page. */
+    private val tokens = SavedTokenStore(storage.tokens).apply { onCleared = { workspace = null } }
+
+    private var server = ServerLink(address)
+    private var saved = SavedSettings()
+
     /** Client for the current server; replaced when an invite link names another one. */
-    private var api: DoraiApi = openApi(address)
+    private var api: DoraiApi = openApi(server, tokens)
 
     val connection = ConnectionViewModel(address, probe ?: ServerProbe { api.health() })
     val login = LoginViewModel(gateway ?: object : LoginGateway {
@@ -95,24 +113,45 @@ class ShellViewModel(
     suspend fun openInvite(text: String = invite.state.text) {
         if (invite.state.busy) return
         val link = invite.read(text) ?: return
-        if (link.fingerprint != null) {
-            // Certificate pinning: DoraiApi must trust only the certificate with this SHA-256 (shared lane, Ignjat).
-            // Until it can, a secure link is refused instead of trusting any certificate.
-            invite.fail(InviteViewModel.SECURE_NOT_READY, text)
-            return
-        }
         logout()
-        switchServer(link.server)
+        switchServer(ServerLink(link.server, link.fingerprint))
+        remember(saved.copy(server = server, username = null))
         login.reset()
         invite.redeem(link.code)
         connection.check()
     }
 
-    private fun switchServer(address: String) {
-        if (address == connection.address) return
+    /**
+     * Puts back the last run: server, theme, language and username, and opens the workspace straight away
+     * when the saved session can still be refreshed. The first call refreshes it if needed; a refused
+     * refresh returns to the login page.
+     */
+    suspend fun restore(now: Instant = Clock.System.now()) {
+        if (ready) return
+        saved = storage.settings.load()
+        saved.server?.let(::switchServer)
+        state = state.copy(theme = saved.theme ?: state.theme, language = saved.language ?: state.language)
+        saved.username?.let(login::onUsernameChange)
+        val session = tokens.load()
+        if (session != null) {
+            if (session.refreshExpiresAt > now) open(session) else tokens.save(null)
+        }
+        ready = true
+    }
+
+    private fun switchServer(next: ServerLink) {
+        if (next == server) return
         api.close()
-        api = openApi(address)
-        connection.switchTo(address)
+        server = next
+        api = openApi(next, tokens)
+        connection.switchTo(next.address)
+    }
+
+    /** Saves in the background, only when something changed. */
+    private fun remember(next: SavedSettings) {
+        if (next == saved) return
+        saved = next
+        storage.settings.save(next)
     }
 
     /** Runs the login page and opens the platform when the server accepts it. */
@@ -128,6 +167,7 @@ class ShellViewModel(
     private fun open(session: Tokens) {
         workspace = Workspace(session, api)
         state = state.copy(section = Sections.INVENTORY)
+        remember(saved.copy(server = server, username = session.username))
     }
 
     /** Back to the login page at once, then ends the session on the server. */
@@ -141,9 +181,15 @@ class ShellViewModel(
         if (shellSections.any { it.id == section && it.enabled }) state = state.copy(section = section)
     }
 
-    fun setTheme(theme: ThemeMode) { state = state.copy(theme = theme) }
+    fun setTheme(theme: ThemeMode) {
+        state = state.copy(theme = theme)
+        remember(saved.copy(theme = theme))
+    }
 
-    fun setLanguage(language: AppLanguage) { state = state.copy(language = language) }
+    fun setLanguage(language: AppLanguage) {
+        state = state.copy(language = language)
+        remember(saved.copy(language = language))
+    }
 
     override fun onCleared() = api.close()
 }
