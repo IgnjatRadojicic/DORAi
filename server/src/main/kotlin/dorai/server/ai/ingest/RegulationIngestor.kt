@@ -9,7 +9,6 @@ import kotlinx.coroutines.withContext
 import org.jetbrains.exposed.v1.core.notInList
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.batchInsert
-import org.jetbrains.exposed.v1.jdbc.deleteAll
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
@@ -26,6 +25,8 @@ class RegulationIngestor(private val database: Database, private val embedder: T
     private val running = Mutex()
 
     suspend fun ingest(chunks: List<RegulationChunk>): Result = running.withLock {
+        // An empty corpus means reading or chunking broke; keep what is stored instead of wiping it.
+        require(chunks.isNotEmpty()) { "No regulation chunks to ingest; stored chunks are kept" }
         val stored = chunks
             .map { it to RegulationChunker.sha256("${embedder.modelId}\n${it.contentHash}") }
             .distinctBy { it.second }
@@ -34,11 +35,7 @@ class RegulationIngestor(private val database: Database, private val embedder: T
 
         val (removed, existing) = withContext(Dispatchers.IO) {
             transaction(database) {
-                val removed = if (hashes.isEmpty()) {
-                    table.deleteAll()
-                } else {
-                    table.deleteWhere { table.contentHash notInList hashes }
-                }
+                val removed = table.deleteWhere { table.contentHash notInList hashes }
                 removed to table.select(table.contentHash).map { it[table.contentHash] }.toSet()
             }
         }
