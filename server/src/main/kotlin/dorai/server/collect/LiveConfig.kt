@@ -15,8 +15,14 @@ data class LiveConfig(
     val costCurrency: String = "EUR",
     /** Units of [costCurrency] per one unit of the key currency, e.g. USD to 0.92. */
     val exchangeRates: Map<String, Double> = emptyMap(),
+    /** Identity providers whose SaaS apps the scan lists (DORAI_APPS: entra, okta). */
+    val apps: Set<App> = emptySet(),
+    /** Okta org URL (DORAI_OKTA_URL); the token comes from DORAI_OKTA_TOKEN at wiring time. */
+    val oktaUrl: String? = null,
 ) {
     enum class Cloud { Azure, Aws }
+
+    enum class App { Entra, Okta }
 
     companion object {
         const val DEFAULT_AWS_REGION = "eu-central-1"
@@ -52,6 +58,16 @@ data class LiveConfig(
                 key.removePrefix("DORAI_FX_").uppercase() to rate
             }.toMap()
 
+            val apps = list("DORAI_APPS").map {
+                when (it.lowercase()) {
+                    "entra" -> App.Entra
+                    "okta" -> App.Okta
+                    else -> error("DORAI_APPS lists '$it'; known identity providers are entra and okta.")
+                }
+            }.toSet()
+            val okta = get("DORAI_OKTA_URL")
+            require(App.Okta !in apps || (okta != null && okta.startsWith("https://"))) { "DORAI_APPS has okta, so DORAI_OKTA_URL must be the https URL of the Okta org." }
+
             return LiveConfig(
                 clouds = clouds,
                 azureSubscriptions = list("DORAI_AZURE_SUBSCRIPTIONS"),
@@ -60,6 +76,8 @@ data class LiveConfig(
                 awsEndpoint = get("DORAI_AWS_ENDPOINT"),
                 costCurrency = currency,
                 exchangeRates = rates,
+                apps = apps,
+                oktaUrl = okta,
             )
         }
     }

@@ -24,7 +24,7 @@ data class RoiView(
         fun of(register: Register, resources: List<Resource>, referenceDate: LocalDate, vendors: List<VendorSpend> = emptyList()): RoiView {
             val report = RoiTables.build(register, resources, referenceDate)
             val issues = RoiReadiness.check(report, register) + ResilienceChecks.check(register, resources) +
-                VendorChecks.check(register, vendors)
+                VendorChecks.check(register, vendors) + VendorChecks.checkApps(register, resources)
             val errors = issues.count { it.severity == ValidationSeverity.Error }
             return RoiView(
                 referenceDate = referenceDate,

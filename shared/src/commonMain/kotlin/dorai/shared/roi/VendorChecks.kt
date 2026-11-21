@@ -1,6 +1,8 @@
 package dorai.shared.roi
 
 import dorai.shared.model.Register
+import dorai.shared.model.Resource
+import dorai.shared.model.ServiceType
 import dorai.shared.model.ValidationIssue
 import dorai.shared.model.ValidationSeverity
 import kotlinx.serialization.Serializable
@@ -16,9 +18,7 @@ data class VendorSpend(val seller: String, val cloud: String, val amount: Double
 object VendorChecks {
 
     fun check(register: Register, vendors: List<VendorSpend>): List<ValidationIssue> {
-        val known = register.providers.flatMap { p ->
-            listOfNotNull(p.name, p.roi["B_05.01.0050"]?.value, p.roi["B_05.01.0060"]?.value)
-        }.map(::normalize).filter { it.isNotEmpty() }
+        val known = knownNames(register)
         return vendors.groupBy { it.seller to it.cloud }
             .filter { (key, _) -> val n = normalize(key.first); n.isNotEmpty() && known.none { matches(it, n) } }
             .map { (key, rows) ->
@@ -31,6 +31,29 @@ object VendorChecks {
                 )
             }
     }
+
+    /** Tag on a SaaS app resource naming who publishes it (set by the identity-provider scan). */
+    const val PUBLISHER_TAG = "dorai-publisher"
+
+    /** SaaS apps the firm signs in to (Entra ID, Okta) whose publisher no provider in the register matches. */
+    fun checkApps(register: Register, resources: List<Resource>): List<ValidationIssue> {
+        val known = knownNames(register)
+        return resources.filter { it.serviceType == ServiceType.S19 }
+            .mapNotNull { r -> r.tags[PUBLISHER_TAG]?.let { it to r } }
+            .groupBy({ it.first }, { it.second })
+            .filter { (publisher, _) -> val n = normalize(publisher); n.isNotEmpty() && known.none { matches(it, n) } }
+            .map { (publisher, apps) ->
+                ValidationIssue(
+                    ValidationSeverity.Warning, "unregistered-saas", "B_05.01", "B_05.01.0050",
+                    "Staff sign in to ${apps.joinToString { it.name }} from $publisher, which is not a provider in the register (DORA Art. 28(3)).",
+                    publisher,
+                )
+            }
+    }
+
+    private fun knownNames(register: Register) = register.providers.flatMap { p ->
+        listOfNotNull(p.name, p.roi["B_05.01.0050"]?.value, p.roi["B_05.01.0060"]?.value)
+    }.map(::normalize).filter { it.isNotEmpty() }
 
     private fun matches(a: String, b: String) =
         a == b || (minOf(a.length, b.length) >= 4 && (a.contains(b) || b.contains(a)))

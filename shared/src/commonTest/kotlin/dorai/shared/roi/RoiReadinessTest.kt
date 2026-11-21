@@ -145,3 +145,17 @@ class VendorChecksTest {
         assertTrue(VendorChecks.check(Roi.register(), listOf(VendorSpend("Microsoft Ireland Operations, Limited", "Azure", 10.0, "EUR"))).isEmpty())
     }
 }
+
+class SaasAppChecksTest {
+    private fun app(name: String, publisher: String) = Roi.resource(name, "saas/app", "IE").copy(
+        serviceType = dorai.shared.model.ServiceType.S19, tags = mapOf(VendorChecks.PUBLISHER_TAG to publisher),
+    )
+
+    @Test
+    fun `apps from an unregistered publisher are one warning per publisher`() {
+        val issues = VendorChecks.checkApps(Roi.register(), listOf(app("Slack", "Slack Technologies"), app("Slack Huddles", "Slack Technologies"), app("Teams", "Microsoft Ireland Operations")))
+        val issue = issues.single()
+        assertEquals("unregistered-saas", issue.code)
+        assertTrue("Slack, Slack Huddles" in issue.message, issue.message)
+    }
+}
