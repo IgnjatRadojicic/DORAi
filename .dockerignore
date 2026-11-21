@@ -1,0 +1,15 @@
+.git
+.github
+.gradle
+.kotlin
+.idea
+.claude
+**/build
+**/.gradle
+local.properties
+*.jks
+*.keystore
+*.p12
+.env
+*.env
+deploy/backups

@@ -19,3 +19,7 @@ One line each: date, who, decision, why. Newest at the bottom.
 - 2026-11-21, Ignjat: File dialogs with FileKit. Why: one Compose API for desktop and Android, no platform code.
 - 2026-11-21, Ignjat: Server generates a self-signed TLS keystore on first start (ktor-network-tls-certificates) unless one is configured. Why: zero setup for firms and the demo; the fingerprint goes in the invite link.
 - 2026-11-21, Ignjat: ViewModel and Flow tests use Turbine. Why: short, readable assertions on StateFlow emissions.
+- 2026-11-21, Ignjat: Firms run the server with Docker Compose (`deploy/`); CI publishes the image to GHCR on version tags for amd64 and arm64. Why: firms pull a tagged image and need no source or JDK.
+- 2026-11-21, Ignjat: Server image based on eclipse-temurin:21-jre. Why: official, patched, has a shell for debugging and the health check.
+- 2026-11-21, Ignjat: The server terminates TLS itself on 8443 with the keystore in a Docker volume; plain HTTP only on the host. Why: the pinned fingerprint is exactly the server's, no proxy to configure.
+- 2026-11-21, Ignjat: A compose backup service runs pg_dump nightly and keeps 14 days. Why: backups happen by default; firms copy the folder offsite.

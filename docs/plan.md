@@ -105,5 +105,6 @@ and the server runs without auth in development.
 - Server: `./gradlew :server:run`. Config through environment variables `DORAI_*`
   (port, database URL, data source fixtures or live, AI fake or real). Defaults are fixtures and a fake AI,
   so nobody needs cloud or model keys to work.
-- Database: PostgreSQL 16 with pgvector in Docker (compose file comes with phase 2).
+- Database: PostgreSQL 16 with pgvector in Docker: `docker compose up -d db` in `deploy/`
+  (copy `.env.example` to `.env` first). Running the whole server for a firm: `docs/deploy.md`.
 - Android emulator reaches the host machine at `http://10.0.2.2:8080`.
