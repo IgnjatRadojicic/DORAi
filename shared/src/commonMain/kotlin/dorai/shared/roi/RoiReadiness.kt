@@ -50,7 +50,7 @@ object RoiReadiness {
         RoiNeed.IfAdditionalCode -> row.value("B_05.01.0030") != null
         RoiNeed.IfAmountReported -> row.value("B_05.01.0100") != null
         RoiNeed.IfDirectProvider -> row.facts.directProvider
-        // Blank is how the provider says it is its own ultimate parent: set it to its own code, export leaves it out.
+        // Blank is how the provider says it is its own ultimate parent; the export repeats its own code (EBA FAQ Q99).
         RoiNeed.IfNotUltimateParent -> false
         RoiNeed.IfRankAboveOne -> (row.value("B_05.02.0050")?.toIntOrNull() ?: 1) > 1
         RoiNeed.IfHardToSubstitute -> row.value("B_07.01.0050") in setOf("1", "2")

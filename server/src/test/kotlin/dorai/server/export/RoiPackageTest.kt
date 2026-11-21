@@ -116,4 +116,15 @@ class RoiPackageTest {
         val lines = files(written().bytes).entries.single { it.key.endsWith("b_02.02.csv") }.value.trimEnd().split("\r\n")
         assertEquals(lines.size, lines.toSet().size)
     }
+
+    @Test
+    fun `blank key columns are filled as the EBA FAQ asks`() {
+        assertEquals("eba_GA:qx2007", RoiPackage.filled("B_02.02", mapOf("c0150" to "", "c0160" to "eba_GA:DE"))["c0150"])
+        assertEquals("eba_GA:DE", RoiPackage.filled("B_02.02", mapOf("c0150" to "", "c0160" to "eba_GA:DE"))["c0160"])
+        assertEquals("Not Applicable", RoiPackage.filled("B_04.01", mapOf("c0040" to ""))["c0040"])
+        assertEquals("P1", RoiPackage.filled("B_05.02", mapOf("c0030" to "P1", "c0060" to ""))["c0060"])
+        val own = RoiPackage.filled("B_05.01", mapOf("c0010" to "P1", "c0020" to "eba_qCO:qx2000", "c0110" to "", "c0120" to ""))
+        assertEquals("P1" to "eba_qCO:qx2000", own["c0110"] to own["c0120"])
+        assertEquals("Not Applicable", RoiPackage.filled("B_02.01", mapOf("c0030" to ""))["c0030"])
+    }
 }

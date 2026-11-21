@@ -40,7 +40,10 @@ object RoiPackage {
                 }
                 val columns = t.template.columns
                 // Rows the register keeps apart (one per resource) can be the same RoI row: report it once.
-                val rows = t.rows.map { row -> columns.map { col -> row.value(col.code)?.let { encode(col, it) }.orEmpty() } }.distinct()
+                val rows = t.rows.map { row ->
+                    val cells = columns.associate { col -> col.header to row.value(col.code)?.let { encode(col, it) }.orEmpty() }
+                    filled(t.template.code, cells).let { f -> columns.map { f.getValue(it.header) } }
+                }.distinct()
                 put("reports/${t.template.code.lowercase()}.csv", csv(listOf(columns.map { it.header }) + rows))
             }
         }
@@ -74,6 +77,37 @@ object RoiPackage {
     /** The module fixes the tables, their file names and the parameters file, so report.json only extends it. */
     private fun reportJson(): String =
         """{"documentInfo":{"documentType":"${TaxonomyCodes.xbrlCsvType}","extends":["${TaxonomyCodes.moduleEntryPoint}"]}}"""
+
+    /** The taxonomy member for "Not applicable" in the country lists. */
+    const val NOT_APPLICABLE_COUNTRY = "eba_GA:qx2007"
+
+    /** Typed where a key column has no list (EBA DORA RoI FAQ Q64 and Q124). */
+    const val NOT_APPLICABLE_TEXT = "Not Applicable"
+
+    /**
+     * Key and foreign-key columns the CIR lets an entity leave blank, filled as the EBA DORA RoI reporting
+     * FAQ (28 March 2025) asks, because the taxonomy rejects a blank key. The register keeps the blank; only
+     * the package carries the filler.
+     */
+    fun filled(template: String, cells: Map<String, String>): Map<String, String> {
+        val out = cells.toMutableMap()
+        fun orElse(column: String, value: String?) {
+            if (out[column].isNullOrEmpty() && column in out && !value.isNullOrEmpty()) out[column] = value
+        }
+        when (template) {
+            // Q124: no overarching arrangement.
+            "B_02.01" -> orElse("c0030", NOT_APPLICABLE_TEXT)
+            // Q59, Q61, Q63: service not supporting a critical function, no storage, no processing.
+            "B_02.02" -> listOf("c0130", "c0150", "c0160").forEach { orElse(it, NOT_APPLICABLE_COUNTRY) }
+            // Q64: not a branch.
+            "B_04.01" -> orElse("c0040", NOT_APPLICABLE_TEXT)
+            // Q99: a provider with no parent undertaking repeats its own code.
+            "B_05.01" -> { orElse("c0110", out["c0010"]); orElse("c0120", out["c0020"]) }
+            // Q65: at rank 1 the recipient is the direct provider itself.
+            "B_05.02" -> orElse("c0060", out["c0030"])
+        }
+        return out
+    }
 
     /** A cell as the taxonomy wants it: closed lists by code, amounts in units with no grouping. */
     fun encode(col: RoiColumn, value: String): String = when (col.type) {
