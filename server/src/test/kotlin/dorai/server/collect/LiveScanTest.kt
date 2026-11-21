@@ -122,6 +122,21 @@ class AzureRowsTest {
     }
 
     @Test
+    fun sellersOnTheBillBecomeVendorSpend() {
+        val azure = AzureCostRows.parseVendors(
+            listOf("Cost", "BillingMonth", "PublisherName", "Currency"),
+            listOf(listOf(100.0, "2026-10-01T00:00:00", "Datadog", "EUR"), listOf(50.0, "2026-11-01T00:00:00", "Datadog", "EUR")),
+        )
+        val aws = AwsArns.sellers(listOf(
+            AwsArns.SellerCost("Amazon Web Services EMEA SARL", LocalDate(2026, 10, 1), 900.0, "USD"),
+            AwsArns.SellerCost("Elastic N.V.", LocalDate(2026, 10, 1), 40.0, "USD"),
+        ))
+        assertEquals(listOf("vendor:Elastic N.V."), aws.map { it.resourceId })
+        val spend = dorai.server.core.Vendors.spend(azure + aws + CostEntry("/x/vm", "Azure", LocalDate(2026, 10, 1), 7.0, "EUR"))
+        assertEquals(setOf("Datadog" to 150.0, "Elastic N.V." to 40.0), spend.map { it.seller to it.amount }.toSet())
+    }
+
+    @Test
     fun theQueryNarrowsToTheResourceGroupOnlyWhenSet() {
         assertTrue("resourceGroup" !in AzureRows.query(null))
         assertTrue("| where resourceGroup =~ 'rg-finpay-prod'" in AzureRows.query("rg-finpay-prod"))

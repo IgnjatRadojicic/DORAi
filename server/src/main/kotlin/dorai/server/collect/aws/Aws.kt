@@ -1,6 +1,7 @@
 package dorai.server.collect.aws
 
 import aws.sdk.kotlin.services.costexplorer.CostExplorerClient
+import aws.sdk.kotlin.services.costexplorer.getCostAndUsage
 import aws.sdk.kotlin.services.costexplorer.getCostAndUsageWithResources
 import aws.sdk.kotlin.services.costexplorer.model.DateInterval
 import aws.sdk.kotlin.services.costexplorer.model.Dimension
@@ -14,16 +15,19 @@ import aws.sdk.kotlin.services.resourcegroupstaggingapi.paginators.getResourcesP
 import dorai.server.collect.LiveConfig
 import dorai.server.core.CloudCollector
 import dorai.server.core.CollectResult
+import dorai.server.core.CostEntry
 import dorai.server.core.CostProvider
 import dorai.server.core.CostResult
 import dorai.shared.model.CostSource
 import dorai.shared.model.Resource
 import dorai.shared.model.ScanMode
 import dorai.shared.rules.ServiceTypeTable
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.toList
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.minus
+import org.slf4j.LoggerFactory
 
 /**
  * Real AWS: the Resource Groups Tagging API, one call chain per configured region. Credentials come from the
@@ -81,10 +85,46 @@ class AwsCostExplorerProvider : CostProvider {
                 token = page.nextPageToken
             } while (!token.isNullOrEmpty())
         }
-        return CostResult(AwsArns.monthly(daily), CostSource.Live)
+        return CostResult(AwsArns.monthly(daily) + sellers(from, to), CostSource.Live)
+    }
+
+    /**
+     * Who the bill pays, by legal entity, for the whole period (Marketplace sellers bill under their own name).
+     * Best effort: a refused call only means no seller check.
+     */
+    private suspend fun sellers(from: LocalDate, to: LocalDate): List<CostEntry> = try {
+        val rows = mutableListOf<AwsArns.SellerCost>()
+        CostExplorerClient.fromEnvironment { region = "us-east-1" }.use { ce ->
+            var token: String? = null
+            do {
+                val page = ce.getCostAndUsage {
+                    timePeriod = DateInterval { this.start = from.toString(); end = to.toString() }
+                    granularity = Granularity.Monthly
+                    metrics = listOf(METRIC)
+                    groupBy = listOf(GroupDefinition { type = GroupDefinitionType.Dimension; key = "LEGAL_ENTITY_NAME" })
+                    nextPageToken = token
+                }
+                page.resultsByTime.orEmpty().forEach { month ->
+                    val start = month.timePeriod?.start?.let(LocalDate::parse) ?: return@forEach
+                    month.groups.orEmpty().forEach { g ->
+                        val metric = g.metrics?.get(METRIC)
+                        val amount = metric?.amount?.toDoubleOrNull() ?: return@forEach
+                        rows += AwsArns.SellerCost(g.keys?.firstOrNull().orEmpty(), start, amount, metric.unit ?: "USD")
+                    }
+                }
+                token = page.nextPageToken
+            } while (!token.isNullOrEmpty())
+        }
+        AwsArns.sellers(rows)
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        log.warn("AWS seller spend unavailable: {}", e.message)
+        emptyList()
     }
 
     private companion object {
         const val METRIC = "UnblendedCost"
+        val log = LoggerFactory.getLogger(AwsCostExplorerProvider::class.java)
     }
 }

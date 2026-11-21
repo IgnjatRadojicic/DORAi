@@ -10,6 +10,9 @@ import com.azure.resourcemanager.costmanagement.models.FunctionType
 import com.azure.resourcemanager.costmanagement.models.GranularityType
 import com.azure.resourcemanager.costmanagement.models.QueryAggregation
 import com.azure.resourcemanager.costmanagement.models.QueryColumnType
+import com.azure.resourcemanager.costmanagement.models.QueryComparisonExpression
+import com.azure.resourcemanager.costmanagement.models.QueryFilter
+import com.azure.resourcemanager.costmanagement.models.QueryOperatorType
 import com.azure.resourcemanager.costmanagement.models.QueryDataset
 import com.azure.resourcemanager.costmanagement.models.QueryDefinition
 import com.azure.resourcemanager.costmanagement.models.QueryGrouping
@@ -27,7 +30,9 @@ import dorai.server.core.CostResult
 import dorai.shared.model.CostSource
 import dorai.shared.model.ScanMode
 import dorai.shared.rules.ServiceTypeTable
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import org.slf4j.LoggerFactory
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.LocalDate
@@ -88,10 +93,30 @@ class AzureCostProvider(private val clients: AzureClients, private val config: L
         val entries = subscriptions.flatMap { subscription ->
             val scope = "/subscriptions/$subscription" + (config.azureResourceGroup?.let { "/resourceGroups/$it" } ?: "")
             val result = clients.cost.queries().usage(scope, definition(start, to))
-            AzureCostRows.parse(result.columns().map { it.name() }, result.rows())
+            AzureCostRows.parse(result.columns().map { it.name() }, result.rows()) + vendors(scope, start, to)
         }
         CostResult(entries, CostSource.Live)
     }
+
+    /** Marketplace sellers on the bill. Best effort: a refused query only means no seller check. */
+    private fun vendors(scope: String, from: LocalDate, to: LocalDate) = try {
+        val marketplace = QueryFilter().withDimensions(
+            QueryComparisonExpression().withName("PublisherType").withOperator(QueryOperatorType.IN).withValues(listOf("Marketplace")),
+        )
+        val query = definition(from, to).withDataset(dataset("PublisherName").withFilter(marketplace))
+        val result = clients.cost.queries().usage(scope, query)
+        AzureCostRows.parseVendors(result.columns().map { it.name() }, result.rows())
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        log.warn("Azure Marketplace spend unavailable: {}", e.message)
+        emptyList()
+    }
+
+    private fun dataset(groupBy: String) = QueryDataset()
+        .withGranularity(GranularityType.fromString("Monthly"))
+        .withAggregation(mapOf("totalCost" to QueryAggregation().withName("Cost").withFunction(FunctionType.SUM)))
+        .withGrouping(listOf(QueryGrouping().withType(QueryColumnType.DIMENSION).withName(groupBy)))
 
     private fun definition(from: LocalDate, to: LocalDate) = QueryDefinition()
         .withType(ExportType.ACTUAL_COST)
@@ -101,10 +126,9 @@ class AzureCostProvider(private val clients: AzureClients, private val config: L
                 .withFrom(OffsetDateTime.of(from.year, from.month.ordinal + 1, from.day, 0, 0, 0, 0, ZoneOffset.UTC))
                 .withTo(OffsetDateTime.of(to.year, to.month.ordinal + 1, to.day, 23, 59, 59, 0, ZoneOffset.UTC)),
         )
-        .withDataset(
-            QueryDataset()
-                .withGranularity(GranularityType.fromString("Monthly"))
-                .withAggregation(mapOf("totalCost" to QueryAggregation().withName("Cost").withFunction(FunctionType.SUM)))
-                .withGrouping(listOf(QueryGrouping().withType(QueryColumnType.DIMENSION).withName("ResourceId"))),
-        )
+        .withDataset(dataset("ResourceId"))
+
+    private companion object {
+        val log = LoggerFactory.getLogger(AzureCostProvider::class.java)
+    }
 }

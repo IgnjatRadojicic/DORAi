@@ -3,6 +3,7 @@ package dorai.server.register
 import dorai.server.ApiProblem
 import dorai.server.auth.principal
 import dorai.server.core.Services
+import dorai.server.core.Vendors
 import dorai.shared.model.BusinessFunction
 import dorai.shared.model.Contract
 import dorai.shared.model.FinancialEntity
@@ -28,7 +29,10 @@ fun Route.registerRoutes(services: Services) {
 
     get("register") { call.respond(services.register.register()) }
     get("validation") { call.respond(services.validator.validate(services.register.register())) }
-    get("roi") { call.respond(RoiView.of(services.register.register(), services.register.resources(), call.referenceDate())) }
+    get("roi") {
+        val repo = services.register
+        call.respond(RoiView.of(repo.register(), repo.resources(), call.referenceDate(), Vendors.spend(repo.costs())))
+    }
 
     route("register") {
         put("entity") { call.respond(editor.putEntity(call.receive<FinancialEntity>(), call.who())) }

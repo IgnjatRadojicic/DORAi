@@ -3,6 +3,7 @@ package dorai.server.collect.azure
 import dorai.server.collect.cloudResource
 import dorai.server.collect.round2
 import dorai.server.core.CostEntry
+import dorai.server.core.Vendors
 import dorai.shared.model.BackupInfo
 import dorai.shared.model.Redundancy
 import dorai.shared.model.Resource
@@ -93,11 +94,20 @@ object AzureCostRows {
      * Columns are found by name, never by position: the API has returned Cost, BillingMonth (or UsageDate),
      * ResourceId and Currency in different orders across versions. Unreadable rows are skipped.
      */
-    fun parse(columns: List<String>, rows: List<List<Any?>>): List<CostEntry> {
+    fun parse(columns: List<String>, rows: List<List<Any?>>): List<CostEntry> =
+        parse(columns, rows, "ResourceId") { it.lowercase() }
+
+    /** Marketplace spend grouped by PublisherName: one row per seller and month, id `vendor:<seller>`. */
+    fun parseVendors(columns: List<String>, rows: List<List<Any?>>): List<CostEntry> =
+        parse(columns, rows, "PublisherName") { Vendors.id(it) }
+            .groupBy { Triple(it.resourceId, it.month, it.currency) }
+            .map { (k, r) -> r.first().copy(amount = round2(r.sumOf { it.amount })) }
+
+    private fun parse(columns: List<String>, rows: List<List<Any?>>, idColumn: String, idOf: (String) -> String): List<CostEntry> {
         fun col(vararg names: String) = columns.indexOfFirst { c -> names.any { it.equals(c, ignoreCase = true) } }
         val cost = col("Cost", "totalCost", "PreTaxCost")
         val month = col("BillingMonth", "UsageDate")
-        val id = col("ResourceId")
+        val id = col(idColumn)
         val currency = col("Currency")
         if (cost < 0 || month < 0 || id < 0) return emptyList()
 
@@ -107,7 +117,7 @@ object AzureCostRows {
             val resourceId = row.getOrNull(id)?.toString()?.trim().orEmpty()
             if (amount == null || m == null || resourceId.isEmpty()) return@mapNotNull null
             CostEntry(
-                resourceId = resourceId.lowercase(),
+                resourceId = idOf(resourceId),
                 provider = ServiceTypeTable.AZURE,
                 month = m,
                 amount = round2(amount),

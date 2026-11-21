@@ -3,6 +3,7 @@ package dorai.server.collect.aws
 import dorai.server.collect.cloudResource
 import dorai.server.collect.round2
 import dorai.server.core.CostEntry
+import dorai.server.core.Vendors
 import dorai.shared.model.Resource
 import dorai.shared.rules.ServiceTypeTable
 import kotlinx.datetime.LocalDate
@@ -51,6 +52,17 @@ object AwsArns {
             .map { (key, rows) -> CostEntry(key.first, ServiceTypeTable.AWS, key.second, round2(rows.sumOf { it.amount }), key.third) }
 
     data class DailyCost(val resourceId: String, val day: LocalDate, val amount: Double, val currency: String)
+
+    data class SellerCost(val seller: String, val month: LocalDate, val amount: Double, val currency: String)
+
+    /** Seller rows to vendor cost entries; AWS's own billing entities are the cloud itself, not a vendor. */
+    fun sellers(rows: List<SellerCost>): List<CostEntry> =
+        rows.filter { it.amount != 0.0 && it.seller.isNotBlank() && !isAws(it.seller) }
+            .groupBy { Triple(it.seller.trim(), LocalDate(it.month.year, it.month.month, 1), it.currency) }
+            .map { (k, r) -> CostEntry(Vendors.id(k.first), ServiceTypeTable.AWS, k.second, round2(r.sumOf { it.amount }), k.third) }
+
+    private fun isAws(seller: String) =
+        seller.trim().let { it.startsWith("Amazon", ignoreCase = true) || it.startsWith("AWS", ignoreCase = true) }
 
     private val DEFAULT_TYPE = mapOf("s3" to "bucket", "sqs" to "queue", "sns" to "topic")
 }

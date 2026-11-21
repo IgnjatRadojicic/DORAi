@@ -130,3 +130,18 @@ class ResilienceChecksTest {
         assertTrue(issues.any { it.code == "art12-single-location" })
     }
 }
+
+class VendorChecksTest {
+    @Test
+    fun `a paid seller missing from the register is a warning`() {
+        val issues = VendorChecks.check(Roi.register(), listOf(VendorSpend("Elastic N.V.", "AWS", 1200.0, "EUR"), VendorSpend("Elastic N.V.", "AWS", 300.0, "EUR")))
+        val issue = issues.single()
+        assertEquals("unregistered-vendor" to ValidationSeverity.Warning, issue.code to issue.severity)
+        assertTrue("1500.00 EUR" in issue.message, issue.message)
+    }
+
+    @Test
+    fun `a registered provider matches despite legal form and punctuation`() {
+        assertTrue(VendorChecks.check(Roi.register(), listOf(VendorSpend("Microsoft Ireland Operations, Limited", "Azure", 10.0, "EUR"))).isEmpty())
+    }
+}
