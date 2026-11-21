@@ -12,7 +12,8 @@ enum class ExportFormat(val fileName: String, val mediaType: String) {
     CSV("register.zip", "application/zip"), PDF("compliance-report.pdf", "application/pdf")
 }
 
-data class ExportDocument(val bytes: ByteArray, val mediaType: String)
+/** [fileName]: the name the server gave the file; null keeps the format's default name. */
+data class ExportDocument(val bytes: ByteArray, val mediaType: String, val fileName: String? = null)
 
 fun interface ExportSource { suspend fun download(format: ExportFormat): ExportDocument }
 
@@ -41,7 +42,7 @@ class ExportViewModel(
         try {
             val document = source.download(format)
             validateDocument(format, document)
-            state = when (val result = files.save(format.fileName, format.mediaType, document.bytes)) {
+            state = when (val result = files.save(document.fileName ?: format.fileName, format.mediaType, document.bytes)) {
                 is SaveOutcome.Saved -> ExportState(savedLocation = result.location)
                 SaveOutcome.Cancelled -> ExportState(cancelled = true)
             }

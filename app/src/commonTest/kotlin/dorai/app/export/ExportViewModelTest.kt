@@ -10,14 +10,27 @@ import kotlin.test.assertTrue
 class ExportViewModelTest {
     private class FilesFake : WorkspaceFiles {
         var saves = 0
+        var lastName: String? = null
         var outcome: SaveOutcome = SaveOutcome.Saved("selected/report.pdf")
         var failure: Exception? = null
         override suspend fun openPlan(): PlanDocument? = null
         override suspend fun save(name: String, mediaType: String, bytes: ByteArray): SaveOutcome {
             saves++
+            lastName = name
             failure?.let { throw it }
             return outcome
         }
+    }
+
+    @Test
+    fun thePackageKeepsTheNameTheServerGaveIt() {
+        val files = FilesFake()
+        val zip = byteArrayOf(0x50, 0x4B, 3, 4, 1)
+        ExportViewModel({ ExportDocument(zip, "application/zip", "DRAFT_529900T8BM49AURSDO55.CON_IE_DORA010100_DORA_2026-12-31_20261122.zip") }, files)
+            .also { runImmediate { it.download(ExportFormat.CSV) } }
+        assertTrue(files.lastName!!.startsWith("DRAFT_"))
+        ExportViewModel({ ExportDocument(zip, "application/zip") }, files).also { runImmediate { it.download(ExportFormat.CSV) } }
+        assertEquals("register.zip", files.lastName)
     }
 
     @Test

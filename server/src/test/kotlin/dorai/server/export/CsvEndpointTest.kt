@@ -36,6 +36,9 @@ class CsvEndpointTest {
         DoraiApi("http://localhost", client).use { api ->
             val result = assertIs<ApiResult.Success<ByteArray>>(api.exportCsv(draft = true))
             assertEquals(listOf<Byte>(0x50, 0x4b), result.value.take(2))
+            val file = assertIs<ApiResult.Success<dorai.shared.api.DownloadedFile>>(api.exportCsvFile(draft = true)).value
+            assertTrue(file.fileName!!.startsWith("DRAFT_"), file.fileName)
+            assertTrue(file.fileName!!.endsWith(".zip"))
         }
     }
 

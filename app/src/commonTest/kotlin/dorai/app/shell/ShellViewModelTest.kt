@@ -116,15 +116,29 @@ class ShellViewModelTest {
             shell.select(it)
             assertEquals(it, shell.state.section)
         }
-        shell.select("admin")
+        shell.select("unknown")
         assertEquals(Sections.INVENTORY, shell.state.section)
     }
 
     @Test
-    fun theFrameShowsTheFiveSectionsInOrder() {
-        assertEquals(listOf("01", "02", "03", "04", "05"), shellSections.map { it.number })
+    fun onlyAdminsSeeTheAdministration() {
+        val reviewer = shell()
+        reviewer.signIn()
+        reviewer.select(Sections.ADMIN)
+        assertEquals(Sections.INVENTORY, reviewer.state.section)
+        assertFalse(reviewer.workspace!!.sections.any { it.id == Sections.ADMIN })
+
+        val admin = shell(ApiResult.Success(LoginResponse(false, tokens(Role.Admin))))
+        admin.signIn()
+        admin.select(Sections.ADMIN)
+        assertEquals(Sections.ADMIN, admin.state.section)
+    }
+
+    @Test
+    fun theFrameShowsTheSevenSectionsInOrder() {
+        assertEquals(listOf("01", "02", "03", "04", "05", "06", "07"), shellSections.map { it.number })
         assertEquals(
-            listOf(Sections.INVENTORY, Sections.REVIEW, Sections.FINDINGS, Sections.EXPORT, Sections.ROI),
+            listOf(Sections.INVENTORY, Sections.REVIEW, Sections.FINDINGS, Sections.EXPORT, Sections.ROI, Sections.REGISTER, Sections.ADMIN),
             shellSections.map { it.id },
         )
     }
