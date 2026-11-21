@@ -1,5 +1,6 @@
 package dorai.server.ai.services
 
+import dorai.server.versionedClient
 import dorai.server.ai.chat.ChatModel
 import dorai.server.ai.chat.ChatRequest
 import dorai.server.ai.chat.ChatUnavailableException
@@ -46,7 +47,7 @@ class AiRoutesTest {
     fun generatedSuggestionsArePendingAndCited() = testApplication {
         application { module(services(FakeChatModel())) }
 
-        val response = client.post("/api/suggestions/generate")
+        val response = versionedClient().post("/api/suggestions/generate")
         val suggestions = DoraiJson.decodeFromString<List<Suggestion>>(response.bodyAsText())
 
         assertEquals(HttpStatusCode.OK, response.status)
@@ -58,8 +59,8 @@ class AiRoutesTest {
     fun aModelOutageIsNeverStoredAsASuggestion() = testApplication {
         application { module(services(down)) }
 
-        client.post("/api/suggestions/generate")
-        val stored = DoraiJson.decodeFromString<List<Suggestion>>(client.get("/api/suggestions").bodyAsText())
+        versionedClient().post("/api/suggestions/generate")
+        val stored = DoraiJson.decodeFromString<List<Suggestion>>(versionedClient().get("/api/suggestions").bodyAsText())
 
         assertTrue(stored.isEmpty())
     }
@@ -70,7 +71,7 @@ class AiRoutesTest {
         val plan = fixtures.planEastus
         val expected = RulesPlanChecker().check(plan.decodeToString(), fixtures.register)
 
-        val response = client.submitFormWithBinaryData(
+        val response = versionedClient().submitFormWithBinaryData(
             "/api/check",
             formData { append("plan", plan, Headers.build { append(HttpHeaders.ContentDisposition, "filename=\"plan.json\"") }) },
         )

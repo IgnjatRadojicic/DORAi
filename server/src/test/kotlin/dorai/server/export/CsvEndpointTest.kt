@@ -1,5 +1,6 @@
 package dorai.server.export
 
+import dorai.server.versionedClient
 import dorai.server.module
 import dorai.server.fixtures.fixtureServices
 import dorai.server.fixtures.InMemoryRegisterRepository
@@ -20,7 +21,7 @@ class CsvEndpointTest {
     @Test
     fun csvEndpointAndSharedClientDownloadAnActualArchive() = testApplication {
         application { module(fixtureServices()) }
-        val response = client.get("/api/export/csv")
+        val response = versionedClient().get("/api/export/csv")
         assertEquals(HttpStatusCode.OK, response.status)
         assertTrue(response.headers[HttpHeaders.ContentType].orEmpty().startsWith("application/zip"))
         assertTrue(response.headers[HttpHeaders.ContentDisposition].orEmpty().contains("dorai-register.zip"))
@@ -41,7 +42,7 @@ class CsvEndpointTest {
         val data = FixtureData.load()
         val invalid = data.register.copy(entity = data.register.entity.copy(name = ""))
         application { module(fixtureServices(data).copy(register = InMemoryRegisterRepository(invalid, data.resources, data.costs))) }
-        val response = client.get("/api/export/csv")
+        val response = versionedClient().get("/api/export/csv")
         assertEquals(422, response.status.value)
         assertTrue(response.headers[HttpHeaders.ContentType].orEmpty().startsWith("application/problem+json"))
         assertNull(response.headers[HttpHeaders.ContentDisposition])
@@ -54,6 +55,6 @@ class CsvEndpointTest {
         val first = data.register.providers[0]
         val register = data.register.copy(providers = listOf(first.copy(lei = first.lei.copy(value = null))) + data.register.providers.drop(1))
         application { module(fixtureServices(data).copy(register = InMemoryRegisterRepository(register, data.resources, data.costs))) }
-        assertEquals(200, client.get("/api/export/csv").status.value)
+        assertEquals(200, versionedClient().get("/api/export/csv").status.value)
     }
 }

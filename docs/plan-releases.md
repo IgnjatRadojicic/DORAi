@@ -125,19 +125,19 @@ a message naming the missing secret. The build reads them as `DORAI_ANDROID_*` e
 ### Clients
 
 - `DoraiApi` adds the header to every request and exposes the server version it last saw.
-- `dorai.shared` gets a `Version` type with `isCompatibleWith(other)` (same major) and, for later, a helper to check
-  that a server's minor is high enough for a given feature. No feature uses it yet.
-- Apps: both problem types become a clear blocking message ("Update DORAi to version 2" or "Your
-  server runs 1.9; this app needs 2.x, ask your admin"). The login page shows the same from `/api/health`.
-  The screens are Luka's; this phase supplies the state, Luka places the message.
-- CLI: a mismatch prints the same message and exits with its own exit code, so a CI run fails clearly.
+- `dorai.shared` gets a `Version` type with `isCompatibleWith(other)` (same major). It is comparable, so a
+  feature that needs a newer server within the major can check `api.serverVersion >= Version(1, 7, 0)`.
+  No feature uses that yet.
+- Apps: the problem's title and detail already say who must update ("Update DORAi" or "Server needs an
+  update", with both versions), and every call fails, so the app is blocked from the first call (login).
+  A dedicated screen, and a warning on the login page from `Health.version`, are Luka's to add.
+- CLI: nothing to do. `dorai check` runs the rules offline and never calls the server.
 
 ### Tests
 
 - Server: same version, different minor, client major lower, client major higher, missing or malformed header,
   `/api/health` never blocked, response header always present.
 - Client: header sent on every call, server version read from the response, both problem types mapped.
-- CLI: exit code on mismatch.
 
 ### Done when
 

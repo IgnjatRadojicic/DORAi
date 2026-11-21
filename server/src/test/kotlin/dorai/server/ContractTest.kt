@@ -116,7 +116,7 @@ class ContractTest {
     @Test
     fun unknownRouteIsAProblem() = testApplication {
         application { module() }
-        val response = client.get("/api/nope")
+        val response = versionedClient().get("/api/nope")
         assertEquals(HttpStatusCode.NotFound, response.status)
         assertTrue(response.headers[HttpHeaders.ContentType].orEmpty().startsWith("application/problem+json"))
         assertTrue(response.bodyAsText().contains("\"status\":404"))
