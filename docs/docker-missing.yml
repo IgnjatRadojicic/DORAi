@@ -4,33 +4,6 @@
 # Remove an item when it is done.
 
 server:
-  - id: tls
-    missing: On first start, generate a self-signed keystore at DORAI_TLS_KEYSTORE (password DORAI_TLS_KEYSTORE_PASSWORD)
-      if none exists, serve HTTPS on DORAI_TLS_PORT (8443), and log the SHA-256 fingerprint.
-    why: The apps pin this fingerprint from the invite link. Today port 8443 is published but nothing listens on it.
-    owner: Ignjat
-    phase: 3
-
-  - id: jwt-secret
-    missing: Read DORAI_JWT_SECRET and refuse to start without it when auth is on.
-    why: Tokens must be signed with a firm-specific secret, never a default.
-    owner: Ignjat
-    phase: 3
-
-  - id: invite-links
-    missing: Build invite links from DORAI_PUBLIC_URL and the keystore fingerprint.
-    why: The server cannot know the DNS name staff use; the admin sets it in .env.
-    owner: Ignjat
-    phase: 3
-
-  - id: first-admin
-    missing: Decide and build how the first admin is created on a fresh install.
-    why: Only an admin can create users, so an empty database has no way in.
-      Options to decide, for example DORAI_ADMIN_USERNAME plus a temporary password in .env that must be
-      changed at first login, or a one-time setup code printed in the server log.
-    owner: Ignjat (decision)
-    phase: 3
-
   - id: llm-settings
     missing: Names of the LLM settings (endpoint, key, model, Azure OpenAI or OpenAI) for DORAI_AI=real,
       added to deploy/.env.example and docs/deploy.md.
