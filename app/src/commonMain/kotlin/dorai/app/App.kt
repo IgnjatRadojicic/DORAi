@@ -11,6 +11,8 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import dorai.app.auth.LoginActions
 import dorai.app.auth.LoginScreen
+import dorai.app.auth.SessionStore
+import dorai.app.auth.rememberSecretVault
 import dorai.app.components.ControlCenterFrame
 import dorai.app.connect.InviteField
 import dorai.app.export.ExportViewModel
@@ -38,7 +40,10 @@ class OpenedInvite(val link: String)
  */
 @Composable
 fun App(chrome: @Composable () -> Unit = {}, invite: OpenedInvite? = null) {
-    val shell = viewModel { ShellViewModel() }
+    val vault = rememberSecretVault()
+    val shell = viewModel { ShellViewModel(sessions = SessionStore(vault)) }
+    // The saved session first, so an invite link opened with the app can still replace it.
+    LaunchedEffect(shell) { shell.restore() }
     LaunchedEffect(shell) { shell.connection.watch() }
     LaunchedEffect(invite) { invite?.let { shell.openInvite(it.link) } }
     val scope = rememberCoroutineScope()

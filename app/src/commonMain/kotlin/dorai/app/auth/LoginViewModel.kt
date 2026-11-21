@@ -14,6 +14,9 @@ import kotlinx.coroutines.CancellationException
 interface LoginGateway {
     suspend fun login(username: String, password: String): ApiResult<LoginResponse>
     suspend fun changePassword(username: String, currentPassword: String, newPassword: String): ApiResult<Tokens>
+
+    /** Ends the session on the server; the app forgets the login whatever the answer. */
+    suspend fun logout()
 }
 
 enum class LoginStep { SIGN_IN, CHANGE_PASSWORD }
@@ -52,6 +55,12 @@ class LoginViewModel(private val gateway: LoginGateway) : ViewModel() {
 
     fun onRepeatPasswordChange(password: String) {
         if (!state.busy) state = state.copy(repeatPassword = password, error = null)
+    }
+
+    /** Empty sign-in card with [message], for example when the server ended the session. */
+    fun showError(message: String) {
+        temporaryPassword = null
+        state = LoginState(username = state.username, error = message)
     }
 
     /** Empty sign-in card, for example after an invite link switched the server. */
@@ -158,5 +167,6 @@ class LoginViewModel(private val gateway: LoginGateway) : ViewModel() {
         const val PASSWORDS_DIFFER = "The two passwords do not match."
         const val SIGN_IN_AGAIN = "Your temporary password is no longer valid. Sign in again."
         const val UNEXPECTED = "Sign-in failed. Try again."
+        const val SESSION_ENDED = "Your session has ended. Sign in again."
     }
 }

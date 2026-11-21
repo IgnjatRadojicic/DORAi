@@ -28,6 +28,11 @@ class FakeLoginGateway(
 ) : LoginGateway {
     var lastLogin: Pair<String, String>? = null
     var lastChange: Triple<String, String, String>? = null
+    var logouts = 0
+
+    override suspend fun logout() {
+        logouts++
+    }
 
     override suspend fun login(username: String, password: String): ApiResult<LoginResponse> {
         lastLogin = username to password

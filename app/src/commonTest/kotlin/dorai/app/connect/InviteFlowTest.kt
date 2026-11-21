@@ -28,7 +28,7 @@ class InviteFlowTest {
     // DoraiApi only builds a client here; every server call is a fake.
     private fun shell(recorder: Recorder = Recorder(), redeem: ApiResult<RedeemResponse> = ok) = ShellViewModel(
         address = "http://localhost:8080",
-        openApi = { recorder.opened += it; DoraiApi(it) },
+        openApi = { target, tokens -> recorder.opened += target.address; DoraiApi(target.address, tokens = tokens) },
         probe = { ApiResult.Success(Health("ok", "DORAi")) },
         gateway = FakeLoginGateway(),
         invites = { code -> recorder.redeemed += code; redeem },
