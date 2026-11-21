@@ -1,5 +1,7 @@
 package dorai.server
 
+import dorai.server.ai.AiConfig
+import dorai.server.ai.regulationSearch
 import dorai.server.check.checkRoutes
 import dorai.server.core.Services
 import dorai.server.db.Db
@@ -36,14 +38,15 @@ fun main() {
     embeddedServer(Netty, port = port) { module(servicesFromEnv()) }.start(wait = true)
 }
 
-/** PostgreSQL when DORAI_DB_URL is set, otherwise fixtures in memory. */
+/** PostgreSQL with pgvector regulation search when DORAI_DB_URL is set, otherwise fixtures in memory. */
 fun servicesFromEnv(): Services {
     val config = DbConfig.fromEnv()
     if (config == null) {
         LoggerFactory.getLogger("dorai.server").info("DORAI_DB_URL is not set: running on fixtures in memory.")
         return fixtureServices()
     }
-    return postgresServices(Db.open(config))
+    val database = Db.open(config)
+    return postgresServices(database).copy(regulationSearch = regulationSearch(database, AiConfig.fromEnv()))
 }
 
 /** Fixture wiring: in-memory storage, no AI. Used by tests and by a server started without a database. */
