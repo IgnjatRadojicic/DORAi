@@ -24,9 +24,10 @@ object RoiReadiness {
         addAll(references(report))
         addAll(codeRules(report))
         addAll(uniqueness(report))
+        addAll(keyConflicts(report))
         addAll(unconfirmed(register))
         if (!TaxonomyCodes.verified) {
-            add(warning("taxonomy-unverified", "", "", "Package layout and closed-list codes are not yet checked against the EBA DORA taxonomy release ${TaxonomyCodes.frameworkRelease}.", null))
+            add(warning("taxonomy-unverified", "", "", "The package has not yet passed a full Arelle validation against the EBA DORA taxonomy ${TaxonomyCodes.frameworkRelease}; columns and codes are taken from it.", null))
         }
         if (register.rows["B_99.01"].isNullOrEmpty()) {
             add(warning("default-definitions", "B_99.01", "C0040", "Definitions are the CIR option labels. Replace them with the entity's own definitions.", null))
@@ -140,6 +141,22 @@ object RoiReadiness {
             .forEach { (_, rows) ->
                 add(error("roi-duplicate-function", col, "Functions ${rows.joinToString { it.key }} have the same name and licensed activity.", rows.first().key))
             }
+    }
+
+    /**
+     * Rows that share the taxonomy's primary key must be the same row: the export keeps one copy of exact
+     * duplicates, but two rows with one key and different values cannot both be reported.
+     */
+    private fun keyConflicts(report: RoiReport): List<ValidationIssue> = buildList {
+        report.tables.forEach { table ->
+            val key = TaxonomyCodes.primaryKey(table.template.code) ?: return@forEach
+            table.rows.groupBy { row -> key.map { row.value(it) } }
+                .filter { (_, rows) -> rows.map { r -> r.cells.mapValues { it.value.value } }.distinct().size > 1 }
+                .forEach { (_, rows) ->
+                    val col = RoiSpec.column(key.first())!!
+                    add(error("roi-duplicate-key", col, "Rows ${rows.joinToString { it.key }} share the key ${key.joinToString { it.substringAfterLast('.') }} but differ in other columns.", rows.first().key))
+                }
+        }
     }
 
     /** Values still waiting for a person to accept or reject them (product rule: a person decides). */

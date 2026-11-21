@@ -37,7 +37,7 @@ jobs:
         with:
           python-version: "3.12"
       - name: Install Arelle
-        # Pin it with the repository variable ARELLE_VERSION once the team has chosen a version.
+        # Pinned by the repository variable ARELLE_VERSION (checked with 2.47.5).
         env:
           ARELLE_VERSION: ${{ vars.ARELLE_VERSION }}
         run: pip install "arelle-release${ARELLE_VERSION:+==$ARELLE_VERSION}"

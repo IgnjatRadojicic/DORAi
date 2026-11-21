@@ -833,7 +833,7 @@
             "isCritical": true,
             "roi": {
                 "B_06.01.0020": {
-                    "value": "b",
+                    "value": "x28",
                     "provenance": {
                         "label": "human-confirmed",
                         "updatedAt": "2026-11-21T00:00:00Z",
@@ -841,7 +841,7 @@
                         "reason": "Synthetic demo value for the FinPay register."
                     }
                 },
-                "B_06.01.0080": {
+                "B_06.01.0070": {
                     "value": "2026-09-30",
                     "provenance": {
                         "label": "human-confirmed",
@@ -850,7 +850,7 @@
                         "reason": "Synthetic demo value for the FinPay register."
                     }
                 },
-                "B_06.01.0090": {
+                "B_06.01.0080": {
                     "value": "4",
                     "provenance": {
                         "label": "human-confirmed",
@@ -859,7 +859,7 @@
                         "reason": "Synthetic demo value for the FinPay register."
                     }
                 },
-                "B_06.01.0100": {
+                "B_06.01.0090": {
                     "value": "1",
                     "provenance": {
                         "label": "human-confirmed",
@@ -868,7 +868,7 @@
                         "reason": "Synthetic demo value for the FinPay register."
                     }
                 },
-                "B_06.01.0110": {
+                "B_06.01.0100": {
                     "value": "3",
                     "provenance": {
                         "label": "human-confirmed",
@@ -885,7 +885,7 @@
             "isCritical": true,
             "roi": {
                 "B_06.01.0020": {
-                    "value": "b",
+                    "value": "x28",
                     "provenance": {
                         "label": "human-confirmed",
                         "updatedAt": "2026-11-21T00:00:00Z",
@@ -893,7 +893,7 @@
                         "reason": "Synthetic demo value for the FinPay register."
                     }
                 },
-                "B_06.01.0080": {
+                "B_06.01.0070": {
                     "value": "2026-09-30",
                     "provenance": {
                         "label": "human-confirmed",
@@ -902,7 +902,7 @@
                         "reason": "Synthetic demo value for the FinPay register."
                     }
                 },
-                "B_06.01.0090": {
+                "B_06.01.0080": {
                     "value": "24",
                     "provenance": {
                         "label": "human-confirmed",
@@ -911,7 +911,7 @@
                         "reason": "Synthetic demo value for the FinPay register."
                     }
                 },
-                "B_06.01.0100": {
+                "B_06.01.0090": {
                     "value": "4",
                     "provenance": {
                         "label": "human-confirmed",
@@ -920,7 +920,7 @@
                         "reason": "Synthetic demo value for the FinPay register."
                     }
                 },
-                "B_06.01.0110": {
+                "B_06.01.0100": {
                     "value": "2",
                     "provenance": {
                         "label": "human-confirmed",
@@ -937,7 +937,7 @@
             "isCritical": true,
             "roi": {
                 "B_06.01.0020": {
-                    "value": "b",
+                    "value": "x28",
                     "provenance": {
                         "label": "human-confirmed",
                         "updatedAt": "2026-11-21T00:00:00Z",
@@ -945,7 +945,7 @@
                         "reason": "Synthetic demo value for the FinPay register."
                     }
                 },
-                "B_06.01.0080": {
+                "B_06.01.0070": {
                     "value": "2026-09-30",
                     "provenance": {
                         "label": "human-confirmed",
@@ -954,7 +954,7 @@
                         "reason": "Synthetic demo value for the FinPay register."
                     }
                 },
-                "B_06.01.0090": {
+                "B_06.01.0080": {
                     "value": "4",
                     "provenance": {
                         "label": "human-confirmed",
@@ -963,7 +963,7 @@
                         "reason": "Synthetic demo value for the FinPay register."
                     }
                 },
-                "B_06.01.0100": {
+                "B_06.01.0090": {
                     "value": "1",
                     "provenance": {
                         "label": "human-confirmed",
@@ -972,7 +972,7 @@
                         "reason": "Synthetic demo value for the FinPay register."
                     }
                 },
-                "B_06.01.0110": {
+                "B_06.01.0100": {
                     "value": "3",
                     "provenance": {
                         "label": "human-confirmed",
@@ -989,7 +989,7 @@
             "isCritical": false,
             "roi": {
                 "B_06.01.0020": {
-                    "value": "b",
+                    "value": "x28",
                     "provenance": {
                         "label": "human-confirmed",
                         "updatedAt": "2026-11-21T00:00:00Z",
@@ -997,7 +997,7 @@
                         "reason": "Synthetic demo value for the FinPay register."
                     }
                 },
-                "B_06.01.0080": {
+                "B_06.01.0070": {
                     "value": "2026-09-30",
                     "provenance": {
                         "label": "human-confirmed",
@@ -1006,7 +1006,7 @@
                         "reason": "Synthetic demo value for the FinPay register."
                     }
                 },
-                "B_06.01.0090": {
+                "B_06.01.0080": {
                     "value": "48",
                     "provenance": {
                         "label": "human-confirmed",
@@ -1015,7 +1015,7 @@
                         "reason": "Synthetic demo value for the FinPay register."
                     }
                 },
-                "B_06.01.0100": {
+                "B_06.01.0090": {
                     "value": "24",
                     "provenance": {
                         "label": "human-confirmed",
@@ -1024,7 +1024,7 @@
                         "reason": "Synthetic demo value for the FinPay register."
                     }
                 },
-                "B_06.01.0110": {
+                "B_06.01.0100": {
                     "value": "1",
                     "provenance": {
                         "label": "human-confirmed",
@@ -1041,7 +1041,7 @@
             "isCritical": false,
             "roi": {
                 "B_06.01.0020": {
-                    "value": "support",
+                    "value": "x276",
                     "provenance": {
                         "label": "human-confirmed",
                         "updatedAt": "2026-11-21T00:00:00Z",
@@ -1049,7 +1049,7 @@
                         "reason": "Synthetic demo value for the FinPay register."
                     }
                 },
-                "B_06.01.0080": {
+                "B_06.01.0070": {
                     "value": "2026-09-30",
                     "provenance": {
                         "label": "human-confirmed",
@@ -1058,7 +1058,7 @@
                         "reason": "Synthetic demo value for the FinPay register."
                     }
                 },
-                "B_06.01.0090": {
+                "B_06.01.0080": {
                     "value": "72",
                     "provenance": {
                         "label": "human-confirmed",
@@ -1067,7 +1067,7 @@
                         "reason": "Synthetic demo value for the FinPay register."
                     }
                 },
-                "B_06.01.0100": {
+                "B_06.01.0090": {
                     "value": "24",
                     "provenance": {
                         "label": "human-confirmed",
@@ -1076,7 +1076,7 @@
                         "reason": "Synthetic demo value for the FinPay register."
                     }
                 },
-                "B_06.01.0110": {
+                "B_06.01.0100": {
                     "value": "1",
                     "provenance": {
                         "label": "human-confirmed",

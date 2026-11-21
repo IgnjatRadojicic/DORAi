@@ -48,7 +48,7 @@ class RoiReadinessTest {
     @Test
     fun `optional columns are never missing`() {
         val issues = check()
-        assertFalse(issues.missing("B_06.01.0070"))
+        assertFalse(issues.missing("B_06.01.0060"))
         assertFalse(issues.missing("B_07.01.0120"))
         assertFalse(issues.missing("B_05.01.0030"))
     }
@@ -98,11 +98,22 @@ class RoiReadinessTest {
     fun `default definitions are a warning`() {
         assertTrue(check().any { it.code == "default-definitions" && it.severity == ValidationSeverity.Warning })
     }
+
+    @Test
+    fun `two services that are one RoI row by the taxonomy key must agree`() {
+        val place = mapOf("B_02.02.0130" to "DE", "B_02.02.0140" to "true", "B_02.02.0150" to "DE", "B_02.02.0160" to "DE")
+        fun twoServices(secondReliance: String) = Roi.register(listOf(Roi.contract(listOf(
+            Roi.service("C1-S1", roi = place + ("B_02.02.0180" to "4")),
+            Roi.service("C1-S2", roi = place + ("B_02.02.0180" to secondReliance)),
+        ))))
+        assertTrue(check(twoServices("2")).any { it.code == "roi-duplicate-key" && it.template == "B_02.02" })
+        assertTrue(check(twoServices("4")).none { it.code == "roi-duplicate-key" })
+    }
 }
 
 class ResilienceChecksTest {
     private fun fn(rpo: String?) = Roi.register().let { r ->
-        r.copy(functions = r.functions.map { f -> f.copy(roi = rpo?.let { mapOf("B_06.01.0100" to Roi.field(it)) } ?: emptyMap()) })
+        r.copy(functions = r.functions.map { f -> f.copy(roi = rpo?.let { mapOf("B_06.01.0090" to Roi.field(it)) } ?: emptyMap()) })
     }
 
     private fun db(backup: dorai.shared.model.BackupInfo?, redundancy: dorai.shared.model.Redundancy = dorai.shared.model.Redundancy.Zone) =

@@ -80,6 +80,7 @@ Need: when the column must be filled. Closed lists use the CIR option keys; the 
 |---|---|---|---|
 | B_02.03.0010 | Contractual arrangement reference number | Text | Mandatory |
 | B_02.03.0020 | Contractual arrangement reference number linked to B_02.03.0010 | Text | Mandatory |
+| B_02.03.0030 | Link (taxonomy only, always true) | YesNo | Mandatory |
 
 ## B_03.01 Entities signing the contractual arrangements for receiving ICT service(s)
 
@@ -87,6 +88,7 @@ Need: when the column must be filled. Closed lists use the CIR option keys; the 
 |---|---|---|---|
 | B_03.01.0010 | Contractual arrangement reference number | Text | Mandatory |
 | B_03.01.0020 | LEI of the entity signing the contractual arrangement | Lei | Mandatory |
+| B_03.01.0030 | Link (taxonomy only, always true) | YesNo | Mandatory |
 
 ## B_03.02 ICT third-party service providers signing the contractual arrangements
 
@@ -102,6 +104,7 @@ Need: when the column must be filled. Closed lists use the CIR option keys; the 
 |---|---|---|---|
 | B_03.03.0010 | Contractual arrangement reference number | Text | Mandatory |
 | B_03.03.0020 | LEI of the entity providing ICT services | Lei | Mandatory |
+| B_03.03.0031 | Link (taxonomy only, always true) | YesNo | Mandatory |
 
 ## B_04.01 Entities making use of the ICT services
 
@@ -149,12 +152,12 @@ Need: when the column must be filled. Closed lists use the CIR option keys; the 
 | B_06.01.0020 | Licensed activity | Choice | Mandatory |
 | B_06.01.0030 | Function name | Text | Mandatory |
 | B_06.01.0040 | LEI of the entity | Lei | Mandatory |
-| B_06.01.0060 | Criticality or importance assessment | Choice | Mandatory |
-| B_06.01.0070 | Reasons for criticality or importance | Text | Optional |
-| B_06.01.0080 | Date of the last assessment of criticality or importance | Date | Mandatory |
-| B_06.01.0090 | Recovery time objective of the function (hours) | NaturalNumber | Mandatory |
-| B_06.01.0100 | Recovery point objective of the function (hours) | NaturalNumber | Mandatory |
-| B_06.01.0110 | Impact of discontinuing the function | Choice | Mandatory |
+| B_06.01.0050 | Criticality or importance assessment | Choice | Mandatory |
+| B_06.01.0060 | Reasons for criticality or importance | Text | Optional |
+| B_06.01.0070 | Date of the last assessment of criticality or importance | Date | Mandatory |
+| B_06.01.0080 | Recovery time objective of the function (hours) | NaturalNumber | Mandatory |
+| B_06.01.0090 | Recovery point objective of the function (hours) | NaturalNumber | Mandatory |
+| B_06.01.0100 | Impact of discontinuing the function | Choice | Mandatory |
 
 ## B_07.01 Assessment of the ICT services
 

@@ -76,13 +76,16 @@ class RoiTablesTest {
         val counts = RoiSpec.templates.associate { it.code to it.columns.size }
         assertEquals(
             mapOf(
-                "B_01.01" to 6, "B_01.02" to 11, "B_01.03" to 4, "B_02.01" to 5, "B_02.02" to 18, "B_02.03" to 2,
-                "B_03.01" to 2, "B_03.02" to 3, "B_03.03" to 2, "B_04.01" to 4, "B_05.01" to 12, "B_05.02" to 7,
+                "B_01.01" to 6, "B_01.02" to 11, "B_01.03" to 4, "B_02.01" to 5, "B_02.02" to 18, "B_02.03" to 3,
+                "B_03.01" to 3, "B_03.02" to 3, "B_03.03" to 3, "B_04.01" to 4, "B_05.01" to 12, "B_05.02" to 7,
                 "B_06.01" to 10, "B_07.01" to 12, "B_99.01" to 4,
             ),
             counts,
         )
-        assertNull(RoiSpec.column("B_06.01.0050"), "B_06.01 has no column 0050")
+        // The taxonomy numbers B_06.01 0010 to 0100 with criticality at 0050, and adds the Link columns.
+        assertEquals("Criticality or importance assessment", RoiSpec.column("B_06.01.0050")!!.name)
+        assertNull(RoiSpec.column("B_06.01.0110"))
+        assertEquals("c0031", RoiSpec.column("B_03.03.0031")!!.header)
         assertEquals("c0100", RoiSpec.column("B_02.02.0100")!!.header)
     }
 
@@ -91,6 +94,7 @@ class RoiTablesTest {
         val report = build()
         assertEquals(15, report.tables.size)
         assertTrue(report.table("B_02.03").rows.isEmpty())
+        assertEquals("true", report.table("B_03.01").rows.single().value("B_03.01.0030"))
         assertTrue(report.table("B_01.03").rows.isEmpty())
     }
 
@@ -186,7 +190,7 @@ class RoiTablesTest {
     @Test
     fun `functions report criticality as a CIR option`() {
         val row = build().table("B_06.01").rows.single()
-        assertEquals("1", row.value("B_06.01.0060"))
+        assertEquals("1", row.value("B_06.01.0050"))
         assertEquals(Roi.entityLei, row.value("B_06.01.0040"))
     }
 

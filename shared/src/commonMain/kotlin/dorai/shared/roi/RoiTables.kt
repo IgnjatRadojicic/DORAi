@@ -50,6 +50,9 @@ data class RoiReport(val referenceDate: LocalDate, val tables: List<RoiTable>) {
 object RoiTables {
     const val NO_END_DATE = "9999-12-31"
 
+    /** The taxonomy's "Link" columns: every row of these templates reports true. */
+    private val LINKS = mapOf("B_02.03" to "B_02.03.0030", "B_03.01" to "B_03.01.0030", "B_03.03" to "B_03.03.0031")
+
     fun build(register: Register, resources: List<Resource>, referenceDate: LocalDate): RoiReport {
         val ctx = Context(register, resources, referenceDate)
         val tables = RoiSpec.templates.map { t ->
@@ -68,7 +71,8 @@ object RoiTables {
                 "B_99.01" -> ctx.definitionRows()
                 else -> ctx.extraRows(t.code)
             }
-            RoiTable(t, rows)
+            val link = LINKS[t.code]
+            RoiTable(t, if (link == null) rows else rows.map { r -> if (link in r.cells) r else r.copy(cells = r.cells + (link to RoiCell("true", null))) })
         }
         return RoiReport(referenceDate, tables)
     }
@@ -240,7 +244,7 @@ object RoiTables {
 
         fun critical(functionId: String?): Boolean {
             val f = functions[functionId] ?: return false
-            val assessed = field(f.roi["B_06.01.0060"])?.value
+            val assessed = field(f.roi["B_06.01.0050"])?.value
             return if (assessed != null) assessed == "1" else f.isCritical
         }
 
@@ -333,9 +337,9 @@ object RoiTables {
                 put("B_06.01.0010", confirmed(f.id))
                 put("B_06.01.0030", confirmed(f.name))
                 put("B_06.01.0040", field(f.roi["B_06.01.0040"]) ?: derived(entity.lei))
-                val assessment = field(f.roi["B_06.01.0060"]) ?: confirmed(if (f.isCritical) "1" else "2")
-                put("B_06.01.0060", assessment)
-                if (assessment?.value == "3") put("B_06.01.0080", derived(NO_END_DATE))
+                val assessment = field(f.roi["B_06.01.0050"]) ?: confirmed(if (f.isCritical) "1" else "2")
+                put("B_06.01.0050", assessment)
+                if (assessment?.value == "3") put("B_06.01.0070", derived(NO_END_DATE))
                 own("B_06.01", f.roi)
             }
         }

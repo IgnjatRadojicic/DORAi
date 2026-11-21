@@ -64,10 +64,12 @@ object RoiSpec {
         template("B_02.03", "List of intra-group contractual arrangements") {
             col("0010", "Contractual arrangement reference number", RoiType.Text)
             col("0020", "Contractual arrangement reference number linked to B_02.03.0010", RoiType.Text)
+            col("0030", "Link", RoiType.YesNo)
         },
         template("B_03.01", "Entities signing the contractual arrangements for receiving ICT service(s)") {
             col("0010", "Contractual arrangement reference number", RoiType.Text)
             col("0020", "LEI of the entity signing the contractual arrangement", RoiType.Lei)
+            col("0030", "Link", RoiType.YesNo)
         },
         template("B_03.02", "ICT third-party service providers signing the contractual arrangements") {
             col("0010", "Contractual arrangement reference number", RoiType.Text)
@@ -77,6 +79,7 @@ object RoiSpec {
         template("B_03.03", "Entities signing the contractual arrangements for providing ICT service(s)") {
             col("0010", "Contractual arrangement reference number", RoiType.Text)
             col("0020", "LEI of the entity providing ICT services", RoiType.Lei)
+            col("0031", "Link", RoiType.YesNo)
         },
         template("B_04.01", "Entities making use of the ICT services") {
             col("0010", "Contractual arrangement reference number", RoiType.Text)
@@ -109,15 +112,15 @@ object RoiSpec {
         },
         template("B_06.01", "Functions identification") {
             col("0010", "Function identifier", RoiType.FunctionId)
-            col("0020", "Licensed activity", RoiType.Choice, options = LICENSED_ACTIVITIES)
+            col("0020", "Licensed activity", RoiType.Choice, options = TaxonomyCodeLists.licensedActivities)
             col("0030", "Function name", RoiType.Text)
             col("0040", "LEI of the entity", RoiType.Lei)
-            col("0060", "Criticality or importance assessment", RoiType.Choice, options = CRITICALITY)
-            col("0070", "Reasons for criticality or importance", RoiType.Text, RoiNeed.Optional)
-            col("0080", "Date of the last assessment of criticality or importance", RoiType.Date)
-            col("0090", "Recovery time objective of the function (hours)", RoiType.NaturalNumber)
-            col("0100", "Recovery point objective of the function (hours)", RoiType.NaturalNumber)
-            col("0110", "Impact of discontinuing the function", RoiType.Choice, options = IMPACT)
+            col("0050", "Criticality or importance assessment", RoiType.Choice, options = CRITICALITY)
+            col("0060", "Reasons for criticality or importance", RoiType.Text, RoiNeed.Optional)
+            col("0070", "Date of the last assessment of criticality or importance", RoiType.Date)
+            col("0080", "Recovery time objective of the function (hours)", RoiType.NaturalNumber)
+            col("0090", "Recovery point objective of the function (hours)", RoiType.NaturalNumber)
+            col("0100", "Impact of discontinuing the function", RoiType.Choice, options = IMPACT)
         },
         template("B_07.01", "Assessment of the ICT services") {
             col("0010", "Contractual arrangement reference number", RoiType.Text)
@@ -148,7 +151,7 @@ object RoiSpec {
     fun column(code: String): RoiColumn? = byCode[code]
 
     /** The closed lists B_99.01 asks the entity to define, in the CIR's order. */
-    val definedOptionSets: List<String> = listOf("B_02.01.0020", "B_02.02.0170", "B_06.01.0110", "B_07.01.0050", "B_07.01.0090", "B_07.01.0100")
+    val definedOptionSets: List<String> = listOf("B_02.01.0020", "B_02.02.0170", "B_06.01.0100", "B_07.01.0050", "B_07.01.0090", "B_07.01.0100")
 }
 
 data class RoiTemplate(val code: String, val name: String, val columns: List<RoiColumn>)
@@ -272,28 +275,3 @@ private val REINTEGRATION = numbered("Easy", "Difficult", "Highly complex")
 
 private val ALTERNATIVES = listOf(RoiOption("1", "Yes"), RoiOption("2", "No"), RoiOption("7", "Assessment not performed"))
 
-/** Annex II, by type of entity (a) to (u), plus "support functions" for functions with no licensed activity. */
-private val LICENSED_ACTIVITIES = listOf(
-    "a" to "Credit institutions: Annex I to Directive 2013/36/EU and Sections A and B of Annex I to Directive 2014/65/EU",
-    "b" to "Payment institutions: Annex I to Directive (EU) 2015/2366",
-    "c" to "Account information services: point (8) of Annex I to Directive (EU) 2015/2366",
-    "d" to "Electronic money: Directive 2009/110/EC and Annex I to Directive (EU) 2015/2366",
-    "e" to "Investment services: Sections A and B of Annex I to Directive 2014/65/EU",
-    "f" to "Crypto-asset services: Article 3(16) of Regulation (EU) 2023/1114",
-    "g" to "Asset-referenced tokens: Article 16(1) of Regulation (EU) 2023/1114",
-    "h" to "Central securities depositories: Annex to Regulation (EU) No 909/2014",
-    "i" to "Central counterparties: Article 2(1) of Regulation (EU) No 648/2012",
-    "j" to "Trading venues: Article 4(21) to (24) of Directive 2014/65/EU",
-    "k" to "Trade repositories: Regulation (EU) No 648/2012 and Regulation (EU) 2015/2365",
-    "l" to "Alternative investment fund managers: Article 6(4) and Annex I to Directive 2011/61/EU",
-    "m" to "Management companies: Article 6(3) and Annex II to Directive 2009/65/EC",
-    "n" to "Data reporting services: Article 2(1)(34) to (36) of Regulation (EU) No 600/2014",
-    "o" to "Insurance and reinsurance: Directive 2009/138/EC",
-    "p" to "Insurance and reinsurance distribution: Article 2(1)(1) and (2) of Directive (EU) 2016/97",
-    "q" to "Occupational retirement provision: Article 7 of Directive (EU) 2016/2341",
-    "r" to "Credit rating agencies: Article 3(1)(a) and (b) of Regulation (EC) No 1060/2009",
-    "s" to "Critical benchmarks: Regulation (EU) 2016/1011",
-    "t" to "Crowdfunding services: Article 3 of Regulation (EU) 2020/1503",
-    "u" to "Securitisation repositories: Regulation (EU) 2017/2402",
-    "support" to "Support functions (no registered or licensed activity)",
-).map { (k, l) -> RoiOption(k, l) }
