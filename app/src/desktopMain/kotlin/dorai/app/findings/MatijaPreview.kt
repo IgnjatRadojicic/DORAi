@@ -15,7 +15,7 @@ import dorai.app.components.WorkspaceSection
 import dorai.app.components.matijaSections
 import dorai.app.components.AppLanguage
 import dorai.app.export.ExportViewModel
-import dorai.app.export.CsvDownloadSource
+import dorai.app.export.ApiExportSource
 import dorai.app.export.ExportFormat
 import dorai.app.export.ValidationExportRoute
 import dorai.app.export.rememberWorkspaceFiles
@@ -44,7 +44,7 @@ fun main() = application {
             val api = remember { DoraiApi(System.getenv("DORAI_SERVER_URL")?.takeIf { it.isNotBlank() } ?: "http://localhost:8080") }
             DisposableEffect(api) { onDispose { api.close() } }
             val validation = remember(api) { ValidationViewModel(ApiRegisterValidation(api)) }
-            val export = remember(api, files) { ExportViewModel(CsvDownloadSource(api), files) }
+            val export = remember(api, files) { ExportViewModel(ApiExportSource(api), files) }
 
             LaunchedEffect(findings) {
                 try {
@@ -100,7 +100,7 @@ fun main() = application {
                                 catch (error: Exception) { findings.showFileError(error) }
                             }
                         })
-                        else -> ValidationExportRoute(validation, export, isDemo = true, availableFormats = setOf(ExportFormat.CSV))
+                        else -> ValidationExportRoute(validation, export, isDemo = true, availableFormats = ExportFormat.entries.toSet())
                     }
                 }
             }

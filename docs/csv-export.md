@@ -55,14 +55,14 @@ Start the desktop feature client using the launch instructions in `matija-fronte
 `Validation & export`, refresh validation if needed, and select `Save CSV package`.
 The client defaults to `http://localhost:8080`; `DORAI_SERVER_URL` changes that address for the feature
 launcher. Authenticated production composition should pass its authenticated `DoraiApi` to
-`CsvDownloadSource` and `ApiRegisterValidation`.
+`ApiExportSource` and `ApiRegisterValidation`.
 
 The validation view uses the server's actual report. No local server means a connection error, not a
 successful sample download. The fixture server is useful for checking the CSV workflow without a
 database or cloud credentials. PostgreSQL mode uses the same exporter through the repository interface.
 
-PDF export is deliberately unavailable: its server response remains 501 and its desktop save action
-is disabled. `availableFormats` separates supported downloads from fixture/demo labeling.
+PDF export is also available; see `pdf-export.md` for its contents and diagnostic behavior.
+`availableFormats` separates supported downloads from fixture/demo labeling.
 
 ## Tests
 

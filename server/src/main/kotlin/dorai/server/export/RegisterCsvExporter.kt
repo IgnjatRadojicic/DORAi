@@ -1,9 +1,7 @@
 package dorai.server.export
 
 import dorai.server.ApiProblem
-import dorai.server.core.RegisterExporter
 import dorai.shared.model.DoraiJson
-import dorai.shared.model.Finding
 import dorai.shared.model.Register
 import dorai.shared.rules.RegisterValidator
 import dorai.shared.rules.RulesRegisterValidator
@@ -20,9 +18,9 @@ import kotlinx.coroutines.withContext
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVPrinter
 
-/** CSV-only implementation. PDF remains unavailable until its implementation is supplied. */
-class RegisterCsvExporter(private val validator: RegisterValidator = RulesRegisterValidator()) : RegisterExporter {
-    override suspend fun csvZip(register: Register): ByteArray = withContext(Dispatchers.Default) {
+/** Writes the register templates and their audit manifest as one archive. */
+class RegisterCsvExporter(private val validator: RegisterValidator = RulesRegisterValidator()) {
+    suspend fun csvZip(register: Register): ByteArray = withContext(Dispatchers.Default) {
         val context = currentCoroutineContext()
         context.ensureActive()
         val validation = validator.validate(register)
@@ -58,9 +56,6 @@ class RegisterCsvExporter(private val validator: RegisterValidator = RulesRegist
         context.ensureActive()
         output.toByteArray()
     }
-
-    override suspend fun pdf(register: Register, findings: List<Finding>): ByteArray =
-        throw ApiProblem(HttpStatusCode.NotImplemented, "Export unavailable", "PDF export is not configured.")
 
     private companion object {
         const val NOTES = """DORAi register CSV package

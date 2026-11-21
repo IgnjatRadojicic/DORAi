@@ -5,11 +5,14 @@ import dorai.shared.api.ApiResult
 import dorai.shared.api.DoraiApi
 
 /** Uses the shared client's authentication, error handling and raw-byte export contract. */
-class CsvDownloadSource(private val api: DoraiApi) : ExportSource {
+class ApiExportSource(private val api: DoraiApi) : ExportSource {
     override suspend fun download(format: ExportFormat): ExportDocument {
-        if (format != ExportFormat.CSV) throw FrontendFailure("Export unavailable.")
-        return when (val result = api.exportCsv()) {
-            is ApiResult.Success -> ExportDocument(result.value, ExportFormat.CSV.mediaType)
+        val result = when (format) {
+            ExportFormat.CSV -> api.exportCsv()
+            ExportFormat.PDF -> api.exportPdf()
+        }
+        return when (result) {
+            is ApiResult.Success -> ExportDocument(result.value, format.mediaType)
             is ApiResult.Failure -> throw FrontendFailure(when (result.problem.status) {
                 0 -> "Server unavailable. Check the connection."
                 401 -> "Sign in to export."

@@ -1,7 +1,6 @@
 package dorai.app.export
 
 import com.sun.net.httpserver.HttpServer
-import dorai.app.components.FrontendFailure
 import dorai.app.findings.PlanDocument
 import dorai.app.validation.ApiRegisterValidation
 import dorai.app.validation.IssueSeverity
@@ -14,13 +13,13 @@ import java.util.zip.ZipOutputStream
 import kotlinx.coroutines.runBlocking
 import kotlin.test.*
 
-class CsvDownloadSourceTest {
+class ApiExportSourceTest {
     @Test
     fun serverBytesReachTheFileSaverThroughTheSharedClient() = runBlocking {
         val bytes = archive()
         withBackend("/api/export/csv", 200, bytes, "application/zip") { api, calls ->
             val files = FilesFake()
-            val source = CsvDownloadSource(api)
+            val source = ApiExportSource(api)
             val model = ExportViewModel(source, files)
             model.download(ExportFormat.CSV)
             assertContentEquals(bytes, files.bytes)
@@ -28,8 +27,7 @@ class CsvDownloadSourceTest {
             assertEquals("application/zip", files.mediaType)
             assertEquals("selected/register.zip", model.state.savedLocation)
             assertNull(model.state.error)
-            assertFailsWith<FrontendFailure> { source.download(ExportFormat.PDF) }
-            assertEquals(1, calls.get(), "PDF must not call an unimplemented endpoint")
+            assertEquals(1, calls.get())
         }
     }
 
@@ -38,10 +36,38 @@ class CsvDownloadSourceTest {
         val problem = """{"title":"Register validation failed","status":422,"detail":"Invalid register"}"""
         withBackend("/api/export/csv", 422, problem.encodeToByteArray(), "application/problem+json") { api, _ ->
             val files = FilesFake()
-            val model = ExportViewModel(CsvDownloadSource(api), files)
+            val model = ExportViewModel(ApiExportSource(api), files)
             model.download(ExportFormat.CSV)
             assertEquals("Resolve register validation errors before exporting.", model.state.error)
             assertNull(model.state.savedLocation)
+            assertNull(files.bytes)
+        }
+    }
+
+    @Test
+    fun pdfBytesReachTheDestinationThroughTheSharedClient() = runBlocking {
+        val bytes = "%PDF-1.7\nshared-client-test".encodeToByteArray()
+        withBackend("/api/export/pdf", 200, bytes, "application/pdf") { api, calls ->
+            val files = FilesFake()
+            val model = ExportViewModel(ApiExportSource(api), files)
+            model.download(ExportFormat.PDF)
+            assertContentEquals(bytes, files.bytes)
+            assertEquals("compliance-report.pdf", files.name)
+            assertEquals("application/pdf", files.mediaType)
+            assertEquals("selected/compliance-report.pdf", model.state.savedLocation)
+            assertEquals(1, calls.get())
+            assertNull(model.state.error)
+        }
+    }
+
+    @Test
+    fun failedPdfDownloadDoesNotOpenAFileDestination() = runBlocking {
+        val problem = """{"title":"Forbidden","status":403}"""
+        withBackend("/api/export/pdf", 403, problem.encodeToByteArray(), "application/problem+json") { api, _ ->
+            val files = FilesFake()
+            val model = ExportViewModel(ApiExportSource(api), files)
+            model.download(ExportFormat.PDF)
+            assertEquals("Your role does not allow exports.", model.state.error)
             assertNull(files.bytes)
         }
     }

@@ -33,7 +33,6 @@ class CsvEndpointTest {
         DoraiApi("http://localhost", client).use { api ->
             val result = assertIs<ApiResult.Success<ByteArray>>(api.exportCsv())
             assertContentEquals(bytes, result.value)
-            assertEquals(501, assertIs<ApiResult.Failure>(api.exportPdf()).problem.status)
         }
     }
 

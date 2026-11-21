@@ -2,7 +2,7 @@
 
 The frontend is in `dorai.app.theme`, `components`, `findings`, `validation` and `export`.
 It uses the existing Compose dependencies and provides light, dark and system appearances.
-The app entry point and production navigation remain with Luka. No backend or shared contract files are changed.
+The app entry point and production navigation remain with Luka. Server exports use the existing shared contract.
 
 ## Desktop presentation
 
@@ -51,9 +51,9 @@ their redistribution licenses. Only sections 03 and 04 are active in this scoped
 To explore the offline workflow, choose `Sample plan`, then `Check plan`. The bundled example
 returns four illustrative findings. A copy of that plan can also be chosen or dropped into the upload
 area on desktop. Other plans require the shared API adapter. Removing the selection resets results.
-CSV downloads now use the local server through `CsvDownloadSource`, including in fixture mode.
-The validation view reads the same server's register report. PDF remains unavailable. Real downloads
-save only after the shared API adapter supplies the document. See `csv-export.md` for the full flow.
+CSV and PDF downloads use the local server through `ApiExportSource`, including in fixture mode.
+The validation view reads the same server's register report. Real downloads save only after the shared
+API adapter supplies the document. See `csv-export.md` and `pdf-export.md` for the full flow.
 
 From the repository root, the preview can also be launched from PowerShell after setting up JDK 21:
 
@@ -107,7 +107,7 @@ boundaries, not substitute wire DTOs. Wire them in the composition layer by dele
 | --- | --- |
 | `FindingsSource.checkPlan` | POST `/api/check`, multipart part `plan`, original filename and JSON bytes; map the returned findings without changing rule, severity or resource |
 | `ValidationSource.validateRegister` | GET `/api/validation`; preserve validity, counts, issue codes, template, field, message and entity reference |
-| `ExportSource.download` | `CsvDownloadSource` calls GET `/api/export/csv`; PDF is not enabled yet |
+| `ExportSource.download` | `ApiExportSource` calls GET `/api/export/csv` or `/api/export/pdf` and preserves the returned bytes |
 
 Map wire severities `High`, `Medium`, `Low` to the presentation enum. Map `Error` and `Warning`
 to validation presentation values. Carry provenance and all citation information through the adapter.

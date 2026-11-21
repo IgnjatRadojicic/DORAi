@@ -14,7 +14,7 @@ import dorai.server.core.RegulationSearch
 import dorai.server.core.ReportDrafter
 import dorai.server.core.ResourceClassifier
 import dorai.server.core.Services
-import dorai.server.export.RegisterCsvExporter
+import dorai.server.export.RegisterDocumentExporter
 import dorai.server.core.SuggestionRepository
 import dorai.server.core.SuggestionRepository.Decision
 import dorai.shared.model.BusinessFunction
@@ -50,7 +50,7 @@ fun fixtureServices(data: FixtureData = FixtureData.load()): Services {
         explainer = NoAi,
         reportDrafter = NoAi,
         regulationSearch = NoAi,
-        exporter = RegisterCsvExporter(),
+        exporter = RegisterDocumentExporter(NoAi),
     )
 }
 

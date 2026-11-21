@@ -87,9 +87,12 @@ fun servicesFromEnv(fingerprint: String? = null, defaultPublicUrl: String = "htt
         auth.bootstrap()
         postgresServices(db, data).copy(auth = auth).withAi(db, AiConfig.fromEnv())
     }
-    val live = LiveConfig.fromEnv() ?: return base
-    log.info("Live scan of {}{}.", live.clouds, live.awsEndpoint?.let { " (AWS through $it)" } ?: "")
-    return base.withLiveScan(live, data.costs)
+    val live = LiveConfig.fromEnv()
+    val configured = if (live == null) base else {
+        log.info("Live scan of {}{}.", live.clouds, live.awsEndpoint?.let { " (AWS through $it)" } ?: "")
+        base.withLiveScan(live, data.costs)
+    }
+    return configured.copy(exporter = dorai.server.export.RegisterDocumentExporter(configured.reportDrafter, configured.validator))
 }
 
 /** Fixture wiring: in-memory storage, no AI. Used by tests and by a server started without a database. */
@@ -128,8 +131,9 @@ private fun Route.exportRoutes(services: Services) = route("export") {
         val exporter = services.exporter ?: throw exportUnavailable()
         val register = services.register.register()
         val findings = services.planChecker.check(services.demoPlan, register)
+        val bytes = exporter.pdf(register, findings)
         call.response.header(HttpHeaders.ContentDisposition, attachment("dorai-report.pdf"))
-        call.respondBytes(exporter.pdf(register, findings), ContentType.Application.Pdf)
+        call.respondBytes(bytes, ContentType.Application.Pdf)
     }
 }
 

@@ -177,11 +177,6 @@ class RegisterCsvExporterTest {
         assertEquals(422, error.status.value)
     }
 
-    @Test
-    fun pdfIsExplicitlyUnavailable() = runTest {
-        assertEquals(501, assertFailsWith<ApiProblem> { exporter.pdf(base, emptyList()) }.status.value)
-    }
-
     private fun ai(field: RegisterField) = field.copy(provenance = field.provenance.copy(label = ProvenanceLabel.AiSuggested))
 
     private fun withAi(field: String): Register {
