@@ -99,3 +99,34 @@ class RoiReadinessTest {
         assertTrue(check().any { it.code == "default-definitions" && it.severity == ValidationSeverity.Warning })
     }
 }
+
+class ResilienceChecksTest {
+    private fun fn(rpo: String?) = Roi.register().let { r ->
+        r.copy(functions = r.functions.map { f -> f.copy(roi = rpo?.let { mapOf("B_06.01.0100" to Roi.field(it)) } ?: emptyMap()) })
+    }
+
+    private fun db(backup: dorai.shared.model.BackupInfo?, redundancy: dorai.shared.model.Redundancy = dorai.shared.model.Redundancy.Zone) =
+        Roi.resource("db", "microsoft.dbforpostgresql/flexibleservers", "NL").copy(backup = backup, redundancy = redundancy)
+
+    @Test
+    fun `backups less frequent than the declared RPO are flagged`() {
+        val issues = ResilienceChecks.check(fn("1"), listOf(db(dorai.shared.model.BackupInfo(intervalHours = 24))))
+        assertTrue(issues.any { it.code == "art12-rpo-not-met" })
+    }
+
+    @Test
+    fun `no backup at all is flagged when an RPO is declared`() {
+        assertTrue(ResilienceChecks.check(fn("4"), listOf(db(null))).any { it.code == "art12-no-backup" })
+    }
+
+    @Test
+    fun `a matching backup and a zone-redundant store raise nothing`() {
+        assertTrue(ResilienceChecks.check(fn("1"), listOf(db(dorai.shared.model.BackupInfo(intervalHours = 1)))).isEmpty())
+    }
+
+    @Test
+    fun `single-location data of a critical function is flagged`() {
+        val issues = ResilienceChecks.check(fn(null), listOf(db(null, dorai.shared.model.Redundancy.Local)))
+        assertTrue(issues.any { it.code == "art12-single-location" })
+    }
+}

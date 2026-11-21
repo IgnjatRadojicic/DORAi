@@ -3,6 +3,7 @@ package dorai.server.collect.azure
 import dorai.server.collect.cloudResource
 import dorai.server.collect.round2
 import dorai.server.core.CostEntry
+import dorai.shared.model.BackupInfo
 import dorai.shared.model.Redundancy
 import dorai.shared.model.Resource
 import dorai.shared.rules.ServiceTypeTable
@@ -19,7 +20,10 @@ object AzureRows {
         if (resourceGroup != null) appendLine("| where resourceGroup =~ '$resourceGroup'")
         appendLine("| project id, name, type, location, tags, sku, kind,")
         appendLine("    ha = tostring(properties.highAvailability.mode),")
-        append("    geoBackup = tostring(properties.backup.geoRedundantBackup)")
+        appendLine("    geoBackup = tostring(properties.backup.geoRedundantBackup),")
+        appendLine("    backupDays = toint(properties.backup.backupRetentionDays),")
+        appendLine("    secondaryLocation = tostring(properties.secondaryLocation),")
+        append("    replicaLocations = properties.locations")
     }
 
     /**
@@ -37,6 +41,8 @@ object AzureRows {
             tags = (row["tags"] as? Map<*, *>).orEmpty()
                 .mapNotNull { (k, v) -> if (k is String && v is String) k to v else null }.toMap(),
             redundancy = redundancy(type, row),
+            replicaRegions = replicaRegions(row),
+            backup = backup(type, row),
         )
     }
 
@@ -54,6 +60,27 @@ object AzureRows {
             else -> Redundancy.Local
         }
         else -> Redundancy.Unknown
+    }
+
+    /** Regions holding copies: a storage account's secondary region, Cosmos DB's other write or read regions. */
+    internal fun replicaRegions(row: Map<String, Any?>): List<String> = buildList {
+        row.str("secondaryLocation").takeIf { it.isNotBlank() }?.let(::add)
+        (row["replicaLocations"] as? List<*>).orEmpty().forEach { l ->
+            ((l as? Map<*, *>)?.get("locationName") as? String)?.takeIf { it.isNotBlank() }?.let(::add)
+        }
+    }.distinct()
+
+    /**
+     * Backups the platform keeps by itself. PostgreSQL flexible server restores to any point in its
+     * retention (the transaction log is backed up at least every 5 minutes), so the interval is under an hour.
+     */
+    internal fun backup(type: String, row: Map<String, Any?>): BackupInfo? = when (type) {
+        "microsoft.dbforpostgresql/flexibleservers" -> BackupInfo(
+            intervalHours = 1,
+            retentionDays = (row["backupDays"] as? Number)?.toInt(),
+            geoRedundant = row.str("geoBackup").equals("Enabled", ignoreCase = true),
+        )
+        else -> null
     }
 
     private fun Map<String, Any?>.str(key: String) = (this[key] as? String).orEmpty()

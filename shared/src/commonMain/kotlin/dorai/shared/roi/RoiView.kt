@@ -23,7 +23,7 @@ data class RoiView(
     companion object {
         fun of(register: Register, resources: List<Resource>, referenceDate: LocalDate): RoiView {
             val report = RoiTables.build(register, resources, referenceDate)
-            val issues = RoiReadiness.check(report, register)
+            val issues = RoiReadiness.check(report, register) + ResilienceChecks.check(register, resources)
             val errors = issues.count { it.severity == ValidationSeverity.Error }
             return RoiView(
                 referenceDate = referenceDate,

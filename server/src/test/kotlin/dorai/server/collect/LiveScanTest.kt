@@ -107,6 +107,21 @@ class AzureRowsTest {
     }
 
     @Test
+    fun replicasAndBackupsBecomeCountriesAndBackupInfo() {
+        val storage = mapOf("type" to "Microsoft.Storage/storageAccounts", "location" to "westeurope", "secondaryLocation" to "northeurope")
+        assertEquals(listOf("IE"), AzureRows.toResource(storage).replicaCountries)
+        val cosmos = mapOf(
+            "type" to "Microsoft.DocumentDB/databaseAccounts", "location" to "westeurope",
+            "replicaLocations" to listOf(mapOf("locationName" to "West Europe"), mapOf("locationName" to "germanywestcentral")),
+        )
+        assertEquals(listOf("westeurope", "germanywestcentral").size, AzureRows.replicaRegions(cosmos).size)
+        val pg = mapOf("type" to "Microsoft.DBforPostgreSQL/flexibleServers", "backupDays" to 14, "geoBackup" to "Enabled")
+        val b = AzureRows.toResource(pg).backup!!
+        assertEquals(Triple(1, 14, true), Triple(b.intervalHours, b.retentionDays, b.geoRedundant))
+        assertEquals(null, AzureRows.toResource(storage).backup)
+    }
+
+    @Test
     fun theQueryNarrowsToTheResourceGroupOnlyWhenSet() {
         assertTrue("resourceGroup" !in AzureRows.query(null))
         assertTrue("| where resourceGroup =~ 'rg-finpay-prod'" in AzureRows.query("rg-finpay-prod"))
