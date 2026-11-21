@@ -3,16 +3,19 @@ package dorai.app.inventory
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.pointerHoverIcon
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
@@ -20,17 +23,22 @@ import androidx.compose.ui.unit.sp
 import dorai.app.components.*
 import dorai.app.theme.ProductStyle
 
-/** The "Details" toggle of a resource row, the same control as the evidence rows in Change findings. */
+/** Makes the whole resource row open and close its details, with a pointer cursor and the expanded state for screen readers. */
 @Composable
-fun DetailsToggle(expanded: Boolean, onToggle: () -> Unit) {
-    val rotation by animateFloatAsState(if (expanded) 180f else 0f, tween(ProductMotion.CONTENT), label = "resource-disclosure")
+fun Modifier.toggleDetails(expanded: Boolean, onToggle: () -> Unit): Modifier {
     val expansionLabel = uiText(if (expanded) UiCopy.EXPANDED else UiCopy.COLLAPSED)
-    TextButton(onClick = onToggle, contentPadding = PaddingValues(0.dp),
-        modifier = Modifier.semantics { stateDescription = expansionLabel }) {
-        LineIcon(ProductIcon.CHEVRON, Modifier.graphicsLayer { rotationZ = rotation }, color = ProductStyle.colors.accent, size = 13.dp)
-        Spacer(Modifier.width(6.dp))
-        Text(uiText("Details"), color = ProductStyle.colors.accent, style = MaterialTheme.typography.bodySmall)
-    }
+    val actionLabel = uiText("Details")
+    return this
+        .pointerHoverIcon(PointerIcon.Hand)
+        .clickable(role = Role.Button, onClickLabel = actionLabel, onClick = onToggle)
+        .semantics { stateDescription = expansionLabel }
+}
+
+/** Chevron next to the resource name that turns when the row is open. */
+@Composable
+fun ExpandIndicator(expanded: Boolean) {
+    val rotation by animateFloatAsState(if (expanded) 180f else 0f, tween(ProductMotion.CONTENT), label = "resource-disclosure")
+    LineIcon(ProductIcon.CHEVRON, Modifier.graphicsLayer { rotationZ = rotation }, color = ProductStyle.colors.accent, size = 13.dp)
 }
 
 /** Small amber mark in the table when a resource lacks a DORA tag the rules expect. */
