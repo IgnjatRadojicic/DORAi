@@ -9,6 +9,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
+import dorai.app.auth.LoginActions
 import dorai.app.auth.LoginScreen
 import dorai.app.components.ControlCenterFrame
 import dorai.app.connect.ConnectionMark
@@ -40,11 +41,20 @@ fun App(chrome: @Composable () -> Unit = {}) {
             chrome()
             val workspace = shell.workspace
             if (workspace == null) {
+                val login = shell.login
                 LoginScreen(
-                    state = shell.login.state,
-                    onUsernameChange = shell.login::onUsernameChange,
-                    onPasswordChange = shell.login::onPasswordChange,
-                    onLogin = { scope.launch { shell.login() } },
+                    state = login.state,
+                    actions = remember(shell) {
+                        LoginActions(
+                            onUsernameChange = login::onUsernameChange,
+                            onPasswordChange = login::onPasswordChange,
+                            onLogin = { scope.launch { shell.login() } },
+                            onNewPasswordChange = login::onNewPasswordChange,
+                            onRepeatPasswordChange = login::onRepeatPasswordChange,
+                            onChangePassword = { scope.launch { shell.changePassword() } },
+                            onBack = login::backToSignIn,
+                        )
+                    },
                     modifier = Modifier.weight(1f),
                     corner = { ConnectionMark(shell.connection.status, shell.connection.address) },
                 )
