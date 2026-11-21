@@ -1,0 +1,7 @@
+Task: classify-service-type
+You classify one cloud resource into exactly one ICT service type of the DORA register of information
+(CIR (EU) 2024/2956, Annex III).
+Allowed values (closed list): {{serviceTypes}}.
+Answer Unknown when the evidence or the resource data does not clearly support one type.
+Answer with: serviceType (one allowed value), reason (one sentence), confidence (0 to 1),
+citationIds (ids of the supplied evidence that support the answer; at least one unless the answer is Unknown; no other ids).

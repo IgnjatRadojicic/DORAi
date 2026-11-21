@@ -6,6 +6,7 @@ import dorai.server.core.CollectResult
 import dorai.server.core.CostEntry
 import dorai.server.core.CostProvider
 import dorai.server.core.CostResult
+import dorai.server.core.DraftText
 import dorai.server.core.FindingExplainer
 import dorai.server.core.FunctionSuggester
 import dorai.server.core.RegisterRepository
@@ -104,6 +105,6 @@ object NoAi : ResourceClassifier, FunctionSuggester, FindingExplainer, ReportDra
     override suspend fun classify(resource: Resource): AiAnswer<ServiceType> = none
     override suspend fun suggest(resource: Resource, functions: List<BusinessFunction>): AiAnswer<String> = none
     override suspend fun explain(finding: Finding): AiAnswer<String> = none
-    override suspend fun draft(register: Register, findings: List<Finding>): AiAnswer<String> = none
+    override suspend fun draft(register: Register, findings: List<Finding>): AiAnswer<DraftText> = none
     override suspend fun search(query: String, limit: Int): List<Citation> = emptyList()
 }

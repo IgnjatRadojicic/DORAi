@@ -64,6 +64,21 @@ on the subscriptions, an AWS IAM user or role with read-only access to tagging a
   If cost is unavailable, the scan continues without that cloud's cost.
 - Cost of deleted resources is ignored in the concentration report.
 
+### AI settings (`DORAI_AI_PROVIDER`)
+- `fake` (default) answers offline from fixed keyword rules, with no key and no outbound traffic. Its
+  answers say they come from the fake model.
+- `openai` uses OpenAI through Koog: `DORAI_AI_OPENAI_KEY` (required), `DORAI_AI_CHAT_MODEL` (default
+  `gpt-4.1-mini`) and, for another OpenAI-compatible endpoint, `DORAI_AI_OPENAI_BASE_URL`. Embeddings use
+  `text-embedding-3-small`. Azure OpenAI is not supported yet.
+- On every start the server loads the DORA regulation and the register templates into PostgreSQL in the
+  background (`DORAI_AI_INGEST_ON_STARTUP=false` skips it). Text already loaded for the same embedding model
+  is skipped, so only the first start, or a change of provider, calls the embedding API for the whole text.
+  Until loading finishes, AI answers say "insufficient evidence".
+- Every AI answer cites a regulation passage with similarity of at least `DORAI_AI_MIN_SIMILARITY`
+  (default 0.40 for `openai`, 0.25 for `fake`), or says "insufficient evidence". A reviewer accepts or
+  rejects every suggestion. If the model is down, the server reports the failure and stores nothing.
+- Without `DORAI_DB_URL` (fixtures in memory) there is no regulation search, so the AI stays off.
+
 ## Update
 ```
 docker compose pull

@@ -45,10 +45,16 @@ interface FindingExplainer {
     suspend fun explain(finding: Finding): AiAnswer<String>
 }
 
-/** Writes the summary text of the PDF report. */
+/** Writes the summary and one sentence per finding for the PDF report. Never adds, drops or re-rates a finding. */
 interface ReportDrafter {
-    suspend fun draft(register: Register, findings: List<Finding>): AiAnswer<String>
+    suspend fun draft(register: Register, findings: List<Finding>): AiAnswer<DraftText>
 }
+
+/** The drafted report text: a summary and one note per supplied finding, in the rules' order. */
+data class DraftText(val summary: String, val findings: List<FindingNote>)
+
+/** One drafted sentence about a finding, identified by the finding's rule and resource. */
+data class FindingNote(val ruleId: String, val resourceAddress: String, val text: String)
 
 /** Finds regulation passages for a question, best first, above the similarity threshold. */
 interface RegulationSearch {

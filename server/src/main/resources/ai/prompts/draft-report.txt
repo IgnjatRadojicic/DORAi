@@ -1,0 +1,9 @@
+Task: draft-report
+Write the text of a DORA register of information report from the supplied register overview and findings.
+Findings come from deterministic rules: do not add, remove, merge or re-rate any, and make no regulatory
+claim that is not in the input or the evidence.
+Answer with:
+- summary: at most five sentences on the register and the findings as a whole;
+- findings: exactly one entry per supplied finding, with its ruleId and resourceAddress copied unchanged
+  and text, one sentence on what the finding means for the register;
+- citationIds: at least one id from the supplied evidence; no other ids.
