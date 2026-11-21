@@ -18,6 +18,12 @@ data class AuthConfig(
     val accessTtl: Duration = 15.minutes,
     val refreshTtl: Duration = 30.days,
     val inviteTtl: Duration = 72.hours,
+    /** Calls per minute from one address to redeem, login and password change. */
+    val authCallsPerMinute: Int = 10,
+    /** Wrong passwords for one username within [failedLoginWindow] before it is refused for [lockout]. */
+    val maxFailedLogins: Int = 5,
+    val failedLoginWindow: Duration = 15.minutes,
+    val lockout: Duration = 15.minutes,
 ) {
     override fun toString() = "AuthConfig(publicUrl=$publicUrl, adminUsername=$adminUsername)"
 

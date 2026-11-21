@@ -41,6 +41,11 @@ last 15 minutes, sessions 30 days. Disabling a user, or revoking their sessions
 (`POST /api/admin/users/{username}/revoke`, which signs them out everywhere but lets them log in again),
 takes effect on their next call. The server checks the session on every API call.
 
+Login limits: five wrong passwords for one username within 15 minutes lock that username for 15 minutes,
+the right password included (revoking the user's sessions lifts it early). Redeem, login and password
+change are limited to 10 calls per minute from one address; behind a reverse proxy every user shares the
+proxy's address, so keep the server reachable directly.
+
 The invite link pins the certificate fingerprint. If `tls/keystore.p12` in the `server-data` volume is
 deleted, the server makes a new certificate and every app must connect again with a new invite.
 

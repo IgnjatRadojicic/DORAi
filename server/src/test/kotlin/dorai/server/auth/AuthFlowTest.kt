@@ -9,6 +9,13 @@ import dorai.shared.api.DoraiApi
 import dorai.shared.api.MemoryTokenStore
 import dorai.shared.model.CreateUserRequest
 import dorai.shared.model.Role
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.client.statement.bodyAsText
+import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpStatusCode
+import io.ktor.http.contentType
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
 import kotlin.test.Test
@@ -190,6 +197,44 @@ class AuthFlowTest {
         assertNull(auth.authorize(forged.sign(com.auth0.jwt.algorithms.Algorithm.HMAC256(config.jwtSecret))))
         assertNull(auth.authorize(forged.withClaim("sid", "x").sign(com.auth0.jwt.algorithms.Algorithm.HMAC256("y".repeat(40)))))
         assertNull(auth.authorize("not a token"))
+    }
+
+    @Test
+    fun fiveWrongPasswordsLockTheUsername() = flow { auth ->
+        val admin = admin(auth)
+        val created = admin.createUser(CreateUserRequest("lee", Role.Viewer, temporaryPassword = "temporary pass 1")).ok()
+        api().changePassword("lee", created.temporaryPassword, "lee password 2026").ok()
+        val lee = api()
+        repeat(5) { assertEquals(401, lee.login("lee", "a wrong guess $it").status()) }
+
+        // Locked: even the right password is refused, with the time to wait.
+        val response = client.post("/api/auth/login") {
+            contentType(ContentType.Application.Json)
+            setBody("""{"username":"lee","password":"lee password 2026"}""")
+        }
+        assertEquals(HttpStatusCode.TooManyRequests, response.status)
+        assertTrue(response.headers[HttpHeaders.RetryAfter]!!.toLong() in 1..900)
+        assertTrue("Try again in 15 minutes" in response.bodyAsText())
+
+        // Revoking the user's sessions lifts the lockout.
+        admin.revokeSessions("lee").ok()
+        assertFalse(lee.login("lee", "lee password 2026").ok().passwordChangeRequired)
+    }
+
+    @Test
+    fun guessingCallsAreLimitedPerAddress() = flow { _ ->
+        val api = api()
+        repeat(10) { assertEquals(404, api.redeem("AAAA-AAA$it").status()) }
+        val response = client.post("/api/auth/redeem") {
+            contentType(ContentType.Application.Json)
+            setBody("""{"code":"AAAA-AAAA"}""")
+        }
+        assertEquals(HttpStatusCode.TooManyRequests, response.status)
+        assertTrue(response.headers[HttpHeaders.RetryAfter]!!.toLong() in 1..60)
+        assertTrue(response.contentType()!!.match(ContentType("application", "problem+json")))
+        // Health and the session calls are not limited.
+        assertEquals("ok", api.health().ok().status)
+        assertEquals(401, api.register().status())
     }
 
     @Test

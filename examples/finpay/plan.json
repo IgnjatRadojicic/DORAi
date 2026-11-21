@@ -1,0 +1,2155 @@
+{
+  "format_version": "1.2",
+  "terraform_version": "1.16.0",
+  "variables": {
+    "localstack_endpoint": {
+      "value": "http://localhost:4566"
+    }
+  },
+  "planned_values": {
+    "outputs": {
+      "statement_jobs_queue_url": {
+        "sensitive": false,
+        "type": "string",
+        "value": "http://sqs.eu-central-1.localhost.localstack.cloud:4566/000000000000/finpay-statement-jobs"
+      },
+      "statements_bucket": {
+        "sensitive": false,
+        "type": "string",
+        "value": "finpay-statements"
+      }
+    },
+    "root_module": {
+      "resources": [
+        {
+          "address": "aws_dynamodb_table.statements_index",
+          "mode": "managed",
+          "type": "aws_dynamodb_table",
+          "name": "statements_index",
+          "provider_name": "registry.terraform.io/hashicorp/aws",
+          "schema_version": 1,
+          "values": {
+            "arn": "arn:aws:dynamodb:eu-central-1:000000000000:table/finpay-statements-index",
+            "attribute": [
+              {
+                "name": "statement_id",
+                "type": "S"
+              }
+            ],
+            "billing_mode": "PAY_PER_REQUEST",
+            "deletion_protection_enabled": false,
+            "global_secondary_index": [],
+            "hash_key": "statement_id",
+            "id": "finpay-statements-index",
+            "import_table": [],
+            "local_secondary_index": [],
+            "name": "finpay-statements-index",
+            "on_demand_throughput": [],
+            "point_in_time_recovery": [
+              {
+                "enabled": false,
+                "recovery_period_in_days": 0
+              }
+            ],
+            "range_key": null,
+            "read_capacity": 0,
+            "replica": [],
+            "restore_date_time": null,
+            "restore_source_name": null,
+            "restore_source_table_arn": null,
+            "restore_to_latest_time": null,
+            "server_side_encryption": [],
+            "stream_arn": "",
+            "stream_enabled": false,
+            "stream_label": "",
+            "stream_view_type": "",
+            "table_class": "STANDARD",
+            "tags": {
+              "dora-contract": "C2",
+              "dora-function": "F4",
+              "env": "prod",
+              "project": "finpay"
+            },
+            "tags_all": {
+              "dora-contract": "C2",
+              "dora-function": "F4",
+              "env": "prod",
+              "project": "finpay"
+            },
+            "timeouts": null,
+            "ttl": [
+              {
+                "attribute_name": "",
+                "enabled": false
+              }
+            ],
+            "write_capacity": 0
+          },
+          "sensitive_values": {
+            "attribute": [
+              {}
+            ],
+            "global_secondary_index": [],
+            "import_table": [],
+            "local_secondary_index": [],
+            "on_demand_throughput": [],
+            "point_in_time_recovery": [
+              {}
+            ],
+            "replica": [],
+            "server_side_encryption": [],
+            "tags": {},
+            "tags_all": {},
+            "ttl": [
+              {}
+            ]
+          }
+        },
+        {
+          "address": "aws_iam_role.lambda",
+          "mode": "managed",
+          "type": "aws_iam_role",
+          "name": "lambda",
+          "provider_name": "registry.terraform.io/hashicorp/aws",
+          "schema_version": 0,
+          "values": {
+            "arn": "arn:aws:iam::000000000000:role/finpay-statement-renderer-role",
+            "assume_role_policy": "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"lambda.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}",
+            "create_date": "2026-11-11T14:50:19Z",
+            "description": "",
+            "force_detach_policies": false,
+            "id": "finpay-statement-renderer-role",
+            "inline_policy": [],
+            "managed_policy_arns": [],
+            "max_session_duration": 3600,
+            "name": "finpay-statement-renderer-role",
+            "name_prefix": "",
+            "path": "/",
+            "permissions_boundary": "",
+            "tags": {
+              "env": "prod",
+              "project": "finpay"
+            },
+            "tags_all": {
+              "env": "prod",
+              "project": "finpay"
+            },
+            "unique_id": "AROAQAAAAAAAOBJG5IEDH"
+          },
+          "sensitive_values": {
+            "inline_policy": [],
+            "managed_policy_arns": [],
+            "tags": {},
+            "tags_all": {}
+          }
+        },
+        {
+          "address": "aws_lambda_function.statement_renderer",
+          "mode": "managed",
+          "type": "aws_lambda_function",
+          "name": "statement_renderer",
+          "provider_name": "registry.terraform.io/hashicorp/aws",
+          "schema_version": 0,
+          "values": {
+            "architectures": [
+              "x86_64"
+            ],
+            "arn": "arn:aws:lambda:eu-central-1:000000000000:function:finpay-statement-renderer",
+            "code_sha256": "jY3PTqOXBq0C1KAGDDdmE2V20pjb4ddJ+yTXqQDR8ik=",
+            "code_signing_config_arn": "",
+            "dead_letter_config": [],
+            "description": "",
+            "environment": [],
+            "ephemeral_storage": [
+              {
+                "size": 512
+              }
+            ],
+            "file_system_config": [],
+            "filename": "./lambda/renderer.zip",
+            "function_name": "finpay-statement-renderer",
+            "handler": "index.handler",
+            "id": "finpay-statement-renderer",
+            "image_config": [],
+            "image_uri": "",
+            "invoke_arn": "arn:aws:apigateway:eu-central-1:lambda:path/2015-03-31/functions/arn:aws:lambda:eu-central-1:000000000000:function:finpay-statement-renderer/invocations",
+            "kms_key_arn": "",
+            "last_modified": "2026-11-11T14:50:20.601472+0000",
+            "layers": [],
+            "logging_config": [
+              {
+                "application_log_level": "",
+                "log_format": "Text",
+                "log_group": "/aws/lambda/finpay-statement-renderer",
+                "system_log_level": ""
+              }
+            ],
+            "memory_size": 128,
+            "package_type": "Zip",
+            "publish": false,
+            "qualified_arn": "arn:aws:lambda:eu-central-1:000000000000:function:finpay-statement-renderer:$LATEST",
+            "qualified_invoke_arn": "arn:aws:apigateway:eu-central-1:lambda:path/2015-03-31/functions/arn:aws:lambda:eu-central-1:000000000000:function:finpay-statement-renderer:$LATEST/invocations",
+            "replace_security_groups_on_destroy": null,
+            "replacement_security_group_ids": null,
+            "reserved_concurrent_executions": -1,
+            "role": "arn:aws:iam::000000000000:role/finpay-statement-renderer-role",
+            "runtime": "python3.12",
+            "s3_bucket": null,
+            "s3_key": null,
+            "s3_object_version": null,
+            "signing_job_arn": "",
+            "signing_profile_version_arn": "",
+            "skip_destroy": false,
+            "snap_start": [],
+            "source_code_hash": "jY3PTqOXBq0C1KAGDDdmE2V20pjb4ddJ+yTXqQDR8ik=",
+            "source_code_size": 196,
+            "tags": {
+              "dora-contract": "C2",
+              "dora-function": "F4",
+              "env": "prod",
+              "project": "finpay"
+            },
+            "tags_all": {
+              "dora-contract": "C2",
+              "dora-function": "F4",
+              "env": "prod",
+              "project": "finpay"
+            },
+            "timeout": 3,
+            "timeouts": null,
+            "tracing_config": [
+              {
+                "mode": "PassThrough"
+              }
+            ],
+            "version": "$LATEST",
+            "vpc_config": []
+          },
+          "sensitive_values": {
+            "architectures": [
+              false
+            ],
+            "dead_letter_config": [],
+            "environment": [],
+            "ephemeral_storage": [
+              {}
+            ],
+            "file_system_config": [],
+            "image_config": [],
+            "layers": [],
+            "logging_config": [
+              {}
+            ],
+            "snap_start": [],
+            "tags": {},
+            "tags_all": {},
+            "tracing_config": [
+              {}
+            ],
+            "vpc_config": []
+          }
+        },
+        {
+          "address": "aws_s3_bucket.statements",
+          "mode": "managed",
+          "type": "aws_s3_bucket",
+          "name": "statements",
+          "provider_name": "registry.terraform.io/hashicorp/aws",
+          "schema_version": 0,
+          "values": {
+            "acceleration_status": "",
+            "acl": null,
+            "arn": "arn:aws:s3:::finpay-statements",
+            "bucket": "finpay-statements",
+            "bucket_domain_name": "finpay-statements.s3.amazonaws.com",
+            "bucket_prefix": "",
+            "bucket_regional_domain_name": "finpay-statements.s3.eu-central-1.amazonaws.com",
+            "cors_rule": [],
+            "force_destroy": false,
+            "grant": [
+              {
+                "id": "75aa57f09aa0c8caeab4f8c24e99d10f8e7faeebf76c078efc7c6caea54ba06a",
+                "permissions": [
+                  "FULL_CONTROL"
+                ],
+                "type": "CanonicalUser",
+                "uri": ""
+              }
+            ],
+            "hosted_zone_id": "Z21DNDUVLTQW6Q",
+            "id": "finpay-statements",
+            "lifecycle_rule": [],
+            "logging": [],
+            "object_lock_configuration": [],
+            "object_lock_enabled": false,
+            "policy": "",
+            "region": "eu-central-1",
+            "replication_configuration": [],
+            "request_payer": "BucketOwner",
+            "server_side_encryption_configuration": [
+              {
+                "rule": [
+                  {
+                    "apply_server_side_encryption_by_default": [
+                      {
+                        "kms_master_key_id": "",
+                        "sse_algorithm": "AES256"
+                      }
+                    ],
+                    "bucket_key_enabled": false
+                  }
+                ]
+              }
+            ],
+            "tags": {
+              "dora-contract": "C2",
+              "dora-function": "F4",
+              "env": "prod",
+              "project": "finpay"
+            },
+            "tags_all": {
+              "dora-contract": "C2",
+              "dora-function": "F4",
+              "env": "prod",
+              "project": "finpay"
+            },
+            "timeouts": null,
+            "versioning": [
+              {
+                "enabled": false,
+                "mfa_delete": false
+              }
+            ],
+            "website": [],
+            "website_domain": null,
+            "website_endpoint": null
+          },
+          "sensitive_values": {
+            "cors_rule": [],
+            "grant": [
+              {
+                "permissions": [
+                  false
+                ]
+              }
+            ],
+            "lifecycle_rule": [],
+            "logging": [],
+            "object_lock_configuration": [],
+            "replication_configuration": [],
+            "server_side_encryption_configuration": [
+              {
+                "rule": [
+                  {
+                    "apply_server_side_encryption_by_default": [
+                      {}
+                    ]
+                  }
+                ]
+              }
+            ],
+            "tags": {},
+            "tags_all": {},
+            "versioning": [
+              {}
+            ],
+            "website": []
+          }
+        },
+        {
+          "address": "aws_sqs_queue.statement_jobs",
+          "mode": "managed",
+          "type": "aws_sqs_queue",
+          "name": "statement_jobs",
+          "provider_name": "registry.terraform.io/hashicorp/aws",
+          "schema_version": 0,
+          "values": {
+            "arn": "arn:aws:sqs:eu-central-1:000000000000:finpay-statement-jobs",
+            "content_based_deduplication": false,
+            "deduplication_scope": "",
+            "delay_seconds": 0,
+            "fifo_queue": false,
+            "fifo_throughput_limit": "",
+            "id": "http://sqs.eu-central-1.localhost.localstack.cloud:4566/000000000000/finpay-statement-jobs",
+            "kms_data_key_reuse_period_seconds": 300,
+            "kms_master_key_id": "",
+            "max_message_size": 262144,
+            "message_retention_seconds": 345600,
+            "name": "finpay-statement-jobs",
+            "name_prefix": "",
+            "policy": "",
+            "receive_wait_time_seconds": 0,
+            "redrive_allow_policy": "",
+            "redrive_policy": "",
+            "sqs_managed_sse_enabled": true,
+            "tags": {
+              "dora-contract": "C2",
+              "dora-function": "F4",
+              "env": "prod",
+              "project": "finpay"
+            },
+            "tags_all": {
+              "dora-contract": "C2",
+              "dora-function": "F4",
+              "env": "prod",
+              "project": "finpay"
+            },
+            "timeouts": null,
+            "url": "http://sqs.eu-central-1.localhost.localstack.cloud:4566/000000000000/finpay-statement-jobs",
+            "visibility_timeout_seconds": 30
+          },
+          "sensitive_values": {
+            "tags": {},
+            "tags_all": {}
+          }
+        }
+      ]
+    }
+  },
+  "resource_drift": [
+    {
+      "address": "aws_lambda_function.statement_renderer",
+      "mode": "managed",
+      "type": "aws_lambda_function",
+      "name": "statement_renderer",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "before": {
+          "architectures": [
+            "x86_64"
+          ],
+          "arn": "arn:aws:lambda:eu-central-1:000000000000:function:finpay-statement-renderer",
+          "code_sha256": "jY3PTqOXBq0C1KAGDDdmE2V20pjb4ddJ+yTXqQDR8ik=",
+          "code_signing_config_arn": "",
+          "dead_letter_config": [],
+          "description": "",
+          "environment": [],
+          "ephemeral_storage": [
+            {
+              "size": 512
+            }
+          ],
+          "file_system_config": [],
+          "filename": "./lambda/renderer.zip",
+          "function_name": "finpay-statement-renderer",
+          "handler": "index.handler",
+          "id": "finpay-statement-renderer",
+          "image_config": [],
+          "image_uri": "",
+          "invoke_arn": "arn:aws:apigateway:eu-central-1:lambda:path/2015-03-31/functions/arn:aws:lambda:eu-central-1:000000000000:function:finpay-statement-renderer/invocations",
+          "kms_key_arn": "",
+          "last_modified": "2026-11-11T14:50:20.601472+0000",
+          "layers": null,
+          "logging_config": [
+            {
+              "application_log_level": "",
+              "log_format": "Text",
+              "log_group": "/aws/lambda/finpay-statement-renderer",
+              "system_log_level": ""
+            }
+          ],
+          "memory_size": 128,
+          "package_type": "Zip",
+          "publish": false,
+          "qualified_arn": "arn:aws:lambda:eu-central-1:000000000000:function:finpay-statement-renderer:$LATEST",
+          "qualified_invoke_arn": "arn:aws:apigateway:eu-central-1:lambda:path/2015-03-31/functions/arn:aws:lambda:eu-central-1:000000000000:function:finpay-statement-renderer:$LATEST/invocations",
+          "replace_security_groups_on_destroy": null,
+          "replacement_security_group_ids": null,
+          "reserved_concurrent_executions": -1,
+          "role": "arn:aws:iam::000000000000:role/finpay-statement-renderer-role",
+          "runtime": "python3.12",
+          "s3_bucket": null,
+          "s3_key": null,
+          "s3_object_version": null,
+          "signing_job_arn": "",
+          "signing_profile_version_arn": "",
+          "skip_destroy": false,
+          "snap_start": [],
+          "source_code_hash": "jY3PTqOXBq0C1KAGDDdmE2V20pjb4ddJ+yTXqQDR8ik=",
+          "source_code_size": 196,
+          "tags": {
+            "dora-contract": "C2",
+            "dora-function": "F4",
+            "env": "prod",
+            "project": "finpay"
+          },
+          "tags_all": {
+            "dora-contract": "C2",
+            "dora-function": "F4",
+            "env": "prod",
+            "project": "finpay"
+          },
+          "timeout": 3,
+          "timeouts": null,
+          "tracing_config": [
+            {
+              "mode": "PassThrough"
+            }
+          ],
+          "version": "$LATEST",
+          "vpc_config": []
+        },
+        "after": {
+          "architectures": [
+            "x86_64"
+          ],
+          "arn": "arn:aws:lambda:eu-central-1:000000000000:function:finpay-statement-renderer",
+          "code_sha256": "jY3PTqOXBq0C1KAGDDdmE2V20pjb4ddJ+yTXqQDR8ik=",
+          "code_signing_config_arn": "",
+          "dead_letter_config": [],
+          "description": "",
+          "environment": [],
+          "ephemeral_storage": [
+            {
+              "size": 512
+            }
+          ],
+          "file_system_config": [],
+          "filename": "./lambda/renderer.zip",
+          "function_name": "finpay-statement-renderer",
+          "handler": "index.handler",
+          "id": "finpay-statement-renderer",
+          "image_config": [],
+          "image_uri": "",
+          "invoke_arn": "arn:aws:apigateway:eu-central-1:lambda:path/2015-03-31/functions/arn:aws:lambda:eu-central-1:000000000000:function:finpay-statement-renderer/invocations",
+          "kms_key_arn": "",
+          "last_modified": "2026-11-11T14:50:20.601472+0000",
+          "layers": [],
+          "logging_config": [
+            {
+              "application_log_level": "",
+              "log_format": "Text",
+              "log_group": "/aws/lambda/finpay-statement-renderer",
+              "system_log_level": ""
+            }
+          ],
+          "memory_size": 128,
+          "package_type": "Zip",
+          "publish": false,
+          "qualified_arn": "arn:aws:lambda:eu-central-1:000000000000:function:finpay-statement-renderer:$LATEST",
+          "qualified_invoke_arn": "arn:aws:apigateway:eu-central-1:lambda:path/2015-03-31/functions/arn:aws:lambda:eu-central-1:000000000000:function:finpay-statement-renderer:$LATEST/invocations",
+          "replace_security_groups_on_destroy": null,
+          "replacement_security_group_ids": null,
+          "reserved_concurrent_executions": -1,
+          "role": "arn:aws:iam::000000000000:role/finpay-statement-renderer-role",
+          "runtime": "python3.12",
+          "s3_bucket": null,
+          "s3_key": null,
+          "s3_object_version": null,
+          "signing_job_arn": "",
+          "signing_profile_version_arn": "",
+          "skip_destroy": false,
+          "snap_start": [],
+          "source_code_hash": "jY3PTqOXBq0C1KAGDDdmE2V20pjb4ddJ+yTXqQDR8ik=",
+          "source_code_size": 196,
+          "tags": {
+            "dora-contract": "C2",
+            "dora-function": "F4",
+            "env": "prod",
+            "project": "finpay"
+          },
+          "tags_all": {
+            "dora-contract": "C2",
+            "dora-function": "F4",
+            "env": "prod",
+            "project": "finpay"
+          },
+          "timeout": 3,
+          "timeouts": null,
+          "tracing_config": [
+            {
+              "mode": "PassThrough"
+            }
+          ],
+          "version": "$LATEST",
+          "vpc_config": []
+        },
+        "after_unknown": {},
+        "before_sensitive": {
+          "architectures": [
+            false
+          ],
+          "dead_letter_config": [],
+          "environment": [],
+          "ephemeral_storage": [
+            {}
+          ],
+          "file_system_config": [],
+          "image_config": [],
+          "logging_config": [
+            {}
+          ],
+          "snap_start": [],
+          "tags": {},
+          "tags_all": {},
+          "tracing_config": [
+            {}
+          ],
+          "vpc_config": []
+        },
+        "after_sensitive": {
+          "architectures": [
+            false
+          ],
+          "dead_letter_config": [],
+          "environment": [],
+          "ephemeral_storage": [
+            {}
+          ],
+          "file_system_config": [],
+          "image_config": [],
+          "layers": [],
+          "logging_config": [
+            {}
+          ],
+          "snap_start": [],
+          "tags": {},
+          "tags_all": {},
+          "tracing_config": [
+            {}
+          ],
+          "vpc_config": []
+        }
+      }
+    }
+  ],
+  "resource_changes": [
+    {
+      "address": "aws_dynamodb_table.statements_index",
+      "mode": "managed",
+      "type": "aws_dynamodb_table",
+      "name": "statements_index",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "no-op"
+        ],
+        "before": {
+          "arn": "arn:aws:dynamodb:eu-central-1:000000000000:table/finpay-statements-index",
+          "attribute": [
+            {
+              "name": "statement_id",
+              "type": "S"
+            }
+          ],
+          "billing_mode": "PAY_PER_REQUEST",
+          "deletion_protection_enabled": false,
+          "global_secondary_index": [],
+          "hash_key": "statement_id",
+          "id": "finpay-statements-index",
+          "import_table": [],
+          "local_secondary_index": [],
+          "name": "finpay-statements-index",
+          "on_demand_throughput": [],
+          "point_in_time_recovery": [
+            {
+              "enabled": false,
+              "recovery_period_in_days": 0
+            }
+          ],
+          "range_key": null,
+          "read_capacity": 0,
+          "replica": [],
+          "restore_date_time": null,
+          "restore_source_name": null,
+          "restore_source_table_arn": null,
+          "restore_to_latest_time": null,
+          "server_side_encryption": [],
+          "stream_arn": "",
+          "stream_enabled": false,
+          "stream_label": "",
+          "stream_view_type": "",
+          "table_class": "STANDARD",
+          "tags": {
+            "dora-contract": "C2",
+            "dora-function": "F4",
+            "env": "prod",
+            "project": "finpay"
+          },
+          "tags_all": {
+            "dora-contract": "C2",
+            "dora-function": "F4",
+            "env": "prod",
+            "project": "finpay"
+          },
+          "timeouts": null,
+          "ttl": [
+            {
+              "attribute_name": "",
+              "enabled": false
+            }
+          ],
+          "write_capacity": 0
+        },
+        "after": {
+          "arn": "arn:aws:dynamodb:eu-central-1:000000000000:table/finpay-statements-index",
+          "attribute": [
+            {
+              "name": "statement_id",
+              "type": "S"
+            }
+          ],
+          "billing_mode": "PAY_PER_REQUEST",
+          "deletion_protection_enabled": false,
+          "global_secondary_index": [],
+          "hash_key": "statement_id",
+          "id": "finpay-statements-index",
+          "import_table": [],
+          "local_secondary_index": [],
+          "name": "finpay-statements-index",
+          "on_demand_throughput": [],
+          "point_in_time_recovery": [
+            {
+              "enabled": false,
+              "recovery_period_in_days": 0
+            }
+          ],
+          "range_key": null,
+          "read_capacity": 0,
+          "replica": [],
+          "restore_date_time": null,
+          "restore_source_name": null,
+          "restore_source_table_arn": null,
+          "restore_to_latest_time": null,
+          "server_side_encryption": [],
+          "stream_arn": "",
+          "stream_enabled": false,
+          "stream_label": "",
+          "stream_view_type": "",
+          "table_class": "STANDARD",
+          "tags": {
+            "dora-contract": "C2",
+            "dora-function": "F4",
+            "env": "prod",
+            "project": "finpay"
+          },
+          "tags_all": {
+            "dora-contract": "C2",
+            "dora-function": "F4",
+            "env": "prod",
+            "project": "finpay"
+          },
+          "timeouts": null,
+          "ttl": [
+            {
+              "attribute_name": "",
+              "enabled": false
+            }
+          ],
+          "write_capacity": 0
+        },
+        "after_unknown": {},
+        "before_sensitive": {
+          "attribute": [
+            {}
+          ],
+          "global_secondary_index": [],
+          "import_table": [],
+          "local_secondary_index": [],
+          "on_demand_throughput": [],
+          "point_in_time_recovery": [
+            {}
+          ],
+          "replica": [],
+          "server_side_encryption": [],
+          "tags": {},
+          "tags_all": {},
+          "ttl": [
+            {}
+          ]
+        },
+        "after_sensitive": {
+          "attribute": [
+            {}
+          ],
+          "global_secondary_index": [],
+          "import_table": [],
+          "local_secondary_index": [],
+          "on_demand_throughput": [],
+          "point_in_time_recovery": [
+            {}
+          ],
+          "replica": [],
+          "server_side_encryption": [],
+          "tags": {},
+          "tags_all": {},
+          "ttl": [
+            {}
+          ]
+        }
+      }
+    },
+    {
+      "address": "aws_iam_role.lambda",
+      "mode": "managed",
+      "type": "aws_iam_role",
+      "name": "lambda",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "no-op"
+        ],
+        "before": {
+          "arn": "arn:aws:iam::000000000000:role/finpay-statement-renderer-role",
+          "assume_role_policy": "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"lambda.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}",
+          "create_date": "2026-11-11T14:50:19Z",
+          "description": "",
+          "force_detach_policies": false,
+          "id": "finpay-statement-renderer-role",
+          "inline_policy": [],
+          "managed_policy_arns": [],
+          "max_session_duration": 3600,
+          "name": "finpay-statement-renderer-role",
+          "name_prefix": "",
+          "path": "/",
+          "permissions_boundary": "",
+          "tags": {
+            "env": "prod",
+            "project": "finpay"
+          },
+          "tags_all": {
+            "env": "prod",
+            "project": "finpay"
+          },
+          "unique_id": "AROAQAAAAAAAOBJG5IEDH"
+        },
+        "after": {
+          "arn": "arn:aws:iam::000000000000:role/finpay-statement-renderer-role",
+          "assume_role_policy": "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"lambda.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}",
+          "create_date": "2026-11-11T14:50:19Z",
+          "description": "",
+          "force_detach_policies": false,
+          "id": "finpay-statement-renderer-role",
+          "inline_policy": [],
+          "managed_policy_arns": [],
+          "max_session_duration": 3600,
+          "name": "finpay-statement-renderer-role",
+          "name_prefix": "",
+          "path": "/",
+          "permissions_boundary": "",
+          "tags": {
+            "env": "prod",
+            "project": "finpay"
+          },
+          "tags_all": {
+            "env": "prod",
+            "project": "finpay"
+          },
+          "unique_id": "AROAQAAAAAAAOBJG5IEDH"
+        },
+        "after_unknown": {},
+        "before_sensitive": {
+          "inline_policy": [],
+          "managed_policy_arns": [],
+          "tags": {},
+          "tags_all": {}
+        },
+        "after_sensitive": {
+          "inline_policy": [],
+          "managed_policy_arns": [],
+          "tags": {},
+          "tags_all": {}
+        }
+      }
+    },
+    {
+      "address": "aws_lambda_function.statement_renderer",
+      "mode": "managed",
+      "type": "aws_lambda_function",
+      "name": "statement_renderer",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "no-op"
+        ],
+        "before": {
+          "architectures": [
+            "x86_64"
+          ],
+          "arn": "arn:aws:lambda:eu-central-1:000000000000:function:finpay-statement-renderer",
+          "code_sha256": "jY3PTqOXBq0C1KAGDDdmE2V20pjb4ddJ+yTXqQDR8ik=",
+          "code_signing_config_arn": "",
+          "dead_letter_config": [],
+          "description": "",
+          "environment": [],
+          "ephemeral_storage": [
+            {
+              "size": 512
+            }
+          ],
+          "file_system_config": [],
+          "filename": "./lambda/renderer.zip",
+          "function_name": "finpay-statement-renderer",
+          "handler": "index.handler",
+          "id": "finpay-statement-renderer",
+          "image_config": [],
+          "image_uri": "",
+          "invoke_arn": "arn:aws:apigateway:eu-central-1:lambda:path/2015-03-31/functions/arn:aws:lambda:eu-central-1:000000000000:function:finpay-statement-renderer/invocations",
+          "kms_key_arn": "",
+          "last_modified": "2026-11-11T14:50:20.601472+0000",
+          "layers": [],
+          "logging_config": [
+            {
+              "application_log_level": "",
+              "log_format": "Text",
+              "log_group": "/aws/lambda/finpay-statement-renderer",
+              "system_log_level": ""
+            }
+          ],
+          "memory_size": 128,
+          "package_type": "Zip",
+          "publish": false,
+          "qualified_arn": "arn:aws:lambda:eu-central-1:000000000000:function:finpay-statement-renderer:$LATEST",
+          "qualified_invoke_arn": "arn:aws:apigateway:eu-central-1:lambda:path/2015-03-31/functions/arn:aws:lambda:eu-central-1:000000000000:function:finpay-statement-renderer:$LATEST/invocations",
+          "replace_security_groups_on_destroy": null,
+          "replacement_security_group_ids": null,
+          "reserved_concurrent_executions": -1,
+          "role": "arn:aws:iam::000000000000:role/finpay-statement-renderer-role",
+          "runtime": "python3.12",
+          "s3_bucket": null,
+          "s3_key": null,
+          "s3_object_version": null,
+          "signing_job_arn": "",
+          "signing_profile_version_arn": "",
+          "skip_destroy": false,
+          "snap_start": [],
+          "source_code_hash": "jY3PTqOXBq0C1KAGDDdmE2V20pjb4ddJ+yTXqQDR8ik=",
+          "source_code_size": 196,
+          "tags": {
+            "dora-contract": "C2",
+            "dora-function": "F4",
+            "env": "prod",
+            "project": "finpay"
+          },
+          "tags_all": {
+            "dora-contract": "C2",
+            "dora-function": "F4",
+            "env": "prod",
+            "project": "finpay"
+          },
+          "timeout": 3,
+          "timeouts": null,
+          "tracing_config": [
+            {
+              "mode": "PassThrough"
+            }
+          ],
+          "version": "$LATEST",
+          "vpc_config": []
+        },
+        "after": {
+          "architectures": [
+            "x86_64"
+          ],
+          "arn": "arn:aws:lambda:eu-central-1:000000000000:function:finpay-statement-renderer",
+          "code_sha256": "jY3PTqOXBq0C1KAGDDdmE2V20pjb4ddJ+yTXqQDR8ik=",
+          "code_signing_config_arn": "",
+          "dead_letter_config": [],
+          "description": "",
+          "environment": [],
+          "ephemeral_storage": [
+            {
+              "size": 512
+            }
+          ],
+          "file_system_config": [],
+          "filename": "./lambda/renderer.zip",
+          "function_name": "finpay-statement-renderer",
+          "handler": "index.handler",
+          "id": "finpay-statement-renderer",
+          "image_config": [],
+          "image_uri": "",
+          "invoke_arn": "arn:aws:apigateway:eu-central-1:lambda:path/2015-03-31/functions/arn:aws:lambda:eu-central-1:000000000000:function:finpay-statement-renderer/invocations",
+          "kms_key_arn": "",
+          "last_modified": "2026-11-11T14:50:20.601472+0000",
+          "layers": [],
+          "logging_config": [
+            {
+              "application_log_level": "",
+              "log_format": "Text",
+              "log_group": "/aws/lambda/finpay-statement-renderer",
+              "system_log_level": ""
+            }
+          ],
+          "memory_size": 128,
+          "package_type": "Zip",
+          "publish": false,
+          "qualified_arn": "arn:aws:lambda:eu-central-1:000000000000:function:finpay-statement-renderer:$LATEST",
+          "qualified_invoke_arn": "arn:aws:apigateway:eu-central-1:lambda:path/2015-03-31/functions/arn:aws:lambda:eu-central-1:000000000000:function:finpay-statement-renderer:$LATEST/invocations",
+          "replace_security_groups_on_destroy": null,
+          "replacement_security_group_ids": null,
+          "reserved_concurrent_executions": -1,
+          "role": "arn:aws:iam::000000000000:role/finpay-statement-renderer-role",
+          "runtime": "python3.12",
+          "s3_bucket": null,
+          "s3_key": null,
+          "s3_object_version": null,
+          "signing_job_arn": "",
+          "signing_profile_version_arn": "",
+          "skip_destroy": false,
+          "snap_start": [],
+          "source_code_hash": "jY3PTqOXBq0C1KAGDDdmE2V20pjb4ddJ+yTXqQDR8ik=",
+          "source_code_size": 196,
+          "tags": {
+            "dora-contract": "C2",
+            "dora-function": "F4",
+            "env": "prod",
+            "project": "finpay"
+          },
+          "tags_all": {
+            "dora-contract": "C2",
+            "dora-function": "F4",
+            "env": "prod",
+            "project": "finpay"
+          },
+          "timeout": 3,
+          "timeouts": null,
+          "tracing_config": [
+            {
+              "mode": "PassThrough"
+            }
+          ],
+          "version": "$LATEST",
+          "vpc_config": []
+        },
+        "after_unknown": {},
+        "before_sensitive": {
+          "architectures": [
+            false
+          ],
+          "dead_letter_config": [],
+          "environment": [],
+          "ephemeral_storage": [
+            {}
+          ],
+          "file_system_config": [],
+          "image_config": [],
+          "layers": [],
+          "logging_config": [
+            {}
+          ],
+          "snap_start": [],
+          "tags": {},
+          "tags_all": {},
+          "tracing_config": [
+            {}
+          ],
+          "vpc_config": []
+        },
+        "after_sensitive": {
+          "architectures": [
+            false
+          ],
+          "dead_letter_config": [],
+          "environment": [],
+          "ephemeral_storage": [
+            {}
+          ],
+          "file_system_config": [],
+          "image_config": [],
+          "layers": [],
+          "logging_config": [
+            {}
+          ],
+          "snap_start": [],
+          "tags": {},
+          "tags_all": {},
+          "tracing_config": [
+            {}
+          ],
+          "vpc_config": []
+        }
+      }
+    },
+    {
+      "address": "aws_s3_bucket.statements",
+      "mode": "managed",
+      "type": "aws_s3_bucket",
+      "name": "statements",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "no-op"
+        ],
+        "before": {
+          "acceleration_status": "",
+          "acl": null,
+          "arn": "arn:aws:s3:::finpay-statements",
+          "bucket": "finpay-statements",
+          "bucket_domain_name": "finpay-statements.s3.amazonaws.com",
+          "bucket_prefix": "",
+          "bucket_regional_domain_name": "finpay-statements.s3.eu-central-1.amazonaws.com",
+          "cors_rule": [],
+          "force_destroy": false,
+          "grant": [
+            {
+              "id": "75aa57f09aa0c8caeab4f8c24e99d10f8e7faeebf76c078efc7c6caea54ba06a",
+              "permissions": [
+                "FULL_CONTROL"
+              ],
+              "type": "CanonicalUser",
+              "uri": ""
+            }
+          ],
+          "hosted_zone_id": "Z21DNDUVLTQW6Q",
+          "id": "finpay-statements",
+          "lifecycle_rule": [],
+          "logging": [],
+          "object_lock_configuration": [],
+          "object_lock_enabled": false,
+          "policy": "",
+          "region": "eu-central-1",
+          "replication_configuration": [],
+          "request_payer": "BucketOwner",
+          "server_side_encryption_configuration": [
+            {
+              "rule": [
+                {
+                  "apply_server_side_encryption_by_default": [
+                    {
+                      "kms_master_key_id": "",
+                      "sse_algorithm": "AES256"
+                    }
+                  ],
+                  "bucket_key_enabled": false
+                }
+              ]
+            }
+          ],
+          "tags": {
+            "dora-contract": "C2",
+            "dora-function": "F4",
+            "env": "prod",
+            "project": "finpay"
+          },
+          "tags_all": {
+            "dora-contract": "C2",
+            "dora-function": "F4",
+            "env": "prod",
+            "project": "finpay"
+          },
+          "timeouts": null,
+          "versioning": [
+            {
+              "enabled": false,
+              "mfa_delete": false
+            }
+          ],
+          "website": [],
+          "website_domain": null,
+          "website_endpoint": null
+        },
+        "after": {
+          "acceleration_status": "",
+          "acl": null,
+          "arn": "arn:aws:s3:::finpay-statements",
+          "bucket": "finpay-statements",
+          "bucket_domain_name": "finpay-statements.s3.amazonaws.com",
+          "bucket_prefix": "",
+          "bucket_regional_domain_name": "finpay-statements.s3.eu-central-1.amazonaws.com",
+          "cors_rule": [],
+          "force_destroy": false,
+          "grant": [
+            {
+              "id": "75aa57f09aa0c8caeab4f8c24e99d10f8e7faeebf76c078efc7c6caea54ba06a",
+              "permissions": [
+                "FULL_CONTROL"
+              ],
+              "type": "CanonicalUser",
+              "uri": ""
+            }
+          ],
+          "hosted_zone_id": "Z21DNDUVLTQW6Q",
+          "id": "finpay-statements",
+          "lifecycle_rule": [],
+          "logging": [],
+          "object_lock_configuration": [],
+          "object_lock_enabled": false,
+          "policy": "",
+          "region": "eu-central-1",
+          "replication_configuration": [],
+          "request_payer": "BucketOwner",
+          "server_side_encryption_configuration": [
+            {
+              "rule": [
+                {
+                  "apply_server_side_encryption_by_default": [
+                    {
+                      "kms_master_key_id": "",
+                      "sse_algorithm": "AES256"
+                    }
+                  ],
+                  "bucket_key_enabled": false
+                }
+              ]
+            }
+          ],
+          "tags": {
+            "dora-contract": "C2",
+            "dora-function": "F4",
+            "env": "prod",
+            "project": "finpay"
+          },
+          "tags_all": {
+            "dora-contract": "C2",
+            "dora-function": "F4",
+            "env": "prod",
+            "project": "finpay"
+          },
+          "timeouts": null,
+          "versioning": [
+            {
+              "enabled": false,
+              "mfa_delete": false
+            }
+          ],
+          "website": [],
+          "website_domain": null,
+          "website_endpoint": null
+        },
+        "after_unknown": {},
+        "before_sensitive": {
+          "cors_rule": [],
+          "grant": [
+            {
+              "permissions": [
+                false
+              ]
+            }
+          ],
+          "lifecycle_rule": [],
+          "logging": [],
+          "object_lock_configuration": [],
+          "replication_configuration": [],
+          "server_side_encryption_configuration": [
+            {
+              "rule": [
+                {
+                  "apply_server_side_encryption_by_default": [
+                    {}
+                  ]
+                }
+              ]
+            }
+          ],
+          "tags": {},
+          "tags_all": {},
+          "versioning": [
+            {}
+          ],
+          "website": []
+        },
+        "after_sensitive": {
+          "cors_rule": [],
+          "grant": [
+            {
+              "permissions": [
+                false
+              ]
+            }
+          ],
+          "lifecycle_rule": [],
+          "logging": [],
+          "object_lock_configuration": [],
+          "replication_configuration": [],
+          "server_side_encryption_configuration": [
+            {
+              "rule": [
+                {
+                  "apply_server_side_encryption_by_default": [
+                    {}
+                  ]
+                }
+              ]
+            }
+          ],
+          "tags": {},
+          "tags_all": {},
+          "versioning": [
+            {}
+          ],
+          "website": []
+        }
+      }
+    },
+    {
+      "address": "aws_sqs_queue.statement_jobs",
+      "mode": "managed",
+      "type": "aws_sqs_queue",
+      "name": "statement_jobs",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "no-op"
+        ],
+        "before": {
+          "arn": "arn:aws:sqs:eu-central-1:000000000000:finpay-statement-jobs",
+          "content_based_deduplication": false,
+          "deduplication_scope": "",
+          "delay_seconds": 0,
+          "fifo_queue": false,
+          "fifo_throughput_limit": "",
+          "id": "http://sqs.eu-central-1.localhost.localstack.cloud:4566/000000000000/finpay-statement-jobs",
+          "kms_data_key_reuse_period_seconds": 300,
+          "kms_master_key_id": "",
+          "max_message_size": 262144,
+          "message_retention_seconds": 345600,
+          "name": "finpay-statement-jobs",
+          "name_prefix": "",
+          "policy": "",
+          "receive_wait_time_seconds": 0,
+          "redrive_allow_policy": "",
+          "redrive_policy": "",
+          "sqs_managed_sse_enabled": true,
+          "tags": {
+            "dora-contract": "C2",
+            "dora-function": "F4",
+            "env": "prod",
+            "project": "finpay"
+          },
+          "tags_all": {
+            "dora-contract": "C2",
+            "dora-function": "F4",
+            "env": "prod",
+            "project": "finpay"
+          },
+          "timeouts": null,
+          "url": "http://sqs.eu-central-1.localhost.localstack.cloud:4566/000000000000/finpay-statement-jobs",
+          "visibility_timeout_seconds": 30
+        },
+        "after": {
+          "arn": "arn:aws:sqs:eu-central-1:000000000000:finpay-statement-jobs",
+          "content_based_deduplication": false,
+          "deduplication_scope": "",
+          "delay_seconds": 0,
+          "fifo_queue": false,
+          "fifo_throughput_limit": "",
+          "id": "http://sqs.eu-central-1.localhost.localstack.cloud:4566/000000000000/finpay-statement-jobs",
+          "kms_data_key_reuse_period_seconds": 300,
+          "kms_master_key_id": "",
+          "max_message_size": 262144,
+          "message_retention_seconds": 345600,
+          "name": "finpay-statement-jobs",
+          "name_prefix": "",
+          "policy": "",
+          "receive_wait_time_seconds": 0,
+          "redrive_allow_policy": "",
+          "redrive_policy": "",
+          "sqs_managed_sse_enabled": true,
+          "tags": {
+            "dora-contract": "C2",
+            "dora-function": "F4",
+            "env": "prod",
+            "project": "finpay"
+          },
+          "tags_all": {
+            "dora-contract": "C2",
+            "dora-function": "F4",
+            "env": "prod",
+            "project": "finpay"
+          },
+          "timeouts": null,
+          "url": "http://sqs.eu-central-1.localhost.localstack.cloud:4566/000000000000/finpay-statement-jobs",
+          "visibility_timeout_seconds": 30
+        },
+        "after_unknown": {},
+        "before_sensitive": {
+          "tags": {},
+          "tags_all": {}
+        },
+        "after_sensitive": {
+          "tags": {},
+          "tags_all": {}
+        }
+      }
+    }
+  ],
+  "output_changes": {
+    "statement_jobs_queue_url": {
+      "actions": [
+        "no-op"
+      ],
+      "before": "http://sqs.eu-central-1.localhost.localstack.cloud:4566/000000000000/finpay-statement-jobs",
+      "after": "http://sqs.eu-central-1.localhost.localstack.cloud:4566/000000000000/finpay-statement-jobs",
+      "after_unknown": false,
+      "before_sensitive": false,
+      "after_sensitive": false
+    },
+    "statements_bucket": {
+      "actions": [
+        "no-op"
+      ],
+      "before": "finpay-statements",
+      "after": "finpay-statements",
+      "after_unknown": false,
+      "before_sensitive": false,
+      "after_sensitive": false
+    }
+  },
+  "prior_state": {
+    "format_version": "1.0",
+    "terraform_version": "1.16.0",
+    "values": {
+      "outputs": {
+        "statement_jobs_queue_url": {
+          "sensitive": false,
+          "value": "http://sqs.eu-central-1.localhost.localstack.cloud:4566/000000000000/finpay-statement-jobs",
+          "type": "string"
+        },
+        "statements_bucket": {
+          "sensitive": false,
+          "value": "finpay-statements",
+          "type": "string"
+        }
+      },
+      "root_module": {
+        "resources": [
+          {
+            "address": "data.archive_file.renderer",
+            "mode": "data",
+            "type": "archive_file",
+            "name": "renderer",
+            "provider_name": "registry.terraform.io/hashicorp/archive",
+            "schema_version": 0,
+            "values": {
+              "exclude_symlink_directories": null,
+              "excludes": null,
+              "id": "444e8f57a40dbd72f4bdc458c8ad1054e69a7e3c",
+              "output_base64sha256": "jY3PTqOXBq0C1KAGDDdmE2V20pjb4ddJ+yTXqQDR8ik=",
+              "output_base64sha512": "HlxtpRrefI3G/08i8KPEDNBfuxVDpIF/QChuyZVZrDTyFaVVS///stojyPwDPZpK7oEswrG45ljwznLu5iO66g==",
+              "output_file_mode": null,
+              "output_md5": "285a7e9d38b27c6a8a3349cdce0acf1b",
+              "output_path": "./lambda/renderer.zip",
+              "output_sha": "444e8f57a40dbd72f4bdc458c8ad1054e69a7e3c",
+              "output_sha256": "8d8dcf4ea39706ad02d4a0060c3766136576d298dbe1d749fb24d7a900d1f229",
+              "output_sha512": "1e5c6da51ade7c8dc6ff4f22f0a3c40cd05fbb1543a4817f40286ec99559ac34f215a5554bffffb2da23c8fc033d9a4aee812cc2b1b8e658f0ce72eee623baea",
+              "output_size": 196,
+              "source": [],
+              "source_content": null,
+              "source_content_filename": null,
+              "source_dir": null,
+              "source_file": "./lambda/index.py",
+              "type": "zip"
+            },
+            "sensitive_values": {
+              "source": []
+            }
+          },
+          {
+            "address": "aws_dynamodb_table.statements_index",
+            "mode": "managed",
+            "type": "aws_dynamodb_table",
+            "name": "statements_index",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "schema_version": 1,
+            "values": {
+              "arn": "arn:aws:dynamodb:eu-central-1:000000000000:table/finpay-statements-index",
+              "attribute": [
+                {
+                  "name": "statement_id",
+                  "type": "S"
+                }
+              ],
+              "billing_mode": "PAY_PER_REQUEST",
+              "deletion_protection_enabled": false,
+              "global_secondary_index": [],
+              "hash_key": "statement_id",
+              "id": "finpay-statements-index",
+              "import_table": [],
+              "local_secondary_index": [],
+              "name": "finpay-statements-index",
+              "on_demand_throughput": [],
+              "point_in_time_recovery": [
+                {
+                  "enabled": false,
+                  "recovery_period_in_days": 0
+                }
+              ],
+              "range_key": null,
+              "read_capacity": 0,
+              "replica": [],
+              "restore_date_time": null,
+              "restore_source_name": null,
+              "restore_source_table_arn": null,
+              "restore_to_latest_time": null,
+              "server_side_encryption": [],
+              "stream_arn": "",
+              "stream_enabled": false,
+              "stream_label": "",
+              "stream_view_type": "",
+              "table_class": "STANDARD",
+              "tags": {
+                "dora-contract": "C2",
+                "dora-function": "F4",
+                "env": "prod",
+                "project": "finpay"
+              },
+              "tags_all": {
+                "dora-contract": "C2",
+                "dora-function": "F4",
+                "env": "prod",
+                "project": "finpay"
+              },
+              "timeouts": null,
+              "ttl": [
+                {
+                  "attribute_name": "",
+                  "enabled": false
+                }
+              ],
+              "write_capacity": 0
+            },
+            "sensitive_values": {
+              "attribute": [
+                {}
+              ],
+              "global_secondary_index": [],
+              "import_table": [],
+              "local_secondary_index": [],
+              "on_demand_throughput": [],
+              "point_in_time_recovery": [
+                {}
+              ],
+              "replica": [],
+              "server_side_encryption": [],
+              "tags": {},
+              "tags_all": {},
+              "ttl": [
+                {}
+              ]
+            }
+          },
+          {
+            "address": "aws_iam_role.lambda",
+            "mode": "managed",
+            "type": "aws_iam_role",
+            "name": "lambda",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "schema_version": 0,
+            "values": {
+              "arn": "arn:aws:iam::000000000000:role/finpay-statement-renderer-role",
+              "assume_role_policy": "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"lambda.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}",
+              "create_date": "2026-11-11T14:50:19Z",
+              "description": "",
+              "force_detach_policies": false,
+              "id": "finpay-statement-renderer-role",
+              "inline_policy": [],
+              "managed_policy_arns": [],
+              "max_session_duration": 3600,
+              "name": "finpay-statement-renderer-role",
+              "name_prefix": "",
+              "path": "/",
+              "permissions_boundary": "",
+              "tags": {
+                "env": "prod",
+                "project": "finpay"
+              },
+              "tags_all": {
+                "env": "prod",
+                "project": "finpay"
+              },
+              "unique_id": "AROAQAAAAAAAOBJG5IEDH"
+            },
+            "sensitive_values": {
+              "inline_policy": [],
+              "managed_policy_arns": [],
+              "tags": {},
+              "tags_all": {}
+            }
+          },
+          {
+            "address": "aws_lambda_function.statement_renderer",
+            "mode": "managed",
+            "type": "aws_lambda_function",
+            "name": "statement_renderer",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "schema_version": 0,
+            "values": {
+              "architectures": [
+                "x86_64"
+              ],
+              "arn": "arn:aws:lambda:eu-central-1:000000000000:function:finpay-statement-renderer",
+              "code_sha256": "jY3PTqOXBq0C1KAGDDdmE2V20pjb4ddJ+yTXqQDR8ik=",
+              "code_signing_config_arn": "",
+              "dead_letter_config": [],
+              "description": "",
+              "environment": [],
+              "ephemeral_storage": [
+                {
+                  "size": 512
+                }
+              ],
+              "file_system_config": [],
+              "filename": "./lambda/renderer.zip",
+              "function_name": "finpay-statement-renderer",
+              "handler": "index.handler",
+              "id": "finpay-statement-renderer",
+              "image_config": [],
+              "image_uri": "",
+              "invoke_arn": "arn:aws:apigateway:eu-central-1:lambda:path/2015-03-31/functions/arn:aws:lambda:eu-central-1:000000000000:function:finpay-statement-renderer/invocations",
+              "kms_key_arn": "",
+              "last_modified": "2026-11-11T14:50:20.601472+0000",
+              "layers": [],
+              "logging_config": [
+                {
+                  "application_log_level": "",
+                  "log_format": "Text",
+                  "log_group": "/aws/lambda/finpay-statement-renderer",
+                  "system_log_level": ""
+                }
+              ],
+              "memory_size": 128,
+              "package_type": "Zip",
+              "publish": false,
+              "qualified_arn": "arn:aws:lambda:eu-central-1:000000000000:function:finpay-statement-renderer:$LATEST",
+              "qualified_invoke_arn": "arn:aws:apigateway:eu-central-1:lambda:path/2015-03-31/functions/arn:aws:lambda:eu-central-1:000000000000:function:finpay-statement-renderer:$LATEST/invocations",
+              "replace_security_groups_on_destroy": null,
+              "replacement_security_group_ids": null,
+              "reserved_concurrent_executions": -1,
+              "role": "arn:aws:iam::000000000000:role/finpay-statement-renderer-role",
+              "runtime": "python3.12",
+              "s3_bucket": null,
+              "s3_key": null,
+              "s3_object_version": null,
+              "signing_job_arn": "",
+              "signing_profile_version_arn": "",
+              "skip_destroy": false,
+              "snap_start": [],
+              "source_code_hash": "jY3PTqOXBq0C1KAGDDdmE2V20pjb4ddJ+yTXqQDR8ik=",
+              "source_code_size": 196,
+              "tags": {
+                "dora-contract": "C2",
+                "dora-function": "F4",
+                "env": "prod",
+                "project": "finpay"
+              },
+              "tags_all": {
+                "dora-contract": "C2",
+                "dora-function": "F4",
+                "env": "prod",
+                "project": "finpay"
+              },
+              "timeout": 3,
+              "timeouts": null,
+              "tracing_config": [
+                {
+                  "mode": "PassThrough"
+                }
+              ],
+              "version": "$LATEST",
+              "vpc_config": []
+            },
+            "sensitive_values": {
+              "architectures": [
+                false
+              ],
+              "dead_letter_config": [],
+              "environment": [],
+              "ephemeral_storage": [
+                {}
+              ],
+              "file_system_config": [],
+              "image_config": [],
+              "layers": [],
+              "logging_config": [
+                {}
+              ],
+              "snap_start": [],
+              "tags": {},
+              "tags_all": {},
+              "tracing_config": [
+                {}
+              ],
+              "vpc_config": []
+            },
+            "depends_on": [
+              "aws_iam_role.lambda",
+              "data.archive_file.renderer"
+            ]
+          },
+          {
+            "address": "aws_s3_bucket.statements",
+            "mode": "managed",
+            "type": "aws_s3_bucket",
+            "name": "statements",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "schema_version": 0,
+            "values": {
+              "acceleration_status": "",
+              "acl": null,
+              "arn": "arn:aws:s3:::finpay-statements",
+              "bucket": "finpay-statements",
+              "bucket_domain_name": "finpay-statements.s3.amazonaws.com",
+              "bucket_prefix": "",
+              "bucket_regional_domain_name": "finpay-statements.s3.eu-central-1.amazonaws.com",
+              "cors_rule": [],
+              "force_destroy": false,
+              "grant": [
+                {
+                  "id": "75aa57f09aa0c8caeab4f8c24e99d10f8e7faeebf76c078efc7c6caea54ba06a",
+                  "permissions": [
+                    "FULL_CONTROL"
+                  ],
+                  "type": "CanonicalUser",
+                  "uri": ""
+                }
+              ],
+              "hosted_zone_id": "Z21DNDUVLTQW6Q",
+              "id": "finpay-statements",
+              "lifecycle_rule": [],
+              "logging": [],
+              "object_lock_configuration": [],
+              "object_lock_enabled": false,
+              "policy": "",
+              "region": "eu-central-1",
+              "replication_configuration": [],
+              "request_payer": "BucketOwner",
+              "server_side_encryption_configuration": [
+                {
+                  "rule": [
+                    {
+                      "apply_server_side_encryption_by_default": [
+                        {
+                          "kms_master_key_id": "",
+                          "sse_algorithm": "AES256"
+                        }
+                      ],
+                      "bucket_key_enabled": false
+                    }
+                  ]
+                }
+              ],
+              "tags": {
+                "dora-contract": "C2",
+                "dora-function": "F4",
+                "env": "prod",
+                "project": "finpay"
+              },
+              "tags_all": {
+                "dora-contract": "C2",
+                "dora-function": "F4",
+                "env": "prod",
+                "project": "finpay"
+              },
+              "timeouts": null,
+              "versioning": [
+                {
+                  "enabled": false,
+                  "mfa_delete": false
+                }
+              ],
+              "website": [],
+              "website_domain": null,
+              "website_endpoint": null
+            },
+            "sensitive_values": {
+              "cors_rule": [],
+              "grant": [
+                {
+                  "permissions": [
+                    false
+                  ]
+                }
+              ],
+              "lifecycle_rule": [],
+              "logging": [],
+              "object_lock_configuration": [],
+              "replication_configuration": [],
+              "server_side_encryption_configuration": [
+                {
+                  "rule": [
+                    {
+                      "apply_server_side_encryption_by_default": [
+                        {}
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "tags": {},
+              "tags_all": {},
+              "versioning": [
+                {}
+              ],
+              "website": []
+            }
+          },
+          {
+            "address": "aws_sqs_queue.statement_jobs",
+            "mode": "managed",
+            "type": "aws_sqs_queue",
+            "name": "statement_jobs",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "schema_version": 0,
+            "values": {
+              "arn": "arn:aws:sqs:eu-central-1:000000000000:finpay-statement-jobs",
+              "content_based_deduplication": false,
+              "deduplication_scope": "",
+              "delay_seconds": 0,
+              "fifo_queue": false,
+              "fifo_throughput_limit": "",
+              "id": "http://sqs.eu-central-1.localhost.localstack.cloud:4566/000000000000/finpay-statement-jobs",
+              "kms_data_key_reuse_period_seconds": 300,
+              "kms_master_key_id": "",
+              "max_message_size": 262144,
+              "message_retention_seconds": 345600,
+              "name": "finpay-statement-jobs",
+              "name_prefix": "",
+              "policy": "",
+              "receive_wait_time_seconds": 0,
+              "redrive_allow_policy": "",
+              "redrive_policy": "",
+              "sqs_managed_sse_enabled": true,
+              "tags": {
+                "dora-contract": "C2",
+                "dora-function": "F4",
+                "env": "prod",
+                "project": "finpay"
+              },
+              "tags_all": {
+                "dora-contract": "C2",
+                "dora-function": "F4",
+                "env": "prod",
+                "project": "finpay"
+              },
+              "timeouts": null,
+              "url": "http://sqs.eu-central-1.localhost.localstack.cloud:4566/000000000000/finpay-statement-jobs",
+              "visibility_timeout_seconds": 30
+            },
+            "sensitive_values": {
+              "tags": {},
+              "tags_all": {}
+            }
+          }
+        ]
+      }
+    }
+  },
+  "configuration": {
+    "provider_config": {
+      "archive": {
+        "name": "archive",
+        "full_name": "registry.terraform.io/hashicorp/archive",
+        "version_constraint": "~> 2.4"
+      },
+      "aws": {
+        "name": "aws",
+        "full_name": "registry.terraform.io/hashicorp/aws",
+        "version_constraint": "~> 5.0",
+        "expressions": {
+          "endpoints": [
+            {
+              "dynamodb": {
+                "references": [
+                  "var.localstack_endpoint"
+                ]
+              },
+              "iam": {
+                "references": [
+                  "var.localstack_endpoint"
+                ]
+              },
+              "lambda": {
+                "references": [
+                  "var.localstack_endpoint"
+                ]
+              },
+              "rds": {
+                "references": [
+                  "var.localstack_endpoint"
+                ]
+              },
+              "s3": {
+                "references": [
+                  "var.localstack_endpoint"
+                ]
+              },
+              "sqs": {
+                "references": [
+                  "var.localstack_endpoint"
+                ]
+              },
+              "sts": {
+                "references": [
+                  "var.localstack_endpoint"
+                ]
+              }
+            }
+          ],
+          "region": {
+            "constant_value": "eu-central-1"
+          },
+          "s3_use_path_style": {
+            "constant_value": true
+          },
+          "skip_credentials_validation": {
+            "constant_value": true
+          },
+          "skip_metadata_api_check": {
+            "constant_value": true
+          },
+          "skip_requesting_account_id": {
+            "constant_value": true
+          }
+        }
+      },
+      "aws.us_east_1": {
+        "name": "aws",
+        "full_name": "registry.terraform.io/hashicorp/aws",
+        "alias": "us_east_1",
+        "version_constraint": "~> 5.0",
+        "expressions": {
+          "endpoints": [
+            {
+              "dynamodb": {
+                "references": [
+                  "var.localstack_endpoint"
+                ]
+              },
+              "iam": {
+                "references": [
+                  "var.localstack_endpoint"
+                ]
+              },
+              "lambda": {
+                "references": [
+                  "var.localstack_endpoint"
+                ]
+              },
+              "rds": {
+                "references": [
+                  "var.localstack_endpoint"
+                ]
+              },
+              "s3": {
+                "references": [
+                  "var.localstack_endpoint"
+                ]
+              },
+              "sqs": {
+                "references": [
+                  "var.localstack_endpoint"
+                ]
+              },
+              "sts": {
+                "references": [
+                  "var.localstack_endpoint"
+                ]
+              }
+            }
+          ],
+          "region": {
+            "constant_value": "us-east-1"
+          },
+          "s3_use_path_style": {
+            "constant_value": true
+          },
+          "skip_credentials_validation": {
+            "constant_value": true
+          },
+          "skip_metadata_api_check": {
+            "constant_value": true
+          },
+          "skip_requesting_account_id": {
+            "constant_value": true
+          }
+        }
+      },
+      "random": {
+        "name": "random",
+        "full_name": "registry.terraform.io/hashicorp/random",
+        "version_constraint": "~> 3.6"
+      }
+    },
+    "root_module": {
+      "outputs": {
+        "statement_jobs_queue_url": {
+          "expression": {
+            "references": [
+              "aws_sqs_queue.statement_jobs.url",
+              "aws_sqs_queue.statement_jobs"
+            ]
+          }
+        },
+        "statements_bucket": {
+          "expression": {
+            "references": [
+              "aws_s3_bucket.statements.bucket",
+              "aws_s3_bucket.statements"
+            ]
+          }
+        }
+      },
+      "resources": [
+        {
+          "address": "aws_dynamodb_table.statements_index",
+          "mode": "managed",
+          "type": "aws_dynamodb_table",
+          "name": "statements_index",
+          "provider_config_key": "aws",
+          "expressions": {
+            "attribute": [
+              {
+                "name": {
+                  "constant_value": "statement_id"
+                },
+                "type": {
+                  "constant_value": "S"
+                }
+              }
+            ],
+            "billing_mode": {
+              "constant_value": "PAY_PER_REQUEST"
+            },
+            "hash_key": {
+              "constant_value": "statement_id"
+            },
+            "name": {
+              "constant_value": "finpay-statements-index"
+            },
+            "tags": {
+              "references": [
+                "local.f4_tags"
+              ]
+            }
+          },
+          "schema_version": 1
+        },
+        {
+          "address": "aws_iam_role.lambda",
+          "mode": "managed",
+          "type": "aws_iam_role",
+          "name": "lambda",
+          "provider_config_key": "aws",
+          "expressions": {
+            "assume_role_policy": {},
+            "name": {
+              "constant_value": "finpay-statement-renderer-role"
+            },
+            "tags": {
+              "references": [
+                "local.base_tags"
+              ]
+            }
+          },
+          "schema_version": 0
+        },
+        {
+          "address": "aws_lambda_function.statement_renderer",
+          "mode": "managed",
+          "type": "aws_lambda_function",
+          "name": "statement_renderer",
+          "provider_config_key": "aws",
+          "expressions": {
+            "filename": {
+              "references": [
+                "data.archive_file.renderer.output_path",
+                "data.archive_file.renderer"
+              ]
+            },
+            "function_name": {
+              "constant_value": "finpay-statement-renderer"
+            },
+            "handler": {
+              "constant_value": "index.handler"
+            },
+            "role": {
+              "references": [
+                "aws_iam_role.lambda.arn",
+                "aws_iam_role.lambda"
+              ]
+            },
+            "runtime": {
+              "constant_value": "python3.12"
+            },
+            "source_code_hash": {
+              "references": [
+                "data.archive_file.renderer.output_base64sha256",
+                "data.archive_file.renderer"
+              ]
+            },
+            "tags": {
+              "references": [
+                "local.f4_tags"
+              ]
+            }
+          },
+          "schema_version": 0
+        },
+        {
+          "address": "aws_s3_bucket.statements",
+          "mode": "managed",
+          "type": "aws_s3_bucket",
+          "name": "statements",
+          "provider_config_key": "aws",
+          "expressions": {
+            "bucket": {
+              "constant_value": "finpay-statements"
+            },
+            "tags": {
+              "references": [
+                "local.f4_tags"
+              ]
+            }
+          },
+          "schema_version": 0
+        },
+        {
+          "address": "aws_sqs_queue.statement_jobs",
+          "mode": "managed",
+          "type": "aws_sqs_queue",
+          "name": "statement_jobs",
+          "provider_config_key": "aws",
+          "expressions": {
+            "name": {
+              "constant_value": "finpay-statement-jobs"
+            },
+            "tags": {
+              "references": [
+                "local.f4_tags"
+              ]
+            }
+          },
+          "schema_version": 0
+        },
+        {
+          "address": "data.archive_file.renderer",
+          "mode": "data",
+          "type": "archive_file",
+          "name": "renderer",
+          "provider_config_key": "archive",
+          "expressions": {
+            "output_path": {
+              "references": [
+                "path.module"
+              ]
+            },
+            "source_file": {
+              "references": [
+                "path.module"
+              ]
+            },
+            "type": {
+              "constant_value": "zip"
+            }
+          },
+          "schema_version": 0
+        }
+      ],
+      "variables": {
+        "localstack_endpoint": {
+          "default": "http://localhost:4566",
+          "description": "LocalStack edge endpoint."
+        }
+      }
+    }
+  },
+  "relevant_attributes": [],
+  "timestamp": "2026-11-11T14:53:15Z",
+  "applyable": true,
+  "complete": true,
+  "errored": false
+}
