@@ -21,6 +21,8 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
 import kotlinx.serialization.json.putJsonObject
+import ai.koog.prompt.executor.clients.retry.RetryConfig
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * A local stand-in for the OpenAI HTTP API on 127.0.0.1, so the real Koog client code runs in tests
@@ -107,6 +109,19 @@ class FakeOpenAi(
 
         suspend fun ApplicationCall.respondError(status: HttpStatusCode) =
             respondText("""{"error":{"message":"test error","type":"test"}}""", ContentType.Application.Json, status)
+
+        /** A 429 worded like Azure OpenAI's, with its "retry after N seconds" hint when [retryAfterSeconds] is set. */
+        suspend fun ApplicationCall.respondRateLimit(retryAfterSeconds: Int? = null) {
+            val hint = retryAfterSeconds?.let { " Please retry after $it second${if (it == 1) "" else "s"}." }.orEmpty()
+            respondText(
+                """{"error":{"code":"RateLimitReached","message":"Your requests have exceeded the call rate limit.$hint"}}""",
+                ContentType.Application.Json,
+                HttpStatusCode.TooManyRequests,
+            )
+        }
+
+        /** Retries in milliseconds, so tests that hit an error stay fast. Koog 1.3 needs a jitter above 0. */
+        val FAST_RETRY = RetryConfig(maxAttempts = 3, initialDelay = 10.milliseconds, maxDelay = 20.milliseconds, jitterFactor = 0.1)
 
         /** The messages the client sent, as role to content. */
         fun messages(body: String) = Json.parseToJsonElement(body).jsonObject.getValue("messages").jsonArray.map {
