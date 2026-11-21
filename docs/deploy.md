@@ -132,3 +132,8 @@ and run it with `DORAI_VERSION=dev`.
 ## Releases
 Pushing a tag `v1.2.3` runs `.github/workflows/server-image.yml`, which publishes the image
 for amd64 and arm64 with the tags `1.2.3`, `1.2` and `latest`.
+Every pull request already builds the image (amd64 only, not pushed), so a tag only fails on publishing.
+The same tag is what other repositories pin for the GitHub Action (`uses: IgnjatRadojicic/DORAi@v1.2.3`).
+
+The server's heap is 75% of the container's memory (`JAVA_OPTS=-XX:MaxRAMPercentage=75` in the image).
+To cap the server, add `mem_limit: 2g` to the `server` service; to change the share, set `JAVA_OPTS` there.

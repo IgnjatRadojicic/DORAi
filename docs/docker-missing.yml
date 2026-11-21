@@ -4,12 +4,6 @@
 # Remove an item when it is done.
 
 image:
-  - id: jvm-memory
-    missing: Set JAVA_OPTS="-XX:MaxRAMPercentage=75" in the Dockerfile or compose file.
-    why: Without it the JVM sizes its heap from defaults rather than the container memory limit.
-    owner: Ignjat
-    phase: before first release
-
 ci-and-release:
   - id: first-release
     missing: Push the first version tag (for example v0.1.0) so the workflow publishes the image.
@@ -22,12 +16,6 @@ ci-and-release:
     why: New GHCR packages are private, so docker compose pull fails for firms.
     owner: Ignjat
     phase: 6
-
-  - id: image-build-on-pr
-    missing: Build the Docker image (without pushing) in the PR workflow.
-    why: Today a broken Dockerfile is only found when a release tag is pushed.
-    owner: Ignjat
-    phase: 5
 
 operations:
   - id: offsite-backups
