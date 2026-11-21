@@ -12,6 +12,8 @@ FROM eclipse-temurin:21-jre
 RUN groupadd --system dorai && useradd --system --gid dorai --home-dir /var/lib/dorai dorai \
     && mkdir -p /var/lib/dorai && chown dorai:dorai /var/lib/dorai
 COPY --from=build /src/server/build/install/server /opt/dorai
+# The heap follows the container's memory limit; override JAVA_OPTS in compose to change it.
+ENV JAVA_OPTS="-XX:MaxRAMPercentage=75"
 USER dorai
 WORKDIR /var/lib/dorai
 VOLUME /var/lib/dorai
