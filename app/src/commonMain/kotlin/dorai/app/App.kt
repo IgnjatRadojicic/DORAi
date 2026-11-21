@@ -11,14 +11,14 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import dorai.app.auth.LoginScreen
 import dorai.app.components.ControlCenterFrame
-import dorai.app.components.ProductIcon
 import dorai.app.connect.ConnectionMark
 import dorai.app.export.ExportViewModel
 import dorai.app.export.ValidationExportRoute
 import dorai.app.export.rememberWorkspaceFiles
 import dorai.app.findings.FindingsRoute
+import dorai.app.inventory.InventoryRoute
+import dorai.app.review.ReviewRoute
 import dorai.app.shell.AccountBar
-import dorai.app.shell.SectionPlaceholder
 import dorai.app.shell.Sections
 import dorai.app.shell.ShellViewModel
 import dorai.app.shell.Workspace
@@ -73,10 +73,8 @@ private fun WorkspaceShell(shell: ShellViewModel, workspace: Workspace, onLogout
             AccountBar(workspace.session, onLogout)
             Box(Modifier.weight(1f)) {
                 when (section) {
-                    Sections.INVENTORY -> SectionPlaceholder(
-                        "Cloud inventory", "Scanned resources will be listed here.", ProductIcon.CLOUD)
-                    Sections.REVIEW -> SectionPlaceholder(
-                        "AI review", "AI suggestions with their citations will be listed here.", ProductIcon.BOOK)
+                    Sections.INVENTORY -> InventoryRoute(workspace.inventory, canScan = workspace.canReview)
+                    Sections.REVIEW -> ReviewRoute(workspace.review, canDecide = workspace.canReview)
                     Sections.FINDINGS -> FindingsRoute(workspace.findings, files, canCheck = workspace.canReview)
                     else -> ValidationExportRoute(workspace.validation, export, canExport = workspace.canReview)
                 }
