@@ -44,6 +44,7 @@ dependencies {
     implementation(libs.koog.agents)
     implementation(libs.koog.embeddings.llm)
     implementation(libs.commons.csv)
+    implementation(libs.openpdf)
 
     testImplementation(libs.ktor.server.test.host)
     testImplementation(libs.kotlin.test)
