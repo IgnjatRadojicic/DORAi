@@ -10,7 +10,6 @@ import org.openpdf.text.Paragraph
 import org.openpdf.text.Phrase
 import org.openpdf.text.Rectangle
 import org.openpdf.text.pdf.BaseFont
-import org.openpdf.text.pdf.ColumnText
 import org.openpdf.text.pdf.PdfPCell
 import org.openpdf.text.pdf.PdfPTable
 import org.openpdf.text.pdf.PdfPageEventHelper
@@ -42,10 +41,17 @@ internal class ReportLayout(private val output: ByteArrayOutputStream) : AutoClo
                 canvas.moveTo(44f, 39f)
                 canvas.lineTo(551f, 39f)
                 canvas.stroke()
-                ColumnText.showTextAligned(canvas, Element.ALIGN_LEFT, phrase("DORAi", 11f, true), 44f, 813f, 0f)
-                ColumnText.showTextAligned(canvas, Element.ALIGN_RIGHT, phrase("REGISTER REVIEW", 8f, color = muted), 551f, 813f, 0f)
-                ColumnText.showTextAligned(canvas, Element.ALIGN_LEFT, phrase("Draft for review", 8f, color = muted), 44f, 25f, 0f)
-                ColumnText.showTextAligned(canvas, Element.ALIGN_RIGHT, phrase("Page " + writer.pageNumber, 8f, color = muted), 551f, 25f, 0f)
+                fun label(value: String, x: Float, y: Float, size: Float, bold: Boolean, color: Color, align: Int) {
+                    canvas.beginText()
+                    canvas.setFontAndSize(if (bold) semibold else regular, size)
+                    canvas.setColorFill(color)
+                    canvas.showTextAligned(align, value, x, y, 0f)
+                    canvas.endText()
+                }
+                label("DORAi", 44f, 813f, 11f, true, ink, Element.ALIGN_LEFT)
+                label("REGISTER REVIEW", 551f, 813f, 8f, false, muted, Element.ALIGN_RIGHT)
+                label("Draft for review", 44f, 25f, 8f, false, muted, Element.ALIGN_LEFT)
+                label("Page " + writer.pageNumber, 551f, 25f, 8f, false, muted, Element.ALIGN_RIGHT)
                 canvas.restoreState()
             }
         }
@@ -70,6 +76,9 @@ internal class ReportLayout(private val output: ByteArrayOutputStream) : AutoClo
 
     fun note(value: String) = text(value, 8f, color = muted)
     fun page() { document.newPage() }
+    fun reserve(height: Float) {
+        if (writer.getVerticalPosition(true) - height < document.bottom()) document.newPage()
+    }
 
     fun table(headers: List<String>, widths: FloatArray, rows: List<List<String>>) {
         val table = PdfPTable(widths).apply {

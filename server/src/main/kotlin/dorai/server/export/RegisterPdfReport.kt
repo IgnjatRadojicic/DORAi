@@ -110,6 +110,7 @@ class RegisterPdfReport(
                 val notes = draft?.value?.findings.orEmpty().associateBy { it.ruleId to it.resourceAddress }
                 findings.forEach { finding ->
                     context.ensureActive()
+                    page.reserve(145f)
                     page.text(finding.severity.name.uppercase() + " / " + finding.ruleId + " / " + finding.title, 10f, true, before = 12f)
                     page.note(finding.resourceAddress)
                     page.text(finding.detail)
