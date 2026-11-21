@@ -13,14 +13,17 @@ import dorai.app.components.ControlCenterFrame
 import dorai.app.components.DesktopTitleBar
 import dorai.app.components.WorkspaceSection
 import dorai.app.components.matijaSections
-import dorai.app.components.FrontendFailure
 import dorai.app.components.AppLanguage
 import dorai.app.export.ExportViewModel
+import dorai.app.export.CsvDownloadSource
+import dorai.app.export.ExportFormat
 import dorai.app.export.ValidationExportRoute
 import dorai.app.export.rememberWorkspaceFiles
 import dorai.app.theme.DoraiTheme
 import dorai.app.theme.ThemeMode
 import dorai.app.validation.ValidationViewModel
+import dorai.app.validation.ApiRegisterValidation
+import dorai.shared.api.DoraiApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
@@ -38,8 +41,10 @@ fun main() = application {
             val files = rememberWorkspaceFiles()
             val scope = rememberCoroutineScope()
             val findings = remember { FindingsViewModel { plan -> withContext(Dispatchers.IO) { PreviewWorkspace.check(plan) } } }
-            val validation = remember { ValidationViewModel { PreviewWorkspace.validation() } }
-            val export = remember(files) { ExportViewModel({ throw FrontendFailure("Export unavailable.") }, files) }
+            val api = remember { DoraiApi(System.getenv("DORAI_SERVER_URL")?.takeIf { it.isNotBlank() } ?: "http://localhost:8080") }
+            DisposableEffect(api) { onDispose { api.close() } }
+            val validation = remember(api) { ValidationViewModel(ApiRegisterValidation(api)) }
+            val export = remember(api, files) { ExportViewModel(CsvDownloadSource(api), files) }
 
             LaunchedEffect(findings) {
                 try {
@@ -95,7 +100,7 @@ fun main() = application {
                                 catch (error: Exception) { findings.showFileError(error) }
                             }
                         })
-                        else -> ValidationExportRoute(validation, export, isDemo = true)
+                        else -> ValidationExportRoute(validation, export, isDemo = true, availableFormats = setOf(ExportFormat.CSV))
                     }
                 }
             }

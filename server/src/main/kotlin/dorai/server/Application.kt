@@ -120,8 +120,9 @@ fun Application.module(services: Services) {
 private fun Route.exportRoutes(services: Services) = route("export") {
     get("csv") {
         val exporter = services.exporter ?: throw exportUnavailable()
+        val bytes = exporter.csvZip(services.register.register())
         call.response.header(HttpHeaders.ContentDisposition, attachment("dorai-register.zip"))
-        call.respondBytes(exporter.csvZip(services.register.register()), ContentType.Application.Zip)
+        call.respondBytes(bytes, ContentType.Application.Zip)
     }
     get("pdf") {
         val exporter = services.exporter ?: throw exportUnavailable()
