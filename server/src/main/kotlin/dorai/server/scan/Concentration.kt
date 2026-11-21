@@ -1,6 +1,6 @@
 package dorai.server.scan
 
-import dorai.server.fixtures.CostSeed
+import dorai.server.core.CostEntry
 import dorai.server.fixtures.round2
 import dorai.shared.model.BusinessFunction
 import dorai.shared.model.ConcentrationReport
@@ -17,7 +17,7 @@ const val UNASSIGNED = "Unassigned"
 /** Splits total cost by provider, region and business function. Shares are 0..1, rounded to 4 decimals. */
 fun concentration(
     resources: List<Resource>,
-    costs: List<CostSeed>,
+    costs: List<CostEntry>,
     functions: List<BusinessFunction>,
 ): ConcentrationReport {
     val critical = functions.filter { it.isCritical }.map { it.id }.toSet()

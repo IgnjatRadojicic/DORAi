@@ -1,14 +1,17 @@
 package dorai.server
 
 import dorai.server.check.checkRoutes
-import dorai.server.fixtures.FixtureData
+import dorai.server.core.Services
+import dorai.server.fixtures.fixtureServices
 import dorai.server.register.registerRoutes
-import dorai.server.review.SuggestionStore
 import dorai.server.review.suggestionRoutes
 import dorai.server.scan.scanRoutes
 import dorai.shared.Dorai
 import dorai.shared.model.DoraiJson
 import dorai.shared.model.Health
+import io.ktor.http.ContentDisposition
+import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
@@ -16,7 +19,10 @@ import io.ktor.server.application.install
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.server.response.header
 import io.ktor.server.response.respond
+import io.ktor.server.response.respondBytes
+import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
@@ -26,26 +32,42 @@ fun main() {
     embeddedServer(Netty, port = port, module = Application::module).start(wait = true)
 }
 
-/** Phase 1: every endpoint serves fixture data, so the apps can be built before the database lands. */
-fun Application.module() = module(FixtureData.load())
+/** Phase 1 wiring: fixtures, in-memory storage, no AI. Later phases pass real services. */
+fun Application.module() = module(fixtureServices())
 
-fun Application.module(fixtures: FixtureData) {
+fun Application.module(services: Services) {
     install(ContentNegotiation) { json(DoraiJson) }
     installProblems()
-
-    val suggestions = SuggestionStore(fixtures.suggestions)
 
     routing {
         route(Dorai.API_PREFIX) {
             get("health") { call.respond(Health(status = "ok", app = Dorai.NAME)) }
-            scanRoutes(fixtures, suggestions)
-            registerRoutes(fixtures)
-            suggestionRoutes(suggestions)
-            checkRoutes(fixtures)
-            route("export") {
-                get("csv") { throw ApiProblem(HttpStatusCode.NotImplemented, "Export not available yet", "CSV export arrives in phase 5.") }
-                get("pdf") { throw ApiProblem(HttpStatusCode.NotImplemented, "Export not available yet", "PDF export arrives in phase 5.") }
-            }
+            scanRoutes(services)
+            registerRoutes(services)
+            suggestionRoutes(services)
+            checkRoutes(services)
+            exportRoutes(services)
         }
     }
 }
+
+private fun Route.exportRoutes(services: Services) = route("export") {
+    get("csv") {
+        val exporter = services.exporter ?: throw exportUnavailable()
+        call.response.header(HttpHeaders.ContentDisposition, attachment("dorai-register.zip"))
+        call.respondBytes(exporter.csvZip(services.register.register()), ContentType.Application.Zip)
+    }
+    get("pdf") {
+        val exporter = services.exporter ?: throw exportUnavailable()
+        val register = services.register.register()
+        val findings = services.planChecker.check(services.demoPlan, register)
+        call.response.header(HttpHeaders.ContentDisposition, attachment("dorai-report.pdf"))
+        call.respondBytes(exporter.pdf(register, findings), ContentType.Application.Pdf)
+    }
+}
+
+private fun exportUnavailable() =
+    ApiProblem(HttpStatusCode.NotImplemented, "Export not available yet", "No exporter is configured on this server.")
+
+private fun attachment(fileName: String) =
+    ContentDisposition.Attachment.withParameter(ContentDisposition.Parameters.FileName, fileName).toString()
