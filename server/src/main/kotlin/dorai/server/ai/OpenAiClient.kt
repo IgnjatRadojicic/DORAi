@@ -24,8 +24,9 @@ val OPENAI_RETRY = RetryConfig(
  * Rate limits (429), server errors (5xx) and dropped connections are tried again with [retry];
  * when the server says how long to wait ("retry after 15 seconds"), that wait is used.
  * Other errors, such as a bad request or a wrong key, fail at once.
+ * A cancelled caller always gets its cancellation back, never a client error ([CancellationKeepingClient]).
  */
 fun openAiClient(apiKey: String, baseUrl: String?, retry: RetryConfig = OPENAI_RETRY): LLMClient {
     val client = if (baseUrl == null) OpenAILLMClient(apiKey) else OpenAILLMClient(apiKey, OpenAIClientSettings(baseUrl = baseUrl))
-    return client.toRetryingClient(retry)
+    return CancellationKeepingClient(client).toRetryingClient(retry)
 }

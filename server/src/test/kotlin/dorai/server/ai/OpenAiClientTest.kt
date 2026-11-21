@@ -1,6 +1,8 @@
 package dorai.server.ai
 
 import ai.koog.prompt.executor.clients.LLMClientException
+import ai.koog.prompt.executor.clients.retry.DefaultRetryAfterExtractor
+import ai.koog.prompt.executor.clients.retry.RetryConfig
 import dorai.server.ai.chat.ChatRequest
 import dorai.server.ai.chat.FakeOpenAi
 import dorai.server.ai.chat.FakeOpenAi.Companion.FAST_RETRY
@@ -13,6 +15,9 @@ import dorai.server.ai.chat.KoogChatModel
 import dorai.server.ai.embed.OpenAiEmbedder
 import dorai.server.ai.services.ExplanationReply
 import io.ktor.http.HttpStatusCode
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -111,23 +116,43 @@ class OpenAiClientTest {
 
     @Test
     fun cancellingTheCallerStopsTheWait() {
+        // Koog reads the server's hint right before it starts to wait, so this marks the start of the wait.
+        val waiting = CompletableDeferred<Unit>()
+        val retry = OPENAI_RETRY.copy(
+            retryAfterExtractor = { message -> waiting.complete(Unit); DefaultRetryAfterExtractor.extract(message) },
+        )
         FakeOpenAi(embed = { respondRateLimit(retryAfterSeconds = 30) }).use { api ->
-            runBlocking {
-                var outcome: Throwable? = null
-                val call = launch {
-                    try {
-                        OpenAiEmbedder("test-key-value", api.baseUrl).embed(listOf("register"))
-                    } catch (e: Throwable) {
-                        outcome = e
-                        throw e
-                    }
-                }
-                while (api.requests.isEmpty()) delay(10)
-                withTimeout(2.seconds) { call.cancelAndJoin() }
+            val outcome = cancelledEmbedding(api, retry) { waiting.await() }
 
-                assertIs<kotlinx.coroutines.CancellationException>(outcome)
-                assertEquals(1, api.requests.size)
+            assertIs<CancellationException>(outcome)
+            assertEquals(1, api.requests.size)
+        }
+    }
+
+    @Test
+    fun cancellingTheCallerDuringARequestStaysACancellation() {
+        FakeOpenAi(embed = { awaitCancellation() }).use { api ->
+            val outcome = cancelledEmbedding(api, OPENAI_RETRY) { while (api.requests.isEmpty()) delay(10) }
+
+            // Koog wraps it in an LLMClientException; the caller must still see its own cancellation.
+            assertIs<CancellationException>(outcome)
+            assertEquals(1, api.requests.size)
+        }
+    }
+
+    /** Starts an embedding call, waits until [ready], cancels the caller and returns what the call threw. */
+    private fun cancelledEmbedding(api: FakeOpenAi, retry: RetryConfig, ready: suspend () -> Unit): Throwable? = runBlocking {
+        var outcome: Throwable? = null
+        val call = launch {
+            try {
+                OpenAiEmbedder("test-key-value", api.baseUrl, retry).embed(listOf("register"))
+            } catch (e: Throwable) {
+                outcome = e
+                throw e
             }
         }
+        withTimeout(10.seconds) { ready() }
+        withTimeout(2.seconds) { call.cancelAndJoin() }
+        outcome
     }
 }
