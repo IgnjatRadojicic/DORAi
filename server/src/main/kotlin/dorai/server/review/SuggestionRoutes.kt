@@ -3,6 +3,8 @@ package dorai.server.review
 import dorai.server.ApiProblem
 import dorai.server.core.AiAnswer
 import dorai.server.core.Services
+import dorai.server.register.RegisterEditor
+import dorai.server.register.who
 import dorai.server.core.SuggestionRepository.Decision
 import dorai.shared.model.Resource
 import dorai.shared.model.Suggestion
@@ -83,7 +85,14 @@ private fun <T> AiAnswer<T>.toSuggestion(
 private suspend fun RoutingContext.decide(services: Services, status: SuggestionStatus) {
     val id = call.parameters["id"].orEmpty()
     when (val result = services.suggestions.decide(id, status)) {
-        is Decision.Done -> call.respond(result.suggestion)
+        is Decision.Done -> {
+            val s = result.suggestion
+            // An accepted register value goes into the register at once, as the person's value.
+            if (status == SuggestionStatus.Accepted && s.kind == SuggestionKind.RoiValue && s.column != null) {
+                RegisterEditor(services.register).acceptValue(s.resourceId, s.column!!, s.value, s.citations.firstOrNull(), s.reason, call.who())
+            }
+            call.respond(s)
+        }
         is Decision.AlreadyDecided -> throw ApiProblem(
             HttpStatusCode.Conflict,
             "Suggestion already decided",

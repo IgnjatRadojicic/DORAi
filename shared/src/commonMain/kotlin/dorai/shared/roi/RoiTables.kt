@@ -11,15 +11,18 @@ import dorai.shared.model.RoiFields
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
+import kotlinx.serialization.Serializable
 import kotlin.math.roundToLong
 
 /**
  * One filled cell. [label] is the provenance of the register value it came from, or null when DORAi worked
  * it out from other values (a sum, a join, a CIR default such as `9999-12-31` for "no end date").
  */
+@Serializable
 data class RoiCell(val value: String, val label: ProvenanceLabel?)
 
 /** Facts about a row that the CIR's "mandatory if" conditions depend on and that are not cells of the row. */
+@Serializable
 data class RowFacts(
     val critical: Boolean = false,
     val processesData: Boolean = false,
@@ -27,6 +30,7 @@ data class RowFacts(
     val directProvider: Boolean = false,
 )
 
+@Serializable
 data class RoiRowOut(val key: String, val cells: Map<String, RoiCell>, val facts: RowFacts = RowFacts()) {
     fun value(code: String): String? = cells[code]?.value
 }
