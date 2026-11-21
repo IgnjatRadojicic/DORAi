@@ -39,7 +39,13 @@ enum class ServiceType {
 }
 
 @Serializable
-enum class SuggestionKind { ServiceType, BusinessFunction }
+enum class SuggestionKind {
+    ServiceType,
+    BusinessFunction,
+
+    /** A value for one RoI column, named in [Suggestion.column]; accepting it writes the value to the register. */
+    RoiValue,
+}
 
 @Serializable
 enum class SuggestionStatus { Pending, Accepted, Rejected }

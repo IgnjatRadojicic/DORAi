@@ -15,6 +15,7 @@ import dorai.shared.model.ProvenanceLabel
 import dorai.shared.model.Provider
 import dorai.shared.model.Redundancy
 import dorai.shared.model.Register
+import dorai.shared.model.RoiRow
 import dorai.shared.model.RegisterField
 import dorai.shared.model.Resource
 import dorai.shared.model.ResourceSource
@@ -96,12 +97,26 @@ private data class RegisterSeed(
     val entity: FinancialEntity,
     val providers: List<ProviderSeed>,
     val contracts: List<ContractSeed>,
-    val functions: List<BusinessFunction>,
+    val functions: List<FunctionSeed>,
     val asOf: Instant,
+    val rows: Map<String, List<RowSeed>> = emptyMap(),
+    val entityRoi: Map<String, FieldSeed> = emptyMap(),
 )
 
 @Serializable
-private data class ProviderSeed(val id: String, val name: String, val lei: FieldSeed, val headquartersCountry: FieldSeed)
+private data class FunctionSeed(val id: String, val name: String, val isCritical: Boolean, val roi: Map<String, FieldSeed> = emptyMap())
+
+@Serializable
+private data class RowSeed(val id: String, val fields: Map<String, FieldSeed> = emptyMap())
+
+@Serializable
+private data class ProviderSeed(
+    val id: String,
+    val name: String,
+    val lei: FieldSeed,
+    val headquartersCountry: FieldSeed,
+    val roi: Map<String, FieldSeed> = emptyMap(),
+)
 
 @Serializable
 private data class ContractSeed(
@@ -112,6 +127,7 @@ private data class ContractSeed(
     val annualCost: FieldSeed,
     val currency: String? = null,
     val services: List<ServiceSeed>,
+    val roi: Map<String, FieldSeed> = emptyMap(),
 )
 
 @Serializable
@@ -121,6 +137,7 @@ private data class ServiceSeed(
     val functionId: FieldSeed,
     val dataLocation: FieldSeed,
     val resourceIds: List<String> = emptyList(),
+    val roi: Map<String, FieldSeed> = emptyMap(),
 )
 
 @Serializable
@@ -135,8 +152,8 @@ private data class ProvenanceSeed(
 )
 
 private fun RegisterSeed.toRegister() = Register(
-    entity = entity,
-    providers = providers.map { Provider(it.id, it.name, it.lei.toField(), it.headquartersCountry.toField()) },
+    entity = entity.copy(roi = entityRoi.toFields()),
+    providers = providers.map { Provider(it.id, it.name, it.lei.toField(), it.headquartersCountry.toField(), it.roi.toFields()) },
     contracts = contracts.map { c ->
         Contract(
             id = c.id,
@@ -146,13 +163,17 @@ private fun RegisterSeed.toRegister() = Register(
             annualCost = c.annualCost.toField(),
             currency = c.currency,
             services = c.services.map {
-                ContractService(it.id, it.serviceType.toField(), it.functionId.toField(), it.dataLocation.toField(), it.resourceIds)
+                ContractService(it.id, it.serviceType.toField(), it.functionId.toField(), it.dataLocation.toField(), it.resourceIds, it.roi.toFields())
             },
+            roi = c.roi.toFields(),
         )
     },
-    functions = functions,
+    functions = functions.map { BusinessFunction(it.id, it.name, it.isCritical, it.roi.toFields()) },
     asOf = asOf,
+    rows = rows.mapValues { (_, list) -> list.map { RoiRow(it.id, it.fields.toFields()) } },
 )
+
+private fun Map<String, FieldSeed>.toFields() = mapValues { it.value.toField() }
 
 private fun FieldSeed.toField() = RegisterField(
     value = value?.let { p ->

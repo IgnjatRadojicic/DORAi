@@ -22,6 +22,20 @@ data class Resource(
     val contractId: String? = null,
     val monthlyCost: Double? = null,
     val currency: String? = null,
+    /** Countries of copies in other regions (geo-redundant storage, database replicas), for B_02.02.0150. */
+    val replicaCountries: List<String> = emptyList(),
+    /** Backups the scan found, or null when it saw none or could not tell. */
+    val backup: BackupInfo? = null,
+)
+
+/** Backups of one resource as the cloud reports them (DORA Art. 12). */
+@Serializable
+data class BackupInfo(
+    /** Hours between backups (or the restore point interval); null when unknown. */
+    val intervalHours: Int? = null,
+    val retentionDays: Int? = null,
+    /** A backup copy is kept in another region. */
+    val geoRedundant: Boolean = false,
 )
 
 @Serializable

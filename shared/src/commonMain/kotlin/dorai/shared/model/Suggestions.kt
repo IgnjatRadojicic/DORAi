@@ -17,4 +17,9 @@ data class Suggestion(
     val status: SuggestionStatus,
     val createdAt: Instant,
     val decidedAt: Instant? = null,
+    /**
+     * For [SuggestionKind.RoiValue]: the RoI column code the value is for (for example `B_02.02.0170`).
+     * [resourceId] then names the register item (service, provider, function) instead of a cloud resource.
+     */
+    val column: String? = null,
 )

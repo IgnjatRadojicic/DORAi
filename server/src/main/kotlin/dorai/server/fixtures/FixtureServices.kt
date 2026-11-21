@@ -63,17 +63,22 @@ class FixtureCostProvider(private val entries: List<CostEntry>) : CostProvider {
 }
 
 class InMemoryRegisterRepository(
-    private val register: Register,
+    private var register: Register,
     private var resources: List<Resource>,
     private var costs: List<CostEntry>,
 ) : RegisterRepository {
     private val lock = Mutex()
-    override suspend fun register() = register
+    override suspend fun register() = lock.withLock { register }
     override suspend fun resources() = lock.withLock { resources }
     override suspend fun costs() = lock.withLock { costs }
     override suspend fun saveScan(resources: List<Resource>, costs: List<CostEntry>) = lock.withLock {
         this.resources = resources
         this.costs = costs
+    }
+    override suspend fun <T> updateRegister(change: (Register) -> Pair<Register, T>): T = lock.withLock {
+        val (updated, result) = change(register)
+        register = updated
+        result
     }
 }
 
