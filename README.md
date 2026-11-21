@@ -11,7 +11,7 @@ What it does:
 - Uses AI to classify resources, suggest business functions and explain findings, always with a citation
   from the regulation. A person accepts or rejects every suggestion.
 - Validates the register and exports it (EBA CSV) plus a PDF report.
-- `dorai check plan.json` runs the same rules in CI and fails the build on HIGH findings.
+- `dorai check plan.json --register register.json` runs the same rules in CI and fails the build on High findings; the GitHub Action posts them as a pull request comment ([docs/ci-check.md](docs/ci-check.md)).
 
 ## Modules
 
