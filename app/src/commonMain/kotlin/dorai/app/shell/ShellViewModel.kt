@@ -17,6 +17,7 @@ import dorai.app.inventory.InventoryViewModel
 import dorai.app.review.ReviewViewModel
 import dorai.app.theme.ThemeMode
 import dorai.app.validation.ValidationViewModel
+import dorai.app.roi.RoiViewModel
 import dorai.shared.api.DoraiApi
 import dorai.shared.api.MemoryTokenStore
 import dorai.shared.model.Role
@@ -27,13 +28,14 @@ object Sections {
     const val REVIEW = "review"
     const val FINDINGS = "findings"
     const val EXPORT = "export"
+    const val ROI = "roi"
 }
 
-/** The four workspace sections in Matija's frame: Luka's 01 and 02, then Matija's 03 and 04. */
+/** The workspace sections in Matija's frame: Luka's 01 and 02, Matija's 03 and 04, then the RoI (05). */
 val shellSections: List<WorkspaceSection> = listOf(
     WorkspaceSection(Sections.INVENTORY, "Cloud inventory", "01"),
     WorkspaceSection(Sections.REVIEW, "AI review", "02"),
-) + matijaSections
+) + matijaSections + WorkspaceSection(Sections.ROI, "Register of Information", "05")
 
 data class ShellState(
     val section: String = Sections.INVENTORY,
@@ -48,6 +50,7 @@ class Workspace(val session: Tokens, api: DoraiApi) {
     val review = ReviewViewModel(sources.review)
     val findings = FindingsViewModel(sources.findings)
     val validation = ValidationViewModel(sources.validation)
+    val roi = RoiViewModel(sources.roi, canEdit = { session.role >= Role.Reviewer })
 
     /** The app only hides what the role can't use; the server checks every call. */
     val canReview: Boolean get() = session.role >= Role.Reviewer

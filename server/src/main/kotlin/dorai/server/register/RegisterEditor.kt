@@ -102,10 +102,17 @@ class RegisterEditor(private val repo: RegisterRepository, private val clock: Cl
      * Writes an accepted AI value into the item it was for: a service, contract, provider, function or the
      * entity (by LEI). The value becomes `human-confirmed`, keeping the AI's citation and reason.
      */
-    suspend fun acceptValue(itemId: String, column: String, value: String, citation: Citation?, reason: String, who: String) = edit { r, now ->
+    suspend fun acceptValue(itemId: String, column: String, value: String, citation: Citation?, reason: String, who: String) =
+        writeValue(itemId, column) { now -> RegisterField(value, Provenance(ProvenanceLabel.HumanConfirmed, now, citation, "Accepted by $who: $reason")) }
+
+    /** One cell typed by a person; blank clears the cell so the derived or scanned value shows again. */
+    suspend fun setValue(itemId: String, column: String, value: String?, who: String) =
+        writeValue(itemId, column) { now -> value?.trim()?.ifEmpty { null }?.let { RegisterField(it, Provenance(ProvenanceLabel.HumanConfirmed, now, reason = "Set by $who")) } }
+
+    private suspend fun writeValue(itemId: String, column: String, make: (Instant) -> RegisterField?) = edit { r, now ->
         if (RoiSpec.column(column) == null) bad("Unknown RoI column $column.")
-        val field = RegisterField(value, Provenance(ProvenanceLabel.HumanConfirmed, now, citation, "Accepted by $who: $reason"))
-        fun RoiFields.with() = this + (column to field)
+        val field = make(now)
+        fun RoiFields.with() = if (field == null) this - column else this + (column to field)
         val updated = when {
             r.entity.lei == itemId -> r.copy(entity = r.entity.copy(roi = r.entity.roi.with()))
             r.providers.any { it.id == itemId } -> r.copy(providers = r.providers.map { if (it.id == itemId) it.copy(roi = it.roi.with()) else it })

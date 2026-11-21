@@ -1,5 +1,6 @@
 package dorai.server.register
 
+import dorai.shared.model.RoiValueEdit
 import io.ktor.server.routing.post
 import kotlinx.coroutines.CancellationException
 import dorai.server.register.lei.LeiLookup
@@ -39,6 +40,18 @@ fun Route.registerRoutes(services: Services) {
 
     route("register") {
         put("entity") { call.respond(editor.putEntity(call.receive<FinancialEntity>(), call.who())) }
+
+        put("entity/values/{column}") {
+            val entity = services.register.register().entity.lei
+            editor.setValue(entity, call.parameters["column"].orEmpty(), call.receive<RoiValueEdit>().value, call.who())
+            call.respond(HttpStatusCode.NoContent)
+        }
+        put("values/{item}/{column}") {
+            val item = call.parameters["item"].orEmpty()
+            if (item == services.register.register().entity.lei) throw ApiProblem(HttpStatusCode.Forbidden, "Entity values are settings", "Use /register/entity/values as an admin.")
+            editor.setValue(item, call.parameters["column"].orEmpty(), call.receive<RoiValueEdit>().value, call.who())
+            call.respond(HttpStatusCode.NoContent)
+        }
 
         route("providers/{id}") {
             put { call.respond(editor.putProvider(call.id(), call.receive<Provider>(), call.who())) }

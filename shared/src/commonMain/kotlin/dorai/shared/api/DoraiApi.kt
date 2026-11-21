@@ -1,5 +1,6 @@
 package dorai.shared.api
 
+import dorai.shared.model.RoiValueEdit
 import dorai.shared.model.LeiLookupResult
 import kotlinx.datetime.LocalDate
 import io.ktor.http.encodeURLPathPart
@@ -146,6 +147,14 @@ class DoraiApi(
     suspend fun putEntity(entity: FinancialEntity): ApiResult<FinancialEntity> = call { http.put("register/entity") { json(entity) } }
     suspend fun putProvider(provider: Provider): ApiResult<Provider> = call { http.put("register/providers/${provider.id.encodeURLPathPart()}") { json(provider) } }
     suspend fun deleteProvider(id: String): ApiResult<Unit> = call { http.delete("register/providers/${id.encodeURLPathPart()}") }
+
+    /** One RoI cell of a register item (provider, contract, service, function); null clears it. */
+    suspend fun putValue(itemId: String, column: String, value: String?): ApiResult<Unit> =
+        call { http.put("register/values/${itemId.encodeURLPathPart()}/${column.encodeURLPathPart()}") { json(RoiValueEdit(value)) } }
+
+    /** One RoI cell of the entity itself (admin). */
+    suspend fun putEntityValue(column: String, value: String?): ApiResult<Unit> =
+        call { http.put("register/entity/values/${column.encodeURLPathPart()}") { json(RoiValueEdit(value)) } }
 
     /** Looks the provider up in GLEIF; the values arrive as suggestions to review. */
     suspend fun leiLookup(providerId: String): ApiResult<LeiLookupResult> = call { http.post("register/providers/${providerId.encodeURLPathPart()}/lei-lookup") }

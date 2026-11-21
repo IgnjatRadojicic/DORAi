@@ -50,6 +50,10 @@ data class Provider(
     val roi: RoiFields = emptyMap(),
 )
 
+/** One RoI cell set by hand; a null or blank value clears it. */
+@Serializable
+data class RoiValueEdit(val value: String?)
+
 /** A contractual arrangement (B_02.01) and the services it covers (B_02.02, one row per service). */
 @Serializable
 data class Contract(

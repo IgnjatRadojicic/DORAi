@@ -106,10 +106,28 @@ class RegisterEditTest {
     }
 
     @Test
+    fun `one cell can be set, shown as the person's value, and cleared`() = api { api ->
+        val view = api.roi(LocalDate(2026, 12, 31)).ok()
+        val row = view.tables.getValue("B_02.02").first()
+        val item = row.key.substringBefore('#')
+        api.putValue(item, "B_02.02.0180", "4").ok()
+        val set = api.roi(LocalDate(2026, 12, 31)).ok().tables.getValue("B_02.02").first { it.key == row.key }.cells.getValue("B_02.02.0180")
+        assertEquals("4" to ProvenanceLabel.HumanConfirmed, set.value to set.label)
+        api.putValue(item, "B_02.02.0180", " ").ok()
+        assertNull(api.roi(LocalDate(2026, 12, 31)).ok().tables.getValue("B_02.02").first { it.key == row.key }.cells["B_02.02.0180"])
+        api.putEntityValue("B_01.02.0040", "1").ok()
+        assertEquals("1", api.register().ok().entity.roi.getValue("B_01.02.0040").value)
+        assertEquals(400, api.putValue(item, "B_09.99.0010", "x").status())
+        assertEquals(403, api.putValue(api.register().ok().entity.lei, "B_01.02.0040", "2").status())
+    }
+
+    @Test
     fun `edits need a reviewer, entity settings and definitions an admin`() {
         assertEquals(Role.Reviewer, Access.required(HttpMethod.Put, "/api/register/contracts/C1"))
         assertEquals(Role.Reviewer, Access.required(HttpMethod.Delete, "/api/register/rows/B_05.02/x"))
         assertEquals(Role.Admin, Access.required(HttpMethod.Put, "/api/register/entity"))
+        assertEquals(Role.Admin, Access.required(HttpMethod.Put, "/api/register/entity/values/B_01.02.0040"))
+        assertEquals(Role.Reviewer, Access.required(HttpMethod.Put, "/api/register/values/C1-S1/B_02.02.0180"))
         assertEquals(Role.Admin, Access.required(HttpMethod.Put, "/api/register/rows/B_99.01/r1"))
         assertEquals(Role.Viewer, Access.required(HttpMethod.Get, "/api/roi"))
         assertNull(Access.required(HttpMethod.Get, "/api/health"))
