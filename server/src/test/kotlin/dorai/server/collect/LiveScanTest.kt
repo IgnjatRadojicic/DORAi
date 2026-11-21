@@ -1,5 +1,6 @@
 package dorai.server.collect
 
+import dorai.server.versionedClient
 import dorai.server.collect.LiveConfig.Cloud
 import dorai.server.collect.aws.AwsArns
 import dorai.server.collect.azure.AzureCostRows
@@ -272,7 +273,7 @@ class ScanFailureTest {
         application { module(base.copy(collectors = base.collectors + failing)) }
         val before = base.register.resources()
 
-        val response = client.post("/api/scan")
+        val response = versionedClient().post("/api/scan")
         assertEquals(HttpStatusCode.BadGateway, response.status)
         val problem = DoraiJson.decodeFromString<Problem>(response.bodyAsText())
         assertEquals("Azure scan failed", problem.title)

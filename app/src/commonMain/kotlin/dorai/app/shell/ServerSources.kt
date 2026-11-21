@@ -28,6 +28,7 @@ import dorai.app.validation.RegisterValidation
 import dorai.app.validation.ValidationSource
 import dorai.shared.api.ApiResult
 import dorai.shared.api.DoraiApi
+import dorai.shared.model.ChangeAction
 import dorai.shared.model.Citation
 import dorai.shared.model.CostSource
 import dorai.shared.model.Finding
@@ -204,6 +205,11 @@ internal fun Resource.toInventoryResource(suggestions: List<Suggestion>, functio
         function = withName(sourced(functionId, SuggestionKind.BusinessFunction)),
         monthlyCost = monthlyCost,
         currency = currency,
+        tags = tags,
+        redundancy = redundancy.name,
+        source = source.name,
+        changeAction = changeAction.takeIf { it != ChangeAction.None }?.name,
+        contractId = contractId,
     )
 }
 

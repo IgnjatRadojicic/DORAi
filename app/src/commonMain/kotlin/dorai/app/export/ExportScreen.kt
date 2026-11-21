@@ -17,6 +17,7 @@ fun ValidationExportScreen(
     validation: ValidationState, export: ExportState,
     onRefresh: () -> Unit, onDownload: (ExportFormat) -> Unit,
     modifier: Modifier = Modifier, canExport: Boolean = true, isDemo: Boolean = false,
+    availableFormats: Set<ExportFormat> = if (isDemo) emptySet() else ExportFormat.entries.toSet(),
 ) {
     Column(modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(bottom = 24.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp)) {
@@ -26,7 +27,7 @@ fun ValidationExportScreen(
         }
         ValidationMetrics(validation)
         ValidationReportPanel(validation, onRefresh, isDemo)
-        ExportDownloads(export, onDownload, canExport, isDemo)
+        ExportDownloads(export, onDownload, canExport, isDemo, availableFormats)
     }
 }
 
@@ -38,7 +39,8 @@ fun ExportScreen(state: ExportState, onDownload: (ExportFormat) -> Unit, modifie
 }
 
 @Composable
-private fun ExportDownloads(state: ExportState, onDownload: (ExportFormat) -> Unit, canExport: Boolean, isDemo: Boolean = false) {
+private fun ExportDownloads(state: ExportState, onDownload: (ExportFormat) -> Unit, canExport: Boolean, isDemo: Boolean = false,
+    availableFormats: Set<ExportFormat> = if (isDemo) emptySet() else ExportFormat.entries.toSet()) {
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -60,7 +62,7 @@ private fun ExportDownloads(state: ExportState, onDownload: (ExportFormat) -> Un
                             }
                         }
                     }
-                    ExportFooter(state, ExportFormat.CSV, onDownload, canExport, isDemo)
+                    ExportFooter(state, ExportFormat.CSV, onDownload, canExport, isDemo, availableFormats)
                 }
             }
             val pdf: @Composable (Modifier) -> Unit = { panelModifier ->
@@ -80,7 +82,7 @@ private fun ExportDownloads(state: ExportState, onDownload: (ExportFormat) -> Un
                             }
                         }
                     }
-                    ExportFooter(state, ExportFormat.PDF, onDownload, canExport, isDemo)
+                    ExportFooter(state, ExportFormat.PDF, onDownload, canExport, isDemo, availableFormats)
                 }
             }
             if (wide) Row(horizontalArrangement = Arrangement.spacedBy(20.dp)) { csv(Modifier.weight(1f)); pdf(Modifier.weight(1f)) }
@@ -99,13 +101,14 @@ private fun ExportDownloads(state: ExportState, onDownload: (ExportFormat) -> Un
 }
 
 @Composable
-private fun ExportFooter(state: ExportState, format: ExportFormat, onDownload: (ExportFormat) -> Unit, canExport: Boolean, isDemo: Boolean) {
+private fun ExportFooter(state: ExportState, format: ExportFormat, onDownload: (ExportFormat) -> Unit, canExport: Boolean, isDemo: Boolean,
+    availableFormats: Set<ExportFormat>) {
     HorizontalDivider(color = ProductStyle.colors.line)
     FlowRow(Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 16.dp), horizontalArrangement = Arrangement.SpaceBetween,
         verticalArrangement = Arrangement.spacedBy(12.dp), itemVerticalAlignment = Alignment.CenterVertically) {
-        MetaText(if (isDemo) "Demo" else if (format == ExportFormat.CSV) "ZIP" else "PDF")
+        MetaText(if (format !in availableFormats) "Unavailable" else if (isDemo) "Demo" else if (format == ExportFormat.CSV) "ZIP" else "PDF")
         ProductButton(if (state.busy == format) "Saving..." else if (format == ExportFormat.CSV) "Save CSV package" else "Save PDF report",
-            { onDownload(format) }, outlined = format == ExportFormat.PDF, enabled = !isDemo && canExport && state.busy == null,
+            { onDownload(format) }, outlined = format == ExportFormat.PDF, enabled = format in availableFormats && canExport && state.busy == null,
             icon = if (state.busy == format) ProductIcon.REFRESH else ProductIcon.DOWNLOAD)
     }
 }

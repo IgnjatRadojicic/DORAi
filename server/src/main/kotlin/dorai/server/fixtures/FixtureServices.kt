@@ -52,7 +52,7 @@ fun fixtureServices(data: FixtureData = FixtureData.load()): Services {
         explainer = NoAi,
         reportDrafter = NoAi,
         regulationSearch = NoAi,
-        exporter = RoiExporter(),
+        exporter = RoiExporter(NoAi),
     )
 }
 

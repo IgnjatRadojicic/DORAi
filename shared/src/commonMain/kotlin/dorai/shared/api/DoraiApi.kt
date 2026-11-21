@@ -13,6 +13,8 @@ import dorai.shared.model.FinancialEntity
 import dorai.shared.model.Contract
 import dorai.shared.model.BusinessFunction
 import dorai.shared.Dorai
+import dorai.shared.Version
+import kotlin.concurrent.Volatile
 import dorai.shared.model.CreateInviteRequest
 import dorai.shared.model.CreateUserRequest
 import dorai.shared.model.CreatedUser
@@ -81,10 +83,29 @@ class DoraiApi(
 
     private val refreshLock = Mutex()
 
+    /**
+     * The server's version from the last response, null before the first one. Every request says this
+     * client's version; a server with another major answers with a [dorai.shared.VersionProblem] type.
+     */
+    @Volatile
+    var serverVersion: Version? = null
+        private set
+
     private val http = httpClient.config {
         expectSuccess = false
         install(ContentNegotiation) { json(DoraiJson) }
-        defaultRequest { url(baseUrl.trimEnd('/') + Dorai.API_PREFIX + "/") }
+        defaultRequest {
+            url(baseUrl.trimEnd('/') + Dorai.API_PREFIX + "/")
+            // Once, even when the caller's client already sets it.
+            if (!headers.contains(Version.CLIENT_HEADER)) headers.append(Version.CLIENT_HEADER, Version.CURRENT.toString())
+        }
+        install(
+            createClientPlugin("DoraiServerVersion") {
+                onResponse { response ->
+                    response.headers[Version.SERVER_HEADER]?.let(Version::parse)?.let { serverVersion = it }
+                }
+            },
+        )
         install(
             createClientPlugin("DoraiBearer") {
                 onRequest { request, _ ->
@@ -200,7 +221,7 @@ class DoraiApi(
 
     // Export: raw file bytes (zip of EBA CSV files, PDF report)
     /**
-     * The RoI xBRL-CSV package. The server refuses the final package (409) while readiness errors remain;
+     * The RoI xBRL-CSV package. The server refuses the final package (422) while readiness errors remain;
      * [draft] builds it anyway, named as a draft.
      */
     suspend fun exportCsv(referenceDate: LocalDate? = null, draft: Boolean = false): ApiResult<ByteArray> = call {

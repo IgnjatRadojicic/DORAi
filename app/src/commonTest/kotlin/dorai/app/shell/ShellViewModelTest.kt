@@ -1,5 +1,6 @@
 package dorai.app.shell
 
+import dorai.app.auth.FakeLoginGateway
 import dorai.app.components.AppLanguage
 import dorai.app.components.runImmediate
 import dorai.app.connect.ServerStatus
@@ -33,10 +34,22 @@ class ShellViewModelTest {
     private fun shell(answer: ApiResult<LoginResponse> = ApiResult.Success(LoginResponse(false, tokens(Role.Reviewer)))) =
         ShellViewModel(
             address = "http://localhost:8080",
-            api = DoraiApi("http://localhost:8080"),
+            openApi = { DoraiApi(it) },
             probe = { ApiResult.Success(Health("ok", "DORAi")) },
-            gateway = { _, _ -> answer },
+            gateway = FakeLoginGateway(loginAnswer = answer, changeAnswer = ApiResult.Success(tokens(Role.Viewer))),
         )
+
+    @Test
+    fun aChangedTemporaryPasswordOpensThePlatformWithoutASecondLogin() {
+        val shell = shell(ApiResult.Success(LoginResponse(passwordChangeRequired = true)))
+        shell.signIn()
+        assertNull(shell.workspace)
+        shell.login.onNewPasswordChange("my-new-password")
+        shell.login.onRepeatPasswordChange("my-new-password")
+        runImmediate { shell.changePassword() }
+        assertEquals(Role.Viewer, shell.workspace?.session?.role)
+        assertEquals(Sections.INVENTORY, shell.state.section)
+    }
 
     private fun ShellViewModel.signIn() {
         login.onUsernameChange("luka")

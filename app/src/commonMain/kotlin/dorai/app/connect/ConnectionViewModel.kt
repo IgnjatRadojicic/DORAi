@@ -20,9 +20,18 @@ fun interface ServerProbe {
 }
 
 /** Whether the server at [address] answers, for the connection mark. */
-class ConnectionViewModel(val address: String, private val probe: ServerProbe) : ViewModel() {
+class ConnectionViewModel(address: String, private val probe: ServerProbe) : ViewModel() {
+    var address by mutableStateOf(address)
+        private set
+
     var status by mutableStateOf(ServerStatus.CHECKING)
         private set
+
+    /** The app now talks to another server (from an invite link); its state is unknown until the next check. */
+    fun switchTo(address: String) {
+        this.address = address
+        status = ServerStatus.CHECKING
+    }
 
     suspend fun check() {
         status = try {

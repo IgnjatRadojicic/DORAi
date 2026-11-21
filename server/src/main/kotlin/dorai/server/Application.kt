@@ -26,6 +26,7 @@ import dorai.server.tls.Tls
 import dorai.server.tls.TlsConfig
 import dorai.shared.Dorai
 import dorai.shared.model.DoraiJson
+import dorai.shared.Version
 import dorai.shared.model.Health
 import io.ktor.http.ContentDisposition
 import io.ktor.http.ContentType
@@ -92,9 +93,13 @@ fun servicesFromEnv(fingerprint: String? = null, defaultPublicUrl: String = "htt
     }
     val gleif = System.getenv("DORAI_GLEIF").equals("off", ignoreCase = true)
     val withLei = if (gleif) base else base.copy(leiDirectory = GleifDirectory(System.getenv("DORAI_GLEIF_URL") ?: GleifDirectory.DEFAULT_URL))
-    val live = LiveConfig.fromEnv() ?: return withLei
-    log.info("Live scan of {}{}.", live.clouds, live.awsEndpoint?.let { " (AWS through $it)" } ?: "")
-    return withLei.withLiveScan(live, data.costs)
+    val live = LiveConfig.fromEnv()
+    val configured = if (live == null) withLei else {
+        log.info("Live scan of {}{}.", live.clouds, live.awsEndpoint?.let { " (AWS through $it)" } ?: "")
+        withLei.withLiveScan(live, data.costs)
+    }
+    // The PDF's AI summary uses the drafting service this server is configured with.
+    return configured.copy(exporter = dorai.server.export.RoiExporter(configured.reportDrafter, configured.validator))
 }
 
 /** Fixture wiring: in-memory storage, no AI. Used by tests and by a server started without a database. */
@@ -103,6 +108,8 @@ fun Application.module() = module(fixtureServices())
 fun Application.module(services: Services) {
     install(ContentNegotiation) { json(DoraiJson) }
     installProblems()
+    // Before access control: an outdated client hears "update" rather than "log in".
+    install(VersionCheck)
 
     services.auth?.let {
         install(accessControl(it))
@@ -111,7 +118,7 @@ fun Application.module(services: Services) {
 
     routing {
         route(Dorai.API_PREFIX) {
-            get("health") { call.respond(Health(status = "ok", app = Dorai.NAME)) }
+            get("health") { call.respond(Health(status = "ok", app = Dorai.NAME, version = Version.CURRENT.toString())) }
             services.auth?.let { authRoutes(it) }
             scanRoutes(services)
             registerRoutes(services)
@@ -134,9 +141,9 @@ private fun Route.exportRoutes(services: Services) = route("export") {
             val view = RoiView.of(register, resources, date)
             if (!view.ready) {
                 throw ApiProblem(
-                    HttpStatusCode.Conflict,
+                    HttpStatusCode.UnprocessableEntity,
                     "Register not ready for export",
-                    "${view.errorCount} errors remain (see GET /api/roi). Ask for a draft with ?draft=true.",
+                    "Resolve register validation errors before the final package: ${view.errorCount} remain (see GET /api/roi). Ask for a draft with ?draft=true.",
                 )
             }
         }
@@ -148,8 +155,10 @@ private fun Route.exportRoutes(services: Services) = route("export") {
         val exporter = services.exporter ?: throw exportUnavailable()
         val register = services.register.register()
         val findings = services.planChecker.check(services.demoPlan, register)
+        // Built before the attachment header, so a failure is answered as problem details.
+        val bytes = exporter.pdf(register, services.register.resources(), call.referenceDate(), findings)
         call.response.header(HttpHeaders.ContentDisposition, attachment("dorai-report.pdf"))
-        call.respondBytes(exporter.pdf(register, services.register.resources(), call.referenceDate(), findings), ContentType.Application.Pdf)
+        call.respondBytes(bytes, ContentType.Application.Pdf)
     }
 }
 

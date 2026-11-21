@@ -109,7 +109,7 @@ class ContractTest {
 
     @Test
     fun exportFinalNeedsAReadyRegisterDraftAlwaysWorks() = contract { api ->
-        assertEquals(409, api.exportCsv().failure().problem.status)
+        assertEquals(422, api.exportCsv().failure().problem.status)
         val zip = api.exportCsv(draft = true).ok()
         assertEquals('P'.code.toByte(), zip[0], "a zip file")
         val pdf = api.exportPdf().ok()
@@ -119,7 +119,7 @@ class ContractTest {
     @Test
     fun unknownRouteIsAProblem() = testApplication {
         application { module() }
-        val response = client.get("/api/nope")
+        val response = versionedClient().get("/api/nope")
         assertEquals(HttpStatusCode.NotFound, response.status)
         assertTrue(response.headers[HttpHeaders.ContentType].orEmpty().startsWith("application/problem+json"))
         assertTrue(response.bodyAsText().contains("\"status\":404"))

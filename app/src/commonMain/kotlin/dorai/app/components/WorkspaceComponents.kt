@@ -45,7 +45,7 @@ fun ProductPanel(modifier: Modifier = Modifier, highlighted: Boolean = false, on
         tween(ProductMotion.FEEDBACK), label = "panel-fill")
     if (onClick == null) Surface(modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp), color = fill,
         border = BorderStroke(1.dp, border)) { Column(content = content) }
-    else Surface(onClick = onClick, interactionSource = interaction, modifier = modifier.fillMaxWidth().hoverable(interaction),
+    else Surface(onClick = onClick, interactionSource = interaction, modifier = modifier.fillMaxWidth().hoverable(interaction).actionPointer(),
         shape = RoundedCornerShape(10.dp), color = fill, border = BorderStroke(1.dp, border)) { Column(content = content) }
 }
 
@@ -84,7 +84,7 @@ fun ProductButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifi
         else -> colors.accent
     }, tween(ProductMotion.FEEDBACK), label = "button-fill")
     Surface(onClick = onClick, enabled = enabled, interactionSource = interaction,
-        modifier = modifier.hoverable(interaction).graphicsLayer { scaleX = scale; scaleY = scale }, shape = RoundedCornerShape(7.dp),
+        modifier = modifier.hoverable(interaction).actionPointer(enabled).graphicsLayer { scaleX = scale; scaleY = scale }, shape = RoundedCornerShape(7.dp),
         color = fill,
         contentColor = if (outlined) colors.ink else colors.background,
         border = BorderStroke(if (focused) 2.dp else 1.dp, if (focused) colors.accent else if (outlined) colors.line else colors.accent.copy(alpha = if (enabled) 1f else 0.28f))) {

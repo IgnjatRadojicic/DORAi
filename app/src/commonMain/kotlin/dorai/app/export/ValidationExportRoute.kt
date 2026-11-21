@@ -9,11 +9,12 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun ValidationExportRoute(validation: ValidationViewModel, export: ExportViewModel,
-    modifier: Modifier = Modifier, canExport: Boolean = true, isDemo: Boolean = false) {
+    modifier: Modifier = Modifier, canExport: Boolean = true, isDemo: Boolean = false,
+    availableFormats: Set<ExportFormat> = if (isDemo) emptySet() else ExportFormat.entries.toSet()) {
     val scope = rememberCoroutineScope()
     LaunchedEffect(validation) { validation.refresh() }
     ValidationExportScreen(validation.state, export.state,
         onRefresh = { scope.launch { validation.refresh() } },
-        onDownload = { format -> if (canExport && !isDemo) scope.launch { export.download(format) } },
-        modifier = modifier, canExport = canExport, isDemo = isDemo)
+        onDownload = { format -> if (canExport && format in availableFormats) scope.launch { export.download(format) } },
+        modifier = modifier, canExport = canExport, isDemo = isDemo, availableFormats = availableFormats)
 }

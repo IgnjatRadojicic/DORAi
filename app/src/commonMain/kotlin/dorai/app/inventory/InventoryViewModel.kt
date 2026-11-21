@@ -6,6 +6,8 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import dorai.app.components.Provenance
 import dorai.app.components.displayMessage
+import dorai.shared.rules.CONTRACT_TAG
+import dorai.shared.rules.FUNCTION_TAG
 import kotlinx.coroutines.CancellationException
 
 /** A register value with where it came from: scanned, ai-suggested (pending) or human-confirmed. */
@@ -22,7 +24,23 @@ data class InventoryResource(
     val function: SourcedValue?,
     val monthlyCost: Double?,
     val currency: String?,
-)
+    val tags: Map<String, String> = emptyMap(),
+    /** Unknown, Local, Zone or Geo. */
+    val redundancy: String = "Unknown",
+    /** Live (scanned) or Planned (from a Terraform plan). */
+    val source: String = "Live",
+    /** Create, Update, Delete or Replace for a planned change; null when nothing changes. */
+    val changeAction: String? = null,
+    val contractId: String? = null,
+) {
+    /** The DORA tags the rules expect on every resource, missing here. */
+    val missingDoraTags: List<String> get() = DORA_TAGS.filter { tags[it].isNullOrBlank() }
+
+    companion object {
+        /** The tag names the rules read, so the mark and the findings never disagree. */
+        val DORA_TAGS = listOf(FUNCTION_TAG, CONTRACT_TAG)
+    }
+}
 
 data class ScanSummary(val live: Boolean, val scannedAt: String, val resourceCount: Int, val newSuggestionCount: Int, val liveCost: Boolean)
 

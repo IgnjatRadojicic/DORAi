@@ -22,6 +22,7 @@ import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
 import kotlinx.serialization.json.putJsonObject
 import ai.koog.prompt.executor.clients.retry.RetryConfig
+import java.util.Collections
 import kotlin.time.Duration.Companion.milliseconds
 
 /**
@@ -32,7 +33,8 @@ class FakeOpenAi(
     private val chat: suspend ApplicationCall.(body: String) -> Unit = { respondChat("{}") },
     private val embed: suspend ApplicationCall.(texts: List<String>) -> Unit = { texts -> respondEmbeddings(texts.map { FloatArray(3) }) },
 ) : AutoCloseable {
-    val requests = mutableListOf<Pair<String, String>>()
+    /** Written by the server's threads, read by the test's, so it is synchronized. */
+    val requests: MutableList<Pair<String, String>> = Collections.synchronizedList(mutableListOf())
 
     private val server: EmbeddedServer<NettyApplicationEngine, NettyApplicationEngine.Configuration> =
         embeddedServer(Netty, port = 0, host = "127.0.0.1") {

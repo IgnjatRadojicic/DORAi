@@ -40,5 +40,11 @@ data class Problem(
     val instance: String? = null,
 )
 
+/** Always open, also to a client of another version: [version] is how a client sees a mismatch before logging in. */
 @Serializable
-data class Health(val status: String, val app: String)
+data class Health(
+    val status: String,
+    val app: String,
+    /** The server's version, `X.Y.Z`; empty from a server older than versioning. */
+    val version: String = "",
+)

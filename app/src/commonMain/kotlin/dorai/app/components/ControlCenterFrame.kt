@@ -46,6 +46,8 @@ fun ControlCenterFrame(
     sections: List<WorkspaceSection> = matijaSections,
     isDemo: Boolean = false,
     onLanguage: ((AppLanguage) -> Unit)? = null,
+    account: (@Composable () -> Unit)? = null,
+    footer: (@Composable () -> Unit)? = null,
     content: @Composable (String) -> Unit,
 ) {
     val colors = ProductStyle.colors
@@ -53,6 +55,7 @@ fun ControlCenterFrame(
     Surface(modifier.fillMaxSize(), color = colors.background) {
         BoxWithConstraints {
             val desktop = maxWidth >= 1000.dp
+            val wideHeader = maxWidth >= 600.dp
             Row(Modifier.fillMaxSize()) {
                 if (desktop) {
                     Column(Modifier.width(244.dp).fillMaxHeight().padding(horizontal = 14.dp, vertical = 24.dp)) {
@@ -75,6 +78,7 @@ fun ControlCenterFrame(
                                 Text("FinPay Payments B.V.", color = colors.muted, fontSize = 10.sp)
                             }
                         }
+                        footer?.invoke()
                     }
                     VerticalDivider(color = colors.line.copy(alpha = 0.7f))
                 }
@@ -86,9 +90,14 @@ fun ControlCenterFrame(
                             Text(uiText(sections.find { it.id == selected }?.label ?: "Workspace"), color = colors.muted, style = MaterialTheme.typography.bodyMedium)
                         }
                         Spacer(Modifier.weight(1f))
-                        OutlineChip(if (isDemo) "Demo" else "Connected", if (isDemo) colors.muted else colors.green, dot = true)
+                        if (isDemo) OutlineChip("Demo", colors.muted, dot = true)
+                        if (wideHeader && account != null) account()
                         if (onLanguage != null) LanguagePicker(onLanguage)
                         ThemeToggle(theme, onTheme)
+                    }
+                    if (!wideHeader && account != null) {
+                        Row(Modifier.fillMaxWidth().padding(start = 20.dp, end = 20.dp, bottom = 12.dp),
+                            horizontalArrangement = Arrangement.End) { account() }
                     }
                     HorizontalDivider(color = colors.line.copy(alpha = 0.7f))
                     if (!desktop) {
@@ -104,6 +113,12 @@ fun ControlCenterFrame(
                             activeSection -> sectionState.SaveableStateProvider(activeSection) { content(activeSection) }
                         }
                     }
+                    if (!desktop && footer != null) {
+                        HorizontalDivider(color = colors.line.copy(alpha = 0.7f))
+                        Box(Modifier.fillMaxWidth().background(colors.background).padding(20.dp)) {
+                            Box(Modifier.widthIn(max = 244.dp)) { footer() }
+                        }
+                    }
                 }
             }
         }
@@ -111,7 +126,7 @@ fun ControlCenterFrame(
 }
 
 @Composable
-private fun BrandMark(modifier: Modifier = Modifier) {
+internal fun BrandMark(modifier: Modifier = Modifier) {
     Row(modifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(11.dp)) {
         Surface(Modifier.size(34.dp), color = ProductStyle.colors.accent.copy(alpha = 0.1f), shape = RoundedCornerShape(10.dp)) {
             Box(contentAlignment = Alignment.Center) {
@@ -141,7 +156,7 @@ private fun NavigationItem(section: WorkspaceSection, active: Boolean, onSection
         if (!section.enabled) colors.muted.copy(alpha = 0.45f) else if (active) colors.ink else colors.muted,
         tween(ProductMotion.FEEDBACK), label = "navigation-label")
     Surface(onClick = { onSection(section.id) }, enabled = section.enabled, interactionSource = interaction,
-        modifier = Modifier.fillMaxWidth().hoverable(interaction).semantics { selected = active },
+        modifier = Modifier.fillMaxWidth().hoverable(interaction).actionPointer(section.enabled).semantics { selected = active },
         shape = RoundedCornerShape(8.dp), color = fill,
         border = if (active) BorderStroke(1.dp, colors.accent.copy(alpha = 0.14f)) else null) {
         Row(Modifier.height(42.dp).padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically,
@@ -161,7 +176,7 @@ private fun ThemeToggle(mode: ThemeMode, onTheme: (ThemeMode) -> Unit) {
     val currentLabel = uiText(if (dark) UiCopy.DARK_THEME else UiCopy.LIGHT_THEME)
     OutlinedIconButton(
         onClick = { onTheme(if (dark) ThemeMode.LIGHT else ThemeMode.DARK) },
-        modifier = Modifier.size(36.dp).semantics {
+        modifier = Modifier.size(36.dp).actionPointer().semantics {
             contentDescription = actionLabel
             stateDescription = currentLabel
         },

@@ -56,7 +56,8 @@ fun FindingsScreen(
                     Row(tileModifier.then(dropModifier).drawBehind {
                         if (state.plan == null) drawRoundRect(borderColor,
                             style = Stroke(width = 1.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(5.dp.toPx(), 4.dp.toPx()))))
-                    }.clickable(enabled = !state.busy && canCheck, role = Role.Button, onClickLabel = selectLabel, onClick = onChoosePlan)
+                    }.actionPointer(!state.busy && canCheck)
+                        .clickable(enabled = !state.busy && canCheck, role = Role.Button, onClickLabel = selectLabel, onClick = onChoosePlan)
                         .padding(12.dp).heightIn(min = 36.dp),
                         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
                         LineIcon(if (state.plan == null) ProductIcon.UPLOAD else ProductIcon.FILE, color = ProductStyle.colors.accent, size = 22.dp)
@@ -65,7 +66,7 @@ fun FindingsScreen(
                             state.plan?.let { plan -> MetaText(((plan.bytes.size / 1024.0 * 10).toInt() / 10.0).toString() + " KB") }
                         }
                         if (state.plan != null) IconButton(onClick = onRemovePlan, enabled = !state.busy,
-                            modifier = Modifier.semantics { contentDescription = removeLabel }) { LineIcon(ProductIcon.CLOSE) }
+                            modifier = Modifier.actionPointer(!state.busy).semantics { contentDescription = removeLabel }) { LineIcon(ProductIcon.CLOSE) }
                     }
                 }
                 if (maxWidth >= 700.dp) Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -113,9 +114,9 @@ private fun SeverityFilter(selected: FindingSeverity?, enabled: Boolean, onFilte
         Box {
             ProductButton(selected?.name?.lowercase()?.replaceFirstChar { it.uppercase() } ?: "All severities", { open = true }, outlined = true, enabled = enabled, icon = ProductIcon.CHEVRON)
             DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
-                DropdownMenuItem(text = { Text(uiText("All severities")) }, onClick = { onFilter(null); open = false })
+                DropdownMenuItem(text = { Text(uiText("All severities")) }, onClick = { onFilter(null); open = false }, modifier = Modifier.actionPointer())
                 FindingSeverity.entries.forEach { severity ->
-                    DropdownMenuItem(text = { Text(uiText(severity.name.lowercase().replaceFirstChar { it.uppercase() })) }, onClick = { onFilter(severity); open = false })
+                    DropdownMenuItem(text = { Text(uiText(severity.name.lowercase().replaceFirstChar { it.uppercase() })) }, onClick = { onFilter(severity); open = false }, modifier = Modifier.actionPointer())
                 }
             }
         }
@@ -155,7 +156,7 @@ private fun FindingEvidence(finding: ChangeFinding, isDemo: Boolean) {
     val expansionLabel = uiText(if (expanded) UiCopy.EXPANDED else UiCopy.COLLAPSED)
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         TextButton(onClick = { expanded = !expanded }, contentPadding = PaddingValues(0.dp),
-            modifier = Modifier.semantics { stateDescription = expansionLabel }) {
+            modifier = Modifier.actionPointer().semantics { stateDescription = expansionLabel }) {
             LineIcon(ProductIcon.CHEVRON, Modifier.graphicsLayer { rotationZ = rotation }, color = ProductStyle.colors.accent, size = 13.dp)
             Spacer(Modifier.width(6.dp))
             Text(uiText("Details"), color = ProductStyle.colors.accent, style = MaterialTheme.typography.bodySmall)

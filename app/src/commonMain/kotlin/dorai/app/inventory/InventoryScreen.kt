@@ -3,9 +3,15 @@ package dorai.app.inventory
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -69,11 +75,30 @@ private fun InventoryPanel(state: InventoryState, onRefresh: () -> Unit) {
 }
 
 @Composable
-private fun ResourceRow(resource: InventoryResource) {
+private fun ColumnScope.ResourceRow(resource: InventoryResource) {
+    var expanded by rememberSaveable(resource.id) { mutableStateOf(false) }
+    // The whole row opens the details; the expanded part below is not clickable, so its text can be selected.
+    Column(Modifier.fillMaxWidth().toggleDetails(expanded) { expanded = !expanded }) {
+        ResourceCells(resource, expanded)
+    }
+    ExpandDetails(expanded) {
+        Column {
+            ResourceDetails(resource)
+            HorizontalDivider(color = ProductStyle.colors.line.copy(alpha = 0.7f))
+        }
+    }
+}
+
+@Composable
+private fun ResourceCells(resource: InventoryResource, expanded: Boolean) {
     ProductTableRow {
         Column(Modifier.weight(2.4f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Text(resource.name, style = MaterialTheme.typography.bodyMedium)
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                ExpandIndicator(expanded)
+                Text(resource.name, style = MaterialTheme.typography.bodyMedium)
+            }
             Text(resource.type, fontFamily = ProductStyle.fonts.mono, fontSize = 12.sp, color = ProductStyle.colors.muted)
+            MissingTagsMark(resource)
         }
         Column(Modifier.weight(1.3f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Text(resource.location, style = MaterialTheme.typography.bodyMedium)
