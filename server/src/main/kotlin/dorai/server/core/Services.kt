@@ -30,4 +30,6 @@ data class Services(
     val auth: AuthService? = null,
     /** The public LEI register (GLEIF); null turns the provider lookup off (answers 501). */
     val leiDirectory: LeiDirectory? = null,
+    /** Drafts the RoI's judgement values (sensitivity, reliance, licensed activity, substitutability). */
+    val roiDrafter: RoiValueDrafter = dorai.server.fixtures.NoAi,
 )

@@ -19,6 +19,8 @@ import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import java.util.UUID
 import kotlin.time.Clock
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.todayIn
 
 fun Route.suggestionRoutes(services: Services) {
     route("suggestions") {
@@ -59,7 +61,13 @@ private suspend fun generate(services: Services, resourceId: String?) {
             }
         }
     }
-    services.suggestions.add(new)
+    // The RoI's judgement cells come with a full run only: they belong to register items, not resources.
+    val drafts = if (resourceId != null) emptyList() else {
+        val done = services.suggestions.all().filter { it.kind == SuggestionKind.RoiValue }.mapNotNull { s -> s.column?.let { s.resourceId to it } }.toSet()
+        val targets = RoiDrafts.targets(services.register.register(), all, Clock.System.todayIn(TimeZone.UTC), done)
+        RoiDrafts.draft(services.roiDrafter, targets, now)
+    }
+    services.suggestions.add(new + drafts)
 }
 
 private fun <T> AiAnswer<T>.toSuggestion(

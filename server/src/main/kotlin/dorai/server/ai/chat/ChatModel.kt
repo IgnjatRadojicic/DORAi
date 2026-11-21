@@ -10,6 +10,7 @@ enum class AiTask(val id: String) {
     SuggestFunction("suggest-business-function"),
     ExplainFinding("explain-finding"),
     DraftReport("draft-report"),
+    DraftRoiValue("draft-roi-value"),
 }
 
 /**

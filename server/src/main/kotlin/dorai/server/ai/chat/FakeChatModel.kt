@@ -30,6 +30,7 @@ class FakeChatModel : ChatModel {
             AiTask.SuggestFunction -> suggestFunction(data, evidence)
             AiTask.ExplainFinding -> explain(data, evidence)
             AiTask.DraftReport -> draft(data, evidence)
+            AiTask.DraftRoiValue -> draftValue(data, evidence)
         }
         return try {
             json.decodeFromJsonElement(serializer, reply)
@@ -62,6 +63,22 @@ class FakeChatModel : ChatModel {
             return reply("functionId" to id, "reason" to "the resource name matches '$name'.", confidence = 0.5, cited = evidence.take(1))
         }
         return reply("functionId" to "unknown", "reason" to "no function matches the resource.", confidence = 0.1, cited = emptyList())
+    }
+
+    /**
+     * Fixed rules per column: data and reliance follow criticality, platform cloud services are hard to
+     * substitute, and the licensed activity needs the entity type, which the fake does not judge.
+     */
+    private fun draftValue(data: JsonObject, evidence: List<String>): JsonObject {
+        val critical = data.text("item", "critical") == "true"
+        val type = data.text("item", "serviceType")
+        val (value, why) = when (data.text("column", "code")) {
+            "B_02.02.0170" -> if (critical) "3" to "the data supports a critical or important function" else "2" to "the function is not critical"
+            "B_02.02.0180" -> if (critical) "3" to "the service supports a critical or important function" else "2" to "the function is not critical"
+            "B_07.01.0050" -> if (type in setOf("S17", "S18")) "2" to "moving a cloud platform ($type) is complex" else "3" to "the service type $type has alternatives"
+            else -> return reply("value" to "unknown", "reason" to "no rule for this column.", confidence = 0.1, cited = emptyList())
+        }
+        return reply("value" to value, "reason" to "$why.", confidence = 0.4, cited = evidence.take(1))
     }
 
     private fun explain(data: JsonObject, evidence: List<String>) = buildJsonObject {
