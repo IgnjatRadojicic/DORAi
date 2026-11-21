@@ -20,14 +20,4 @@ internal object ExportCells {
         return currencies.single() to contracts.fold(BigDecimal.ZERO) { total, contract -> total + checkNotNull(amount(contract.annualCost)) }
     }
 
-    /** Protect text cells while preserving decimal cells as locale-independent numbers. */
-    fun printable(value: Any?): String = when (value) {
-        null -> ""
-        is BigDecimal -> value.stripTrailingZeros().toPlainString()
-        else -> {
-            val text = value.toString()
-            val first = text.dropWhile { it.isWhitespace() || it == '\uFEFF' }.firstOrNull()
-            if (first in listOf('=', '+', '-', '@') || text.firstOrNull() in listOf('\t', '\r', '\n')) "'$text" else text
-        }
-    }
 }

@@ -3,6 +3,8 @@ package dorai.server.review
 import dorai.server.ApiProblem
 import dorai.server.core.AiAnswer
 import dorai.server.core.Services
+import dorai.server.register.RegisterEditor
+import dorai.server.register.who
 import dorai.server.core.SuggestionRepository.Decision
 import dorai.shared.model.Resource
 import dorai.shared.model.Suggestion
@@ -17,6 +19,8 @@ import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import java.util.UUID
 import kotlin.time.Clock
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.todayIn
 
 fun Route.suggestionRoutes(services: Services) {
     route("suggestions") {
@@ -57,7 +61,13 @@ private suspend fun generate(services: Services, resourceId: String?) {
             }
         }
     }
-    services.suggestions.add(new)
+    // The RoI's judgement cells come with a full run only: they belong to register items, not resources.
+    val drafts = if (resourceId != null) emptyList() else {
+        val done = services.suggestions.all().filter { it.kind == SuggestionKind.RoiValue }.mapNotNull { s -> s.column?.let { s.resourceId to it } }.toSet()
+        val targets = RoiDrafts.targets(services.register.register(), all, Clock.System.todayIn(TimeZone.UTC), done)
+        RoiDrafts.draft(services.roiDrafter, targets, now)
+    }
+    services.suggestions.add(new + drafts)
 }
 
 private fun <T> AiAnswer<T>.toSuggestion(
@@ -83,7 +93,14 @@ private fun <T> AiAnswer<T>.toSuggestion(
 private suspend fun RoutingContext.decide(services: Services, status: SuggestionStatus) {
     val id = call.parameters["id"].orEmpty()
     when (val result = services.suggestions.decide(id, status)) {
-        is Decision.Done -> call.respond(result.suggestion)
+        is Decision.Done -> {
+            val s = result.suggestion
+            // An accepted register value goes into the register at once, as the person's value.
+            if (status == SuggestionStatus.Accepted && s.kind == SuggestionKind.RoiValue && s.column != null) {
+                RegisterEditor(services.register).acceptValue(s.resourceId, s.column!!, s.value, s.citations.firstOrNull(), s.reason, call.who())
+            }
+            call.respond(s)
+        }
         is Decision.AlreadyDecided -> throw ApiProblem(
             HttpStatusCode.Conflict,
             "Suggestion already decided",

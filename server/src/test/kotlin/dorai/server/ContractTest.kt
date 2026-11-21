@@ -108,9 +108,12 @@ class ContractTest {
     }
 
     @Test
-    fun csvAndPdfExportsAreAvailable() = contract { api ->
-        assertTrue(api.exportCsv().ok().take(2) == listOf(0x50.toByte(), 0x4b.toByte()))
-        assertEquals("%PDF-", api.exportPdf().ok().take(5).toByteArray().decodeToString())
+    fun exportFinalNeedsAReadyRegisterDraftAlwaysWorks() = contract { api ->
+        assertEquals(422, api.exportCsv().failure().problem.status)
+        val zip = api.exportCsv(draft = true).ok()
+        assertEquals('P'.code.toByte(), zip[0], "a zip file")
+        val pdf = api.exportPdf().ok()
+        assertEquals("%PDF", pdf.copyOfRange(0, 4).decodeToString())
     }
 
     @Test

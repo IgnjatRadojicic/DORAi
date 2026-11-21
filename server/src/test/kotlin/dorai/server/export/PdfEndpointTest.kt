@@ -1,5 +1,7 @@
 package dorai.server.export
 
+import kotlinx.datetime.LocalDate
+import dorai.shared.model.Resource
 import dorai.server.versionedClient
 import dorai.server.ApiProblem
 import dorai.server.core.AiAnswer
@@ -58,6 +60,21 @@ class PdfEndpointTest {
     }
 
     @Test
+    fun pdfCarriesTheFifteenTemplatesWithTheirSources() = testApplication {
+        application { module(fixtureServices()) }
+        val pdf = versionedClient().get("/api/export/pdf")
+        assertEquals(200, pdf.status.value)
+        Loader.loadPDF(pdf.body<ByteArray>()).use {
+            val text = PDFTextStripper().getText(it)
+            assertContains(text, "The 15 templates")
+            assertContains(text, "Not ready: the final package is refused")
+            for (code in listOf("B_01.01", "B_02.02", "B_05.01", "B_07.01", "B_99.01")) assertContains(text, code)
+            assertContains(text, "scanned")
+            assertContains(text, "Sources and methodology")
+        }
+    }
+
+    @Test
     fun configuredDrafterReceivesTheSameSnapshotAndRuleFindings() = testApplication {
         val calls = AtomicInteger()
         val drafter = object : ReportDrafter {
@@ -71,7 +88,7 @@ class PdfEndpointTest {
                     "Financial entities shall manage ICT third-party risk.", 0.9)))
             }
         }
-        val services = fixtureServices().let { it.copy(reportDrafter = drafter, exporter = RegisterDocumentExporter(drafter, it.validator)) }
+        val services = fixtureServices().let { it.copy(reportDrafter = drafter, exporter = RoiExporter(drafter, it.validator)) }
         application { module(services) }
         val response = versionedClient().get("/api/export/pdf")
         assertEquals(200, response.status.value)
@@ -88,7 +105,7 @@ class PdfEndpointTest {
     fun generationFailureHasProblemDetailsAndNoAttachmentHeader() = testApplication {
         val services = fixtureServices()
         val failing = object : RegisterExporter by checkNotNull(services.exporter) {
-            override suspend fun pdf(register: Register, findings: List<Finding>): ByteArray =
+            override suspend fun pdf(register: Register, resources: List<Resource>, referenceDate: LocalDate, findings: List<Finding>): ByteArray =
                 throw ApiProblem(HttpStatusCode.ServiceUnavailable, "Report unavailable", "Please retry.")
         }
         application { module(services.copy(exporter = failing)) }

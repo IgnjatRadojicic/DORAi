@@ -120,10 +120,10 @@ class ShellViewModelTest {
     }
 
     @Test
-    fun theFrameShowsTheFourSectionsInOrder() {
-        assertEquals(listOf("01", "02", "03", "04"), shellSections.map { it.number })
+    fun theFrameShowsTheFiveSectionsInOrder() {
+        assertEquals(listOf("01", "02", "03", "04", "05"), shellSections.map { it.number })
         assertEquals(
-            listOf(Sections.INVENTORY, Sections.REVIEW, Sections.FINDINGS, Sections.EXPORT),
+            listOf(Sections.INVENTORY, Sections.REVIEW, Sections.FINDINGS, Sections.EXPORT, Sections.ROI),
             shellSections.map { it.id },
         )
     }

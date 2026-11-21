@@ -1,6 +1,7 @@
 package dorai.server.collect
 
 import dorai.server.core.CostEntry
+import dorai.shared.model.BackupInfo
 import dorai.shared.model.ChangeAction
 import dorai.shared.model.Redundancy
 import dorai.shared.model.Resource
@@ -25,6 +26,8 @@ fun cloudResource(
     redundancy: Redundancy = Redundancy.Unknown,
     source: ResourceSource = ResourceSource.Live,
     changeAction: ChangeAction = ChangeAction.None,
+    replicaRegions: List<String> = emptyList(),
+    backup: BackupInfo? = null,
 ) = Resource(
     id = id,
     name = name,
@@ -39,6 +42,8 @@ fun cloudResource(
     redundancy = redundancy,
     functionId = tags.tag(FUNCTION_TAG),
     contractId = tags.tag(CONTRACT_TAG),
+    replicaCountries = replicaRegions.mapNotNull { Regions.countryOf(it) }.filter { it != Regions.countryOf(location) }.distinct(),
+    backup = backup,
 )
 
 private fun Map<String, String>.tag(key: String) = entries.firstOrNull { it.key.equals(key, ignoreCase = true) }?.value

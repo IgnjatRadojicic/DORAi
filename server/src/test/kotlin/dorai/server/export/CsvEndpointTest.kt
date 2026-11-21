@@ -20,20 +20,22 @@ import kotlin.test.*
 class CsvEndpointTest {
     @Test
     fun csvEndpointAndSharedClientDownloadAnActualArchive() = testApplication {
+        // The FinPay demo still has readiness errors, so only its draft package can be downloaded.
         application { module(fixtureServices()) }
-        val response = versionedClient().get("/api/export/csv")
+        val response = versionedClient().get("/api/export/csv?draft=true")
         assertEquals(HttpStatusCode.OK, response.status)
         assertTrue(response.headers[HttpHeaders.ContentType].orEmpty().startsWith("application/zip"))
-        assertTrue(response.headers[HttpHeaders.ContentDisposition].orEmpty().contains("dorai-register.zip"))
+        assertTrue(response.headers[HttpHeaders.ContentDisposition].orEmpty().contains("DRAFT_"))
         val bytes = response.body<ByteArray>()
         val names = mutableSetOf<String>()
         ZipInputStream(ByteArrayInputStream(bytes)).use { zip ->
             while (true) { val entry = zip.nextEntry ?: break; names += entry.name }
         }
-        assertEquals(7, names.size)
+        // reportPackage.json, report.json, parameters.csv, FilingIndicators.csv and the 15 templates.
+        assertEquals(19, names.size)
         DoraiApi("http://localhost", client).use { api ->
-            val result = assertIs<ApiResult.Success<ByteArray>>(api.exportCsv())
-            assertContentEquals(bytes, result.value)
+            val result = assertIs<ApiResult.Success<ByteArray>>(api.exportCsv(draft = true))
+            assertEquals(listOf<Byte>(0x50, 0x4b), result.value.take(2))
         }
     }
 
@@ -50,11 +52,12 @@ class CsvEndpointTest {
     }
 
     @Test
-    fun registerWithWarningsCanStillBeExported() = testApplication {
+    fun aDraftCanAlwaysBeExportedEvenWithErrors() = testApplication {
         val data = FixtureData.load()
-        val first = data.register.providers[0]
-        val register = data.register.copy(providers = listOf(first.copy(lei = first.lei.copy(value = null))) + data.register.providers.drop(1))
-        application { module(fixtureServices(data).copy(register = InMemoryRegisterRepository(register, data.resources, data.costs))) }
-        assertEquals(200, versionedClient().get("/api/export/csv").status.value)
+        val invalid = data.register.copy(entity = data.register.entity.copy(name = ""))
+        application { module(fixtureServices(data).copy(register = InMemoryRegisterRepository(invalid, data.resources, data.costs))) }
+        val draft = versionedClient().get("/api/export/csv?draft=true")
+        assertEquals(200, draft.status.value)
+        assertTrue(draft.headers[HttpHeaders.ContentDisposition].orEmpty().contains("DRAFT_"))
     }
 }

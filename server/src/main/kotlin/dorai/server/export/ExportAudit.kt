@@ -3,32 +3,11 @@ package dorai.server.export
 import dorai.shared.model.ProvenanceLabel
 import dorai.shared.model.Register
 import dorai.shared.model.RegisterField
-import kotlinx.serialization.Serializable
 
-@Serializable
-internal data class CsvManifest(
-    val format: String = "dorai-register-csv-draft",
-    val submissionReady: Boolean = false,
-    val snapshotAsOf: String,
-    val source: String = "https://eur-lex.europa.eu/eli/reg_impl/2024/2956/oj/eng",
-    val templates: List<TemplateSummary>,
-    val omittedAiSuggestedFields: List<String>,
-    val missingKnownFields: List<String>,
-    val notes: List<String> = listOf(
-        "This archive covers five templates from the simplified register; it is not a complete regulatory filing.",
-        "Columns unsupported by the register are blank. No legal classification, authority or risk assessment is inferred.",
-        "snapshotAsOf records the data snapshot, not a regulatory reporting date. An indefinite contract ends at 9999-12-31 in the CSV.",
-        "Provider references use available LEIs. Unconfirmed AI values are excluded from every table and derived total.",
-        "Provider totals require every amount and a single currency. No exchange rate or partial sum is used.",
-        "Only ASCII provider names are repeated as Latin names. Other spellings require explicit register data.",
-        "Text that could be interpreted as a spreadsheet formula has an apostrophe prefix.",
-    ),
-)
+/** Register fields the PDF lists as awaiting a person: unaccepted AI proposals and known gaps. */
+internal data class ReviewAudit(val omittedAiSuggestedFields: List<String>, val missingKnownFields: List<String>)
 
-@Serializable
-internal data class TemplateSummary(val file: String, val columns: Int, val rows: Int, val unavailableColumns: List<String>)
-
-internal fun manifest(register: Register): CsvManifest {
+internal fun manifest(register: Register): ReviewAudit {
     val omitted = mutableListOf<String>()
     val missing = mutableListOf<String>()
     fun audit(field: RegisterField, fieldPath: String, cellPath: String, isMissing: Boolean = ExportCells.text(field).isBlank()) {
@@ -51,11 +30,5 @@ internal fun manifest(register: Register): CsvManifest {
             audit(service.dataLocation, "$path/DataLocation", "$path/B_02.02.0150")
         }
     }
-    return CsvManifest(
-        snapshotAsOf = register.asOf.toString(),
-        templates = CsvTemplate.entries.map { template ->
-            TemplateSummary(template.fileName, template.columns.size, template.rowCount(register), template.unavailable.map(template::column))
-        },
-        omittedAiSuggestedFields = omitted.sorted(), missingKnownFields = missing.sorted(),
-    )
+    return ReviewAudit(omittedAiSuggestedFields = omitted.sorted(), missingKnownFields = missing.sorted())
 }

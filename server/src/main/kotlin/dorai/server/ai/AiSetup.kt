@@ -11,6 +11,7 @@ import dorai.server.ai.ingest.RegulationIngestor
 import dorai.server.ai.search.PgRegulationSearch
 import dorai.server.ai.services.AiFindingExplainer
 import dorai.server.ai.services.AiFunctionSuggester
+import dorai.server.ai.services.AiRoiValueDrafter
 import dorai.server.ai.services.AiReportDrafter
 import dorai.server.ai.services.AiResourceClassifier
 import dorai.server.core.RegulationSearch
@@ -129,6 +130,7 @@ fun Services.withAi(database: Database, config: AiConfig, scope: CoroutineScope 
         functionSuggester = AiFunctionSuggester(chat, search),
         explainer = AiFindingExplainer(chat, search),
         reportDrafter = AiReportDrafter(chat, search),
+        roiDrafter = AiRoiValueDrafter(chat, search),
         regulationSearch = search,
     )
 }

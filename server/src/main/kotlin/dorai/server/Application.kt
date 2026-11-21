@@ -1,5 +1,8 @@
 package dorai.server
 
+import dorai.server.register.lei.GleifDirectory
+import dorai.server.register.referenceDate
+import dorai.shared.roi.RoiView
 import dorai.server.ai.AiConfig
 import dorai.server.ai.withAi
 import dorai.server.check.checkRoutes
@@ -88,12 +91,15 @@ fun servicesFromEnv(fingerprint: String? = null, defaultPublicUrl: String = "htt
         auth.bootstrap()
         postgresServices(db, data).copy(auth = auth).withAi(db, AiConfig.fromEnv())
     }
+    val gleif = System.getenv("DORAI_GLEIF").equals("off", ignoreCase = true)
+    val withLei = if (gleif) base else base.copy(leiDirectory = GleifDirectory(System.getenv("DORAI_GLEIF_URL") ?: GleifDirectory.DEFAULT_URL))
     val live = LiveConfig.fromEnv()
-    val configured = if (live == null) base else {
+    val configured = if (live == null) withLei else {
         log.info("Live scan of {}{}.", live.clouds, live.awsEndpoint?.let { " (AWS through $it)" } ?: "")
-        base.withLiveScan(live, data.costs)
+        withLei.withLiveScan(live, data.costs)
     }
-    return configured.copy(exporter = dorai.server.export.RegisterDocumentExporter(configured.reportDrafter, configured.validator))
+    // The PDF's AI summary uses the drafting service this server is configured with.
+    return configured.copy(exporter = dorai.server.export.RoiExporter(configured.reportDrafter, configured.validator))
 }
 
 /** Fixture wiring: in-memory storage, no AI. Used by tests and by a server started without a database. */
@@ -126,15 +132,31 @@ fun Application.module(services: Services) {
 private fun Route.exportRoutes(services: Services) = route("export") {
     get("csv") {
         val exporter = services.exporter ?: throw exportUnavailable()
-        val bytes = exporter.csvZip(services.register.register())
-        call.response.header(HttpHeaders.ContentDisposition, attachment("dorai-register.zip"))
-        call.respondBytes(bytes, ContentType.Application.Zip)
+        val register = services.register.register()
+        val resources = services.register.resources()
+        val date = call.referenceDate()
+        val draft = call.request.queryParameters["draft"] == "true"
+        // The final package only when nothing is missing; a draft shows progress and is named as one.
+        if (!draft) {
+            val view = RoiView.of(register, resources, date)
+            if (!view.ready) {
+                throw ApiProblem(
+                    HttpStatusCode.UnprocessableEntity,
+                    "Register not ready for export",
+                    "Resolve register validation errors before the final package: ${view.errorCount} remain (see GET /api/roi). Ask for a draft with ?draft=true.",
+                )
+            }
+        }
+        val written = exporter.reportPackage(register, resources, date, draft)
+        call.response.header(HttpHeaders.ContentDisposition, attachment(written.fileName))
+        call.respondBytes(written.bytes, ContentType.Application.Zip)
     }
     get("pdf") {
         val exporter = services.exporter ?: throw exportUnavailable()
         val register = services.register.register()
         val findings = services.planChecker.check(services.demoPlan, register)
-        val bytes = exporter.pdf(register, findings)
+        // Built before the attachment header, so a failure is answered as problem details.
+        val bytes = exporter.pdf(register, services.register.resources(), call.referenceDate(), findings)
         call.response.header(HttpHeaders.ContentDisposition, attachment("dorai-report.pdf"))
         call.respondBytes(bytes, ContentType.Application.Pdf)
     }

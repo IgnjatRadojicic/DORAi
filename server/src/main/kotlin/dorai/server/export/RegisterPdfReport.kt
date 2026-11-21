@@ -9,6 +9,9 @@ import dorai.shared.model.ProvenanceLabel
 import dorai.shared.model.Register
 import dorai.shared.model.RegisterField
 import dorai.shared.model.ValidationReport
+import dorai.shared.model.ValidationSeverity
+import dorai.shared.roi.RoiSpec
+import dorai.shared.roi.RoiView
 import dorai.shared.rules.RegisterValidator
 import dorai.shared.rules.RulesRegisterValidator
 import java.io.ByteArrayOutputStream
@@ -29,7 +32,8 @@ class RegisterPdfReport(
     private val clock: Clock = Clock.System,
     private val draftTimeoutMillis: Long = 10_000,
 ) {
-    suspend fun generate(register: Register, findings: List<Finding>): ByteArray {
+    /** [roi]: the 15 RoI templates and their readiness; without it the report covers the register only. */
+    suspend fun generate(register: Register, findings: List<Finding>, roi: RoiView? = null): ByteArray {
         val validation = validator.validate(register)
         val draft = draft(register, findings)
         val prepared = clock.now().toString()
@@ -128,6 +132,7 @@ class RegisterPdfReport(
                         page.note("Stored reference: " + citation.id)
                     }
                 }
+                if (roi != null) registerOfInformation(page, roi)
                 page.page()
                 page.title("Appendix", "Sources and methodology")
                 page.heading("A", "Basis of preparation")
@@ -157,6 +162,48 @@ class RegisterPdfReport(
             context.ensureActive()
             output.toByteArray()
         }
+    }
+
+    /** Section 08: each RoI template as the supervisor's package carries it, with where every value came from. */
+    private suspend fun registerOfInformation(page: ReportLayout, roi: RoiView) {
+        val context = currentCoroutineContext()
+        page.page()
+        page.title("Register of Information", "The 15 templates")
+        page.heading("08", "Readiness on ${roi.referenceDate}")
+        page.text(if (roi.ready) "Ready for the final package" else "Not ready: the final package is refused, a draft is available", 12f, true)
+        page.note("${roi.errorCount} errors / ${roi.warningCount} warnings. Unaccepted AI suggestions are left out of every template.")
+        val issues = roi.issues.groupBy { it.template }
+        page.table(listOf("Template", "Name", "Rows", "Errors", "Warnings"), floatArrayOf(1f, 3.6f, 0.7f, 0.8f, 1f),
+            RoiSpec.templates.map { t ->
+                val own = issues[t.code].orEmpty()
+                listOf(t.code, t.name, roi.tables[t.code].orEmpty().size.toString(),
+                    own.count { it.severity == ValidationSeverity.Error }.toString(), own.count { it.severity == ValidationSeverity.Warning }.toString())
+            })
+        RoiSpec.templates.forEach { t ->
+            context.ensureActive()
+            val rows = roi.tables[t.code].orEmpty()
+            page.reserve(90f)
+            page.text(t.code + " / " + t.name, 10f, true, before = 12f)
+            if (rows.isEmpty()) {
+                page.note("No rows.")
+                return@forEach
+            }
+            page.table(listOf("Row", "Column", "Value", "Source"), floatArrayOf(1.2f, 3f, 2f, 1.1f),
+                rows.flatMap { row ->
+                    t.columns.mapNotNull { col ->
+                        val cell = row.cells[col.code] ?: return@mapNotNull null
+                        listOf(row.key, col.header + " " + col.name, cell.value, cell.label?.let(::source) ?: "derived")
+                    }
+                })
+            issues[t.code].orEmpty().filter { it.severity == ValidationSeverity.Error }.forEach { page.note("Error: " + it.message) }
+        }
+    }
+
+    private fun source(label: ProvenanceLabel) = when (label) {
+        ProvenanceLabel.Scanned -> "scanned"
+        ProvenanceLabel.Planned -> "planned"
+        ProvenanceLabel.AiSuggested -> "ai-suggested"
+        ProvenanceLabel.HumanConfirmed -> "human-confirmed"
     }
 
     private suspend fun draft(register: Register, findings: List<Finding>): AiAnswer.Answer<DraftText>? {

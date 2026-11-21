@@ -80,7 +80,14 @@ class PostgresTest {
     @Test
     fun saveScanReplacesTheStoredScan() = runTest {
         val repo = PostgresRegisterRepository(seeded())
-        val resources = listOf(data.resources[1], data.resources[0].copy(name = "renamed", tags = mapOf("a" to "b")))
+        val resources = listOf(
+            data.resources[1],
+            data.resources[0].copy(
+                name = "renamed", tags = mapOf("a" to "b"), replicaCountries = listOf("IE"),
+                backup = dorai.shared.model.BackupInfo(1, 7, true),
+                alerts = listOf(dorai.shared.model.SecurityAlert("Defender for Cloud", "a1", "Enable MFA", "HIGH")),
+            ),
+        )
         val costs = data.costs.take(2).reversed()
         repo.saveScan(resources, costs)
         assertEquals(resources, repo.resources())

@@ -1,5 +1,6 @@
 package dorai.app
 
+import dorai.app.roi.RoiRoute
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -99,6 +100,7 @@ private fun WorkspaceShell(shell: ShellViewModel, workspace: Workspace, onLogout
                 Sections.INVENTORY -> InventoryRoute(workspace.inventory, canScan = workspace.canReview)
                 Sections.REVIEW -> ReviewRoute(workspace.review, canDecide = workspace.canReview)
                 Sections.FINDINGS -> FindingsRoute(workspace.findings, files, canCheck = workspace.canReview)
+                Sections.ROI -> RoiRoute(workspace.roi)
                 else -> ValidationExportRoute(workspace.validation, export, canExport = workspace.canReview)
             }
         }

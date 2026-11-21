@@ -11,6 +11,9 @@ data class ClassificationReply(val serviceType: String, val reason: String, val 
 data class FunctionReply(val functionId: String, val reason: String, val confidence: Double, val citationIds: List<String>)
 
 @Serializable
+data class RoiValueReply(val value: String, val reason: String, val confidence: Double, val citationIds: List<String>)
+
+@Serializable
 data class ExplanationReply(val explanation: String, val citationIds: List<String>)
 
 @Serializable

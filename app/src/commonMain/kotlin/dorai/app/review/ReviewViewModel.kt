@@ -8,7 +8,7 @@ import dorai.app.components.EvidenceCitation
 import dorai.app.components.displayMessage
 import kotlinx.coroutines.CancellationException
 
-enum class SuggestionField(val label: String) { SERVICE_TYPE("Service type"), BUSINESS_FUNCTION("Business function") }
+enum class SuggestionField(val label: String) { SERVICE_TYPE("Service type"), BUSINESS_FUNCTION("Business function"), ROI_VALUE("Register value") }
 
 enum class ReviewStatus { PENDING, ACCEPTED, REJECTED }
 
@@ -23,6 +23,8 @@ data class ReviewSuggestion(
     val citations: List<EvidenceCitation>,
     val confidence: Double?,
     val status: ReviewStatus,
+    /** For a register value: the RoI column it fills, as "B_02.02.0170 Sensitiveness of the data ...". */
+    val fieldLabel: String? = null,
 )
 
 interface ReviewSource {

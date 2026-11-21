@@ -25,6 +25,10 @@ object Access {
             p.startsWith("/admin/") || p == "/admin" -> Role.Admin
             method == HttpMethod.Post && (p == "/scan" || p == "/check" || p.startsWith("/suggestions/")) -> Role.Reviewer
             method == HttpMethod.Get && p.startsWith("/export/") -> Role.Reviewer
+            // Register edits: the entity and its own definitions (B_99.01) are settings; the rest is review work.
+            p == "/register/entity" || p.startsWith("/register/entity/") || p.startsWith("/register/rows/B_99.01/") -> Role.Admin
+            (method == HttpMethod.Put || method == HttpMethod.Delete) && p.startsWith("/register/") -> Role.Reviewer
+            method == HttpMethod.Post && p.startsWith("/register/providers/") && p.endsWith("/lei-lookup") -> Role.Reviewer
             method == HttpMethod.Get -> Role.Viewer
             else -> Role.Admin
         }

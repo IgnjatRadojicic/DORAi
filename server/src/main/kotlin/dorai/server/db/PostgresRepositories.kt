@@ -11,6 +11,10 @@ import dorai.shared.model.ContractService
 import dorai.shared.model.DoraiJson
 import dorai.shared.model.FinancialEntity
 import dorai.shared.model.Provider
+import dorai.shared.model.BackupInfo
+import dorai.shared.model.SecurityAlert
+import dorai.shared.model.RoiFields
+import dorai.shared.model.RoiRow
 import dorai.shared.model.Register
 import dorai.shared.model.Resource
 import dorai.shared.model.Suggestion
@@ -42,6 +46,15 @@ class PostgresRegisterRepository(private val db: Database) : RegisterRepository 
     }
 
     override suspend fun saveScan(resources: List<Resource>, costs: List<CostEntry>) = db.tx { writeScan(resources, costs) }
+
+    override suspend fun <T> updateRegister(change: (Register) -> Pair<Register, T>): T = db.tx {
+        // Locks the entity row, so two edits at once run one after the other.
+        FinancialEntities.selectAll().forUpdate().toList()
+        val (updated, result) = change(readRegister())
+        deleteRegister()
+        writeRegister(updated)
+        result
+    }
 }
 
 class PostgresSuggestionRepository(private val db: Database, private val clock: Clock = Clock.System) : SuggestionRepository {
@@ -88,12 +101,15 @@ internal fun JdbcTransaction.readRegister(): Register {
             functionId = ContractServices.functionId.read(it),
             dataLocation = ContractServices.dataLocation.read(it),
             resourceIds = it[ContractServices.resourceIds],
+            roi = readRoi(it[ContractServices.roi]),
         )
     }
     return Register(
-        entity = FinancialEntity(entity[FinancialEntities.lei], entity[FinancialEntities.name], entity[FinancialEntities.country]),
+        entity = FinancialEntity(
+            entity[FinancialEntities.lei], entity[FinancialEntities.name], entity[FinancialEntities.country], readRoi(entity[FinancialEntities.roi]),
+        ),
         providers = Providers.selectAll().orderBy(Providers.position).map {
-            Provider(it[Providers.id], it[Providers.name], Providers.lei.read(it), Providers.headquartersCountry.read(it))
+            Provider(it[Providers.id], it[Providers.name], Providers.lei.read(it), Providers.headquartersCountry.read(it), readRoi(it[Providers.roi]))
         },
         contracts = Contracts.selectAll().orderBy(Contracts.position).map {
             Contract(
@@ -104,14 +120,22 @@ internal fun JdbcTransaction.readRegister(): Register {
                 annualCost = Contracts.annualCost.read(it),
                 currency = it[Contracts.currency],
                 services = services[it[Contracts.id]].orEmpty(),
+                roi = readRoi(it[Contracts.roi]),
             )
         },
         functions = BusinessFunctions.selectAll().orderBy(BusinessFunctions.position).map {
-            BusinessFunction(it[BusinessFunctions.id], it[BusinessFunctions.name], it[BusinessFunctions.isCritical])
+            BusinessFunction(it[BusinessFunctions.id], it[BusinessFunctions.name], it[BusinessFunctions.isCritical], readRoi(it[BusinessFunctions.roi]))
         },
         asOf = entity[FinancialEntities.asOf],
+        rows = RoiRows.selectAll().orderBy(RoiRows.position).groupBy({ it[RoiRows.template] }) {
+            RoiRow(it[RoiRows.id], readRoi(it[RoiRows.values]))
+        },
     )
 }
+
+private fun readRoi(json: String): RoiFields = DoraiJson.decodeFromString(json)
+
+private fun writeRoi(fields: RoiFields): String = DoraiJson.encodeToString(fields)
 
 private fun ResultRow.toResource() = Resource(
     id = this[Resources.id],
@@ -130,6 +154,9 @@ private fun ResultRow.toResource() = Resource(
     contractId = this[Resources.contractId],
     monthlyCost = this[Resources.monthlyCost],
     currency = this[Resources.currency],
+    replicaCountries = this[Resources.replicaCountries],
+    backup = this[Resources.backup]?.let { DoraiJson.decodeFromString<BackupInfo>(it) },
+    alerts = DoraiJson.decodeFromString<List<SecurityAlert>>(this[Resources.alerts]),
 )
 
 private fun ResultRow.toSuggestion() = Suggestion(
@@ -144,17 +171,29 @@ private fun ResultRow.toSuggestion() = Suggestion(
     status = this[Suggestions.status],
     createdAt = this[Suggestions.createdAt],
     decidedAt = this[Suggestions.decidedAt],
+    column = this[Suggestions.roiColumn],
 )
 
 // Writes
 
-/** Stores a whole register. Only for an empty register (the seed); editing comes with the review work. */
+/** Removes the stored register (not the scan or suggestions), before an edited one is written back. */
+internal fun JdbcTransaction.deleteRegister() {
+    RoiRows.deleteAll()
+    ContractServices.deleteAll()
+    Contracts.deleteAll()
+    BusinessFunctions.deleteAll()
+    Providers.deleteAll()
+    FinancialEntities.deleteAll()
+}
+
+/** Stores a whole register into empty register tables: the seed, or an edit after [deleteRegister]. */
 internal fun JdbcTransaction.writeRegister(register: Register) {
     FinancialEntities.insert {
         it[lei] = register.entity.lei
         it[name] = register.entity.name
         it[country] = register.entity.country
         it[asOf] = register.asOf
+        it[roi] = writeRoi(register.entity.roi)
     }
     register.providers.forEachIndexed { i, p ->
         Providers.insert {
@@ -163,6 +202,7 @@ internal fun JdbcTransaction.writeRegister(register: Register) {
             it[name] = p.name
             lei.write(it, p.lei)
             headquartersCountry.write(it, p.headquartersCountry)
+            it[roi] = writeRoi(p.roi)
         }
     }
     register.functions.forEachIndexed { i, f ->
@@ -171,6 +211,7 @@ internal fun JdbcTransaction.writeRegister(register: Register) {
             it[position] = i
             it[name] = f.name
             it[isCritical] = f.isCritical
+            it[roi] = writeRoi(f.roi)
         }
     }
     var servicePosition = 0
@@ -183,6 +224,7 @@ internal fun JdbcTransaction.writeRegister(register: Register) {
             it[endDate] = c.endDate
             annualCost.write(it, c.annualCost)
             it[currency] = c.currency
+            it[roi] = writeRoi(c.roi)
         }
         c.services.forEach { s ->
             ContractServices.insert {
@@ -193,6 +235,17 @@ internal fun JdbcTransaction.writeRegister(register: Register) {
                 functionId.write(it, s.functionId)
                 dataLocation.write(it, s.dataLocation)
                 it[resourceIds] = s.resourceIds
+                it[roi] = writeRoi(s.roi)
+            }
+        }
+    }
+    register.rows.forEach { (template, rows) ->
+        rows.forEachIndexed { i, r ->
+            RoiRows.insert {
+                it[RoiRows.template] = template
+                it[id] = r.id
+                it[position] = i
+                it[values] = writeRoi(r.fields)
             }
         }
     }
@@ -221,6 +274,9 @@ internal fun JdbcTransaction.writeScan(resources: List<Resource>, costs: List<Co
             it[contractId] = r.contractId
             it[monthlyCost] = r.monthlyCost
             it[currency] = r.currency
+            it[replicaCountries] = r.replicaCountries
+            it[backup] = r.backup?.let { b -> DoraiJson.encodeToString(b) }
+            it[alerts] = DoraiJson.encodeToString(r.alerts)
         }
     }
     costs.forEachIndexed { i, c ->
@@ -250,6 +306,7 @@ internal fun JdbcTransaction.writeSuggestions(suggestions: List<Suggestion>) {
             it[status] = s.status
             it[createdAt] = s.createdAt
             it[decidedAt] = s.decidedAt
+            it[roiColumn] = s.column
         }
     }
 }

@@ -1,5 +1,6 @@
 package dorai.server.fixtures
 
+import dorai.server.export.RoiExporter
 import dorai.server.core.AiAnswer
 import dorai.server.core.CloudCollector
 import dorai.server.core.CollectResult
@@ -13,8 +14,9 @@ import dorai.server.core.RegisterRepository
 import dorai.server.core.RegulationSearch
 import dorai.server.core.ReportDrafter
 import dorai.server.core.ResourceClassifier
+import dorai.server.core.RoiValueDrafter
+import dorai.shared.roi.RoiColumn
 import dorai.server.core.Services
-import dorai.server.export.RegisterDocumentExporter
 import dorai.server.core.SuggestionRepository
 import dorai.server.core.SuggestionRepository.Decision
 import dorai.shared.model.BusinessFunction
@@ -50,7 +52,7 @@ fun fixtureServices(data: FixtureData = FixtureData.load()): Services {
         explainer = NoAi,
         reportDrafter = NoAi,
         regulationSearch = NoAi,
-        exporter = RegisterDocumentExporter(NoAi),
+        exporter = RoiExporter(NoAi),
     )
 }
 
@@ -64,17 +66,22 @@ class FixtureCostProvider(private val entries: List<CostEntry>) : CostProvider {
 }
 
 class InMemoryRegisterRepository(
-    private val register: Register,
+    private var register: Register,
     private var resources: List<Resource>,
     private var costs: List<CostEntry>,
 ) : RegisterRepository {
     private val lock = Mutex()
-    override suspend fun register() = register
+    override suspend fun register() = lock.withLock { register }
     override suspend fun resources() = lock.withLock { resources }
     override suspend fun costs() = lock.withLock { costs }
     override suspend fun saveScan(resources: List<Resource>, costs: List<CostEntry>) = lock.withLock {
         this.resources = resources
         this.costs = costs
+    }
+    override suspend fun <T> updateRegister(change: (Register) -> Pair<Register, T>): T = lock.withLock {
+        val (updated, result) = change(register)
+        register = updated
+        result
     }
 }
 
@@ -101,11 +108,12 @@ class InMemorySuggestionRepository(
 }
 
 /** Stand-in until the AI lands: every question gets "insufficient evidence", search finds nothing. */
-object NoAi : ResourceClassifier, FunctionSuggester, FindingExplainer, ReportDrafter, RegulationSearch {
+object NoAi : ResourceClassifier, FunctionSuggester, FindingExplainer, ReportDrafter, RegulationSearch, RoiValueDrafter {
     private val none = AiAnswer.InsufficientEvidence("AI is not configured on this server.")
     override suspend fun classify(resource: Resource): AiAnswer<ServiceType> = none
     override suspend fun suggest(resource: Resource, functions: List<BusinessFunction>): AiAnswer<String> = none
     override suspend fun explain(finding: Finding): AiAnswer<String> = none
     override suspend fun draft(register: Register, findings: List<Finding>): AiAnswer<DraftText> = none
     override suspend fun search(query: String, limit: Int): List<Citation> = emptyList()
+    override suspend fun draftValue(column: RoiColumn, itemName: String, facts: Map<String, String>): AiAnswer<String> = none
 }

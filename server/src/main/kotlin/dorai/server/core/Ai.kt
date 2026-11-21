@@ -6,6 +6,7 @@ import dorai.shared.model.Finding
 import dorai.shared.model.Register
 import dorai.shared.model.Resource
 import dorai.shared.model.ServiceType
+import dorai.shared.roi.RoiColumn
 
 /**
  * What an AI service returns. An answer always carries at least one citation;
@@ -38,6 +39,14 @@ interface ResourceClassifier {
 /** Proposes which business function a resource supports; the answer is a function id. */
 interface FunctionSuggester {
     suspend fun suggest(resource: Resource, functions: List<BusinessFunction>): AiAnswer<String>
+}
+
+/**
+ * Drafts one judgement value of the RoI (an option key of [column]) for one register item from [facts]
+ * about it. The rules choose which empty cells to draft; a reviewer accepts or rejects every draft.
+ */
+interface RoiValueDrafter {
+    suspend fun draftValue(column: RoiColumn, itemName: String, facts: Map<String, String>): AiAnswer<String>
 }
 
 /** Explains a finding the rules produced. Never creates, removes or changes a finding. */

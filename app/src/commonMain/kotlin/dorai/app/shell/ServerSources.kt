@@ -1,5 +1,10 @@
 package dorai.app.shell
 
+import dorai.shared.model.ValidationIssue
+import dorai.shared.roi.RoiView
+import dorai.shared.roi.RoiItems
+import dorai.app.roi.RoiSource
+import dorai.shared.roi.RoiSpec
 import dorai.app.components.EvidenceCitation
 import dorai.app.components.FindingSeverity
 import dorai.app.components.FrontendFailure
@@ -47,14 +52,28 @@ class ServerSources(private val api: DoraiApi) {
         api.check(plan.bytes, plan.name).orFail("The plan could not be checked.").map { it.toChangeFinding() }
     }
 
+    /** The register checks and the RoI readiness (all 15 templates and the DORA checks) in one list. */
     val validation = ValidationSource {
-        api.validation().orFail("Validation could not be loaded.").toRegisterValidation()
+        val register = api.validation().orFail("Validation could not be loaded.").toRegisterValidation()
+        val roi = api.roi().orFail("The register of information could not be loaded.")
+        register.withRoi(roi)
+    }
+
+    val roi = object : RoiSource {
+        override suspend fun load() = api.roi().orFail("The register of information could not be loaded.")
+        override suspend fun setValue(target: RoiItems.Target, column: String, value: String?) {
+            when (target) {
+                RoiItems.Target.Entity -> api.putEntityValue(column, value)
+                is RoiItems.Target.Item -> api.putValue(target.id, column, value)
+            }.orFail("The value could not be saved.")
+        }
     }
 
     /** The client returns only bytes; each endpoint serves one fixed media type, so the format supplies it. */
     val export = ExportSource { format ->
         val result = when (format) {
-            ExportFormat.CSV -> api.exportCsv()
+            // A draft until the register is complete, so the user can always see the package.
+            ExportFormat.CSV -> api.exportCsv(draft = (api.roi() as? ApiResult.Success)?.value?.ready != true)
             ExportFormat.PDF -> api.exportPdf()
         }
         ExportDocument(result.orFail("The export could not be downloaded."), format.mediaType)
@@ -118,6 +137,20 @@ internal fun Finding.toChangeFinding() = ChangeFinding(
     citation = citation?.toEvidence(),
     explanation = explanation,
     provenance = Provenance.PLANNED,
+)
+
+/** Adds the RoI issues the register checks do not already report. */
+internal fun RegisterValidation.withRoi(roi: RoiView): RegisterValidation {
+    val known = issues.map { Triple(it.code, it.field, it.entityId) }.toSet()
+    val extra = roi.issues.filter { Triple(it.code, it.field, it.entityId) !in known }.map { it.toRegisterIssue() }
+    val all = issues + extra
+    val errors = all.count { it.severity == IssueSeverity.ERROR }
+    return RegisterValidation(isValid = errors == 0, errorCount = errors, warningCount = all.size - errors, issues = all)
+}
+
+internal fun ValidationIssue.toRegisterIssue() = RegisterIssue(
+    severity = if (severity == ValidationSeverity.Error) IssueSeverity.ERROR else IssueSeverity.WARNING,
+    code = code, template = template, field = field, message = message, entityId = entityId,
 )
 
 internal fun ValidationReport.toRegisterValidation() = RegisterValidation(
@@ -194,9 +227,14 @@ internal fun Suggestion.toReviewSuggestion(functionNames: Map<String, String>) =
     field = when (kind) {
         SuggestionKind.ServiceType -> SuggestionField.SERVICE_TYPE
         SuggestionKind.BusinessFunction -> SuggestionField.BUSINESS_FUNCTION
+        SuggestionKind.RoiValue -> SuggestionField.ROI_VALUE
     },
     value = value,
-    valueLabel = if (kind == SuggestionKind.BusinessFunction) functionNames[value] else null,
+    valueLabel = when (kind) {
+        SuggestionKind.BusinessFunction -> functionNames[value]
+        SuggestionKind.RoiValue -> column?.let { RoiSpec.column(it)?.label(value) }
+        else -> null
+    },
     reason = reason,
     citations = citations.map { it.toEvidence() },
     confidence = confidence,
@@ -205,4 +243,5 @@ internal fun Suggestion.toReviewSuggestion(functionNames: Map<String, String>) =
         SuggestionStatus.Accepted -> ReviewStatus.ACCEPTED
         SuggestionStatus.Rejected -> ReviewStatus.REJECTED
     },
+    fieldLabel = column?.let { c -> RoiSpec.column(c)?.let { "${it.code} ${it.name}" } ?: c },
 )

@@ -1,5 +1,17 @@
 package dorai.shared.api
 
+import dorai.shared.model.RoiValueEdit
+import dorai.shared.model.LeiLookupResult
+import kotlinx.datetime.LocalDate
+import io.ktor.http.encodeURLPathPart
+import io.ktor.client.request.delete
+import io.ktor.client.request.put
+import dorai.shared.roi.RoiView
+import dorai.shared.model.RoiRow
+import dorai.shared.model.Provider
+import dorai.shared.model.FinancialEntity
+import dorai.shared.model.Contract
+import dorai.shared.model.BusinessFunction
 import dorai.shared.Dorai
 import dorai.shared.Version
 import kotlin.concurrent.Volatile
@@ -148,6 +160,32 @@ class DoraiApi(
     suspend fun validation(): ApiResult<ValidationReport> = call { http.get("validation") }
     suspend fun concentration(): ApiResult<ConcentrationReport> = call { http.get("concentration") }
 
+    /** The RoI templates and what is missing before export, for a reference date (default: today). */
+    suspend fun roi(referenceDate: LocalDate? = null): ApiResult<RoiView> =
+        call { http.get("roi") { referenceDate?.let { parameter("date", it.toString()) } } }
+
+    // Register edits. The server sets provenance: a changed value becomes human-confirmed by the caller.
+    suspend fun putEntity(entity: FinancialEntity): ApiResult<FinancialEntity> = call { http.put("register/entity") { json(entity) } }
+    suspend fun putProvider(provider: Provider): ApiResult<Provider> = call { http.put("register/providers/${provider.id.encodeURLPathPart()}") { json(provider) } }
+    suspend fun deleteProvider(id: String): ApiResult<Unit> = call { http.delete("register/providers/${id.encodeURLPathPart()}") }
+
+    /** One RoI cell of a register item (provider, contract, service, function); null clears it. */
+    suspend fun putValue(itemId: String, column: String, value: String?): ApiResult<Unit> =
+        call { http.put("register/values/${itemId.encodeURLPathPart()}/${column.encodeURLPathPart()}") { json(RoiValueEdit(value)) } }
+
+    /** One RoI cell of the entity itself (admin). */
+    suspend fun putEntityValue(column: String, value: String?): ApiResult<Unit> =
+        call { http.put("register/entity/values/${column.encodeURLPathPart()}") { json(RoiValueEdit(value)) } }
+
+    /** Looks the provider up in GLEIF; the values arrive as suggestions to review. */
+    suspend fun leiLookup(providerId: String): ApiResult<LeiLookupResult> = call { http.post("register/providers/${providerId.encodeURLPathPart()}/lei-lookup") }
+    suspend fun putContract(contract: Contract): ApiResult<Contract> = call { http.put("register/contracts/${contract.id.encodeURLPathPart()}") { json(contract) } }
+    suspend fun deleteContract(id: String): ApiResult<Unit> = call { http.delete("register/contracts/${id.encodeURLPathPart()}") }
+    suspend fun putFunction(function: BusinessFunction): ApiResult<BusinessFunction> = call { http.put("register/functions/${function.id.encodeURLPathPart()}") { json(function) } }
+    suspend fun deleteFunction(id: String): ApiResult<Unit> = call { http.delete("register/functions/${id.encodeURLPathPart()}") }
+    suspend fun putRow(template: String, row: RoiRow): ApiResult<RoiRow> = call { http.put("register/rows/$template/${row.id.encodeURLPathPart()}") { json(row) } }
+    suspend fun deleteRow(template: String, id: String): ApiResult<Unit> = call { http.delete("register/rows/$template/${id.encodeURLPathPart()}") }
+
     // AI suggestions, decided by a reviewer
     suspend fun suggestions(): ApiResult<List<Suggestion>> = call { http.get("suggestions") }
 
@@ -182,8 +220,19 @@ class DoraiApi(
         }
 
     // Export: raw file bytes (zip of EBA CSV files, PDF report)
-    suspend fun exportCsv(): ApiResult<ByteArray> = call { http.get("export/csv") }
-    suspend fun exportPdf(): ApiResult<ByteArray> = call { http.get("export/pdf") }
+    /**
+     * The RoI xBRL-CSV package. The server refuses the final package (422) while readiness errors remain;
+     * [draft] builds it anyway, named as a draft.
+     */
+    suspend fun exportCsv(referenceDate: LocalDate? = null, draft: Boolean = false): ApiResult<ByteArray> = call {
+        http.get("export/csv") {
+            referenceDate?.let { parameter("date", it.toString()) }
+            if (draft) parameter("draft", "true")
+        }
+    }
+
+    suspend fun exportPdf(referenceDate: LocalDate? = null): ApiResult<ByteArray> =
+        call { http.get("export/pdf") { referenceDate?.let { parameter("date", it.toString()) } } }
 
     override fun close() = http.close()
 

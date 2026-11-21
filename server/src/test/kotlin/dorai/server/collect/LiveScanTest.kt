@@ -108,6 +108,63 @@ class AzureRowsTest {
     }
 
     @Test
+    fun replicasAndBackupsBecomeCountriesAndBackupInfo() {
+        val storage = mapOf("type" to "Microsoft.Storage/storageAccounts", "location" to "westeurope", "secondaryLocation" to "northeurope")
+        assertEquals(listOf("IE"), AzureRows.toResource(storage).replicaCountries)
+        val cosmos = mapOf(
+            "type" to "Microsoft.DocumentDB/databaseAccounts", "location" to "westeurope",
+            "replicaLocations" to listOf(mapOf("locationName" to "West Europe"), mapOf("locationName" to "germanywestcentral")),
+        )
+        assertEquals(listOf("westeurope", "germanywestcentral").size, AzureRows.replicaRegions(cosmos).size)
+        val pg = mapOf("type" to "Microsoft.DBforPostgreSQL/flexibleServers", "backupDays" to 14, "geoBackup" to "Enabled")
+        val b = AzureRows.toResource(pg).backup!!
+        assertEquals(Triple(1, 14, true), Triple(b.intervalHours, b.retentionDays, b.geoRedundant))
+        assertEquals(null, AzureRows.toResource(storage).backup)
+    }
+
+    @Test
+    fun sellersOnTheBillBecomeVendorSpend() {
+        val azure = AzureCostRows.parseVendors(
+            listOf("Cost", "BillingMonth", "PublisherName", "Currency"),
+            listOf(listOf(100.0, "2026-10-01T00:00:00", "Datadog", "EUR"), listOf(50.0, "2026-11-01T00:00:00", "Datadog", "EUR")),
+        )
+        val aws = AwsArns.sellers(listOf(
+            AwsArns.SellerCost("Amazon Web Services EMEA SARL", LocalDate(2026, 10, 1), 900.0, "USD"),
+            AwsArns.SellerCost("Elastic N.V.", LocalDate(2026, 10, 1), 40.0, "USD"),
+        ))
+        assertEquals(listOf("vendor:Elastic N.V."), aws.map { it.resourceId })
+        val spend = dorai.server.core.Vendors.spend(azure + aws + CostEntry("/x/vm", "Azure", LocalDate(2026, 10, 1), 7.0, "EUR"))
+        assertEquals(setOf("Datadog" to 150.0, "Elastic N.V." to 40.0), spend.map { it.seller to it.amount }.toSet())
+    }
+
+    @Test
+    fun resourceExplorerAddsOnlyResourcesTheTaggingApiMissed() {
+        val tagged = listOf(AwsArns.toResource("arn:aws:s3:::finpay-statements", mapOf("dora-function" to "F3"), "eu-central-1"))
+        val all = AwsArns.withUntagged(tagged, listOf(
+            "arn:aws:s3:::finpay-statements" to "eu-central-1",
+            "arn:aws:s3:::finpay-logs" to "eu-west-1",
+            "arn:aws:iam::1:role/x" to "global",
+        ))
+        assertEquals(3, all.size)
+        assertEquals("F3", all.first().functionId)
+        val logs = all.single { it.id == "arn:aws:s3:::finpay-logs" }
+        assertEquals("eu-west-1" to null, logs.location to logs.functionId)
+    }
+
+    @Test
+    fun securityToolFindingsAttachToResourcesByLowercasedId() {
+        val defender = AzureRows.alerts(listOf(
+            mapOf("alertId" to "/a/1", "resourceId" to "/subscriptions/s/resourcegroups/rg/providers/x/y", "title" to "Enable MFA", "severity" to "High"),
+            mapOf("alertId" to "/a/2", "resourceId" to "", "title" to "No resource"),
+        ))
+        assertEquals(listOf("HIGH"), defender.getValue("/subscriptions/s/resourcegroups/rg/providers/x/y").map { it.severity })
+        assertEquals(1, defender.size)
+        val hub = AwsArns.alertsByResource(listOf(AwsArns.HubFinding("f1", "S3 public", "CRITICAL", listOf("arn:aws:s3:::Bucket", "arn:aws:iam::1:role/r"))))
+        assertEquals(setOf("arn:aws:s3:::bucket", "arn:aws:iam::1:role/r"), hub.keys)
+        assertEquals("Security Hub", hub.values.first().single().source)
+    }
+
+    @Test
     fun theQueryNarrowsToTheResourceGroupOnlyWhenSet() {
         assertTrue("resourceGroup" !in AzureRows.query(null))
         assertTrue("| where resourceGroup =~ 'rg-finpay-prod'" in AzureRows.query("rg-finpay-prod"))

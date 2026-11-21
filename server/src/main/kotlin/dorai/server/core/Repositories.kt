@@ -13,6 +13,12 @@ interface RegisterRepository {
 
     /** Replaces the stored scan with a new one. */
     suspend fun saveScan(resources: List<Resource>, costs: List<CostEntry>)
+
+    /**
+     * Changes the register in one step: [change] gets the current register and returns the new one with a
+     * result for the caller. Edits run one after another, so none is lost.
+     */
+    suspend fun <T> updateRegister(change: (Register) -> Pair<Register, T>): T
 }
 
 /** AI suggestions and the reviewer's decisions on them. */

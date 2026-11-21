@@ -54,12 +54,26 @@ on the subscriptions, an AWS IAM user or role with read-only access to tagging a
 
 ### What a live scan reads (`DORAI_DATA_SOURCE=live`)
 - **Azure**: one Resource Graph query over every subscription the principal can read (or
-  `DORAI_AZURE_SUBSCRIPTIONS` / `DORAI_AZURE_RESOURCE_GROUP`), and actual cost per resource per month
-  from Cost Management for the last 12 months. Billing data lags a day or two.
-- **AWS**: the Resource Groups Tagging API in each region of `DORAI_AWS_REGIONS`. Resources that were
-  never tagged are not returned by that API. Cost comes from Cost Explorer, which keeps per-resource
+  `DORAI_AZURE_SUBSCRIPTIONS` / `DORAI_AZURE_RESOURCE_GROUP`), including replica regions and platform
+  backups (for B_02.02.0150 and the Art. 12 checks), and actual cost per resource per month from Cost
+  Management for the last 12 months. A second cost query lists Azure Marketplace sellers. Billing data
+  lags a day or two.
+- **AWS**: the Resource Groups Tagging API in each region of `DORAI_AWS_REGIONS`, plus Resource Explorer
+  for resources that were never tagged (it needs a Resource Explorer index and default view in the region;
+  without one only tagged resources are found). Cost comes from Cost Explorer, which keeps per-resource
   cost for 14 days only and only after "resource-level data" is turned on in the AWS billing preferences.
-  Each Cost Explorer request costs USD 0.01.
+  A second Cost Explorer call lists 12 months of spend per seller (legal entity), which shows Marketplace
+  vendors. Each Cost Explorer request costs USD 0.01.
+- **Security findings**: unhealthy Defender for Cloud recommendations (Resource Graph, same Reader
+  role) and active high or critical Security Hub findings (needs `securityhub:GetFindings`) are kept on each
+  resource. DORAi's own rule warns when one sits on a resource of a critical function. Either source may
+  be off; the scan then continues without it.
+- **SaaS apps** (optional, `DORAI_APPS=entra,okta`): Entra ID enterprise apps through Microsoft Graph
+  (the Azure principal needs `Application.Read.All`), and Okta apps (`DORAI_OKTA_URL`, and a read-only
+  token in `DORAI_OKTA_TOKEN`). Each app becomes an S19 resource; a publisher missing from the register is
+  a warning. An identity provider that refuses the call adds no apps and does not fail the scan.
+- **LEI lookup**: a reviewer can look a provider up in GLEIF (`api.gleif.org`, public, no key). Only the
+  provider's name or LEI is sent. `DORAI_GLEIF=off` turns it off; `DORAI_GLEIF_URL` points at a mirror.
 - If a cloud cannot be scanned, the scan fails with 502 and the stored inventory stays as it was.
   If cost is unavailable, the scan continues without that cloud's cost.
 - Cost of deleted resources is ignored in the concentration report.

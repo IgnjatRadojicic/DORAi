@@ -25,6 +25,7 @@ object FinancialEntities : Table("financial_entities") {
     val name = text("name")
     val country = text("country")
     val asOf = timestamp("as_of")
+    val roi = jsonb("roi")
     override val primaryKey = PrimaryKey(lei)
 }
 
@@ -34,6 +35,7 @@ object Providers : Table("providers") {
     val name = text("name")
     val lei = FieldColumns(this, "lei")
     val headquartersCountry = FieldColumns(this, "headquarters_country")
+    val roi = jsonb("roi")
     override val primaryKey = PrimaryKey(id)
 }
 
@@ -42,6 +44,7 @@ object BusinessFunctions : Table("business_functions") {
     val position = integer("position")
     val name = text("name")
     val isCritical = bool("is_critical")
+    val roi = jsonb("roi")
     override val primaryKey = PrimaryKey(id)
 }
 
@@ -53,10 +56,12 @@ object Contracts : Table("contracts") {
     val endDate = date("end_date").nullable()
     val annualCost = FieldColumns(this, "annual_cost")
     val currency = text("currency").nullable()
+    val roi = jsonb("roi")
     override val primaryKey = PrimaryKey(id)
 }
 
-object ContractServices : Table("contract_services") {
+object ContractServices
+ : Table("contract_services") {
     val id = text("id")
     val contractId = text("contract_id")
     val position = integer("position")
@@ -64,6 +69,7 @@ object ContractServices : Table("contract_services") {
     val functionId = FieldColumns(this, "function_id")
     val dataLocation = FieldColumns(this, "data_location")
     val resourceIds = array<String>("resource_ids")
+    val roi = jsonb("roi")
     override val primaryKey = PrimaryKey(id)
 }
 
@@ -86,6 +92,9 @@ object Resources : Table("resources") {
     val contractId = text("contract_id").nullable()
     val monthlyCost = double("monthly_cost").nullable()
     val currency = text("currency").nullable()
+    val replicaCountries = array<String>("replica_countries")
+    val backup = jsonb("backup").nullable()
+    val alerts = jsonb("alerts")
     override val primaryKey = PrimaryKey(id)
 }
 
@@ -97,6 +106,15 @@ object CostEntries : Table("cost_entries") {
     val amount = double("amount")
     val currency = text("currency")
     override val primaryKey = PrimaryKey(resourceId, month)
+}
+
+object RoiRows : Table("roi_rows") {
+    val template = text("template")
+    val id = text("id")
+    val position = integer("position")
+    /** Named so it does not hide ColumnSet.fields. */
+    val values = jsonb("fields")
+    override val primaryKey = PrimaryKey(template, id)
 }
 
 object Suggestions : Table("suggestions") {
@@ -113,6 +131,7 @@ object Suggestions : Table("suggestions") {
     val status = enumerationByName<SuggestionStatus>("status", 32)
     val createdAt = timestamp("created_at")
     val decidedAt = timestamp("decided_at").nullable()
+    val roiColumn = text("roi_column").nullable()
     override val primaryKey = PrimaryKey(id)
 }
 

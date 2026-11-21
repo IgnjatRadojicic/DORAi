@@ -91,7 +91,7 @@ private fun SuggestionCard(
                 }
             }
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                OutlineChip(suggestion.field.label)
+                OutlineChip(suggestion.fieldLabel ?: suggestion.field.label)
                 Text(listOfNotNull(suggestion.value, suggestion.valueLabel).joinToString(" "), style = MaterialTheme.typography.bodyLarge)
                 suggestion.confidence?.let { MetaText("${(it * 100).roundToInt()}% ${uiText("confidence")}") }
             }

@@ -35,12 +35,15 @@ dependencies {
     implementation(libs.azure.resourcemanager.costmanagement)
     implementation(libs.aws.resourcegroupstaggingapi)
     implementation(libs.aws.costexplorer)
+    implementation(libs.aws.resourceexplorer2)
+    implementation(libs.aws.securityhub)
     implementation(libs.aws.s3)
     implementation(libs.aws.dynamodb)
     implementation(libs.aws.lambda)
     implementation(libs.aws.sqs)
     implementation(libs.pgvector)
     implementation(libs.pdfbox)
+    implementation(libs.openpdf)
     implementation(libs.koog.agents)
     implementation(libs.koog.embeddings.llm)
     implementation(libs.commons.csv)
@@ -54,3 +57,12 @@ dependencies {
 }
 
 tasks.test { useJUnitPlatform() }
+
+// The FinPay RoI package for the offline taxonomy check (scripts/validate-roi.sh).
+tasks.register<JavaExec>("roiSample") {
+    group = "verification"
+    description = "Writes the FinPay RoI xBRL-CSV package to build/roi-sample."
+    classpath = sourceSets["main"].runtimeClasspath
+    mainClass = "dorai.server.export.SamplePackageKt"
+    args(layout.buildDirectory.dir("roi-sample").get().asFile.path)
+}
