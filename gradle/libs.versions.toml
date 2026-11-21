@@ -33,6 +33,7 @@ datastore = "1.3.0"
 java-keyring = "1.0.4"
 filekit = "0.17.1"
 turbine = "1.2.1"
+pdfbox = "3.0.8"
 
 [libraries]
 compose-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "compose-multiplatform" }
@@ -78,6 +79,8 @@ testcontainers-junit-jupiter = { module = "org.testcontainers:testcontainers-jun
 azure-identity = { module = "com.azure:azure-identity", version.ref = "azure-identity" }
 azure-resourcemanager-resourcegraph = { module = "com.azure.resourcemanager:azure-resourcemanager-resourcegraph", version.ref = "azure-resourcemanager-resourcegraph" }
 azure-resourcemanager-costmanagement = { module = "com.azure.resourcemanager:azure-resourcemanager-costmanagement", version.ref = "azure-resourcemanager-costmanagement" }
+koog-embeddings-llm = { module = "ai.koog:embeddings-llm", version.ref = "koog" }
+pdfbox = { module = "org.apache.pdfbox:pdfbox", version.ref = "pdfbox" }
 koog-agents-test = { module = "ai.koog:agents-test", version.ref = "koog" }
 password4j = { module = "com.password4j:password4j", version.ref = "password4j" }
 aws-sts = { module = "aws.sdk.kotlin:sts", version.ref = "aws-sdk-kotlin" }
