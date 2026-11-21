@@ -5,10 +5,12 @@ package dorai.shared.roi
  * layout and the codes closed lists are reported with. The member codes are generated into
  * [TaxonomyCodeLists] by scripts/taxonomy-codes.py, so a new release changes only these two files.
  *
- * [verified] turns true once Arelle validates a sample package against the taxonomy with no errors.
+ * [verified]: on 2026-11-21 Arelle 2.47.5 validated the FinPay package offline against this release (with the
+ * Eurofiling base files) with no errors; 93 EBA validation rules ran. Set it back to false when the
+ * release or the export changes and the check has not been run again.
  */
 object TaxonomyCodes {
-    const val verified: Boolean = false
+    const val verified: Boolean = true
 
     /** EBA reporting framework release that holds the DORA module (4.0, errata 5; module version 1.1.0). */
     const val frameworkRelease = "4.0"
