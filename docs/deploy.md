@@ -27,9 +27,42 @@ Data lives in two Docker volumes: `db-data` (database) and `server-data` (TLS ke
 3. Pin a release: set `DORAI_VERSION` to a version such as `1.0.0` rather than `latest`.
 4. `docker compose up -d`, then check `docker compose ps` until all services are healthy.
 5. `curl http://localhost:8080/api/health` on the host returns `{"status":"ok",...}`.
+6. First login. On its first start the server creates a self-signed certificate and the admin
+   (`DORAI_ADMIN_USERNAME`, default `admin`), and logs both once:
+   `docker compose logs server | grep -E "Certificate SHA-256|First start"`.
+   The log line has a temporary password and an invite link. Open the link in the app, log in with the
+   temporary password and set a new one (at least 12 characters). The temporary password is not shown again.
+
+### Users
+The admin creates users in the app (or `POST /api/admin/users`) with a role: viewer (read), reviewer
+(scan, check, review suggestions, export) or admin (users and invites). Each new user gets a temporary
+password and an invite link valid for 72 hours; send them through different channels. Access tokens
+last 15 minutes, sessions 30 days. Disabling a user, or revoking their sessions
+(`POST /api/admin/users/{username}/revoke`, which signs them out everywhere but lets them log in again),
+takes effect on their next call. The server checks the session on every API call.
+
+Login limits: five wrong passwords for one username within 15 minutes lock that username for 15 minutes,
+the right password included (revoking the user's sessions lifts it early). Redeem, login and password
+change are limited to 10 calls per minute from one address; behind a reverse proxy every user shares the
+proxy's address, so keep the server reachable directly.
+
+The invite link pins the certificate fingerprint. If `tls/keystore.p12` in the `server-data` volume is
+deleted, the server makes a new certificate and every app must connect again with a new invite.
 
 Cloud credentials for live scans should be read-only: an Azure service principal with Reader
 on the subscriptions, an AWS IAM user or role with read-only access to tagging and cost data.
+
+### What a live scan reads (`DORAI_DATA_SOURCE=live`)
+- **Azure**: one Resource Graph query over every subscription the principal can read (or
+  `DORAI_AZURE_SUBSCRIPTIONS` / `DORAI_AZURE_RESOURCE_GROUP`), and actual cost per resource per month
+  from Cost Management for the last 12 months. Billing data lags a day or two.
+- **AWS**: the Resource Groups Tagging API in each region of `DORAI_AWS_REGIONS`. Resources that were
+  never tagged are not returned by that API. Cost comes from Cost Explorer, which keeps per-resource
+  cost for 14 days only and only after "resource-level data" is turned on in the AWS billing preferences.
+  Each Cost Explorer request costs USD 0.01.
+- If a cloud cannot be scanned, the scan fails with 502 and the stored inventory stays as it was.
+  If cost is unavailable, the scan continues without that cloud's cost.
+- Cost of deleted resources is ignored in the concentration report.
 
 ## Update
 ```
@@ -68,7 +101,16 @@ DORAI_DB_URL=jdbc:postgresql://localhost:5432/dorai DORAI_DB_PASSWORD=... ./grad
 ```
 On start the server runs the Flyway migrations in `server/src/main/resources/db/migration`, and
 loads the FinPay demo register when the database holds no register yet. Without `DORAI_DB_URL` it runs
-on the fixtures in memory and stores nothing.
+on the fixtures in memory, stores nothing and has no auth (every route is open).
+With a database, auth is on and the server needs `DORAI_JWT_SECRET`.
+
+For the demo, AWS can come from LocalStack instead of a real account: set `DORAI_AWS_ENDPOINT`
+(for example `http://localhost:4566`). The scan then lists S3, DynamoDB, Lambda and SQS one by one,
+because free LocalStack returns nothing from the Tagging API, and takes AWS cost from the FinPay
+fixture, because LocalStack has no billing. The scan reports the cost source as `Mixed`.
+
+Against the real clouds with your own `az login` and AWS profile, read-only and without Cost Explorer:
+`DORAI_LIVE_TESTS=1 ./gradlew :server:test --tests "dorai.server.collect.LiveSmokeTest"`.
 Build the image locally from the repository root: `docker build -t ghcr.io/ignjatradojicic/dorai-server:dev .`
 and run it with `DORAI_VERSION=dev`.
 

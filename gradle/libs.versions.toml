@@ -60,6 +60,7 @@ ktor-server-status-pages = { module = "io.ktor:ktor-server-status-pages", versio
 ktor-server-call-logging = { module = "io.ktor:ktor-server-call-logging", version.ref = "ktor" }
 ktor-server-auth = { module = "io.ktor:ktor-server-auth", version.ref = "ktor" }
 ktor-server-auth-jwt = { module = "io.ktor:ktor-server-auth-jwt", version.ref = "ktor" }
+ktor-server-rate-limit = { module = "io.ktor:ktor-server-rate-limit", version.ref = "ktor" }
 ktor-server-test-host = { module = "io.ktor:ktor-server-test-host", version.ref = "ktor" }
 exposed-core = { module = "org.jetbrains.exposed:exposed-core", version.ref = "exposed" }
 exposed-jdbc = { module = "org.jetbrains.exposed:exposed-jdbc", version.ref = "exposed" }
@@ -86,6 +87,11 @@ password4j = { module = "com.password4j:password4j", version.ref = "password4j" 
 aws-sts = { module = "aws.sdk.kotlin:sts", version.ref = "aws-sdk-kotlin" }
 aws-resourcegroupstaggingapi = { module = "aws.sdk.kotlin:resourcegroupstaggingapi", version.ref = "aws-sdk-kotlin" }
 aws-costexplorer = { module = "aws.sdk.kotlin:costexplorer", version.ref = "aws-sdk-kotlin" }
+# Demo only: LocalStack has no Tagging API results, so the collector lists these services one by one.
+aws-s3 = { module = "aws.sdk.kotlin:s3", version.ref = "aws-sdk-kotlin" }
+aws-dynamodb = { module = "aws.sdk.kotlin:dynamodb", version.ref = "aws-sdk-kotlin" }
+aws-lambda = { module = "aws.sdk.kotlin:lambda", version.ref = "aws-sdk-kotlin" }
+aws-sqs = { module = "aws.sdk.kotlin:sqs", version.ref = "aws-sdk-kotlin" }
 ktor-network-tls-certificates = { module = "io.ktor:ktor-network-tls-certificates", version.ref = "ktor" }
 openpdf = { module = "com.github.librepdf:openpdf", version.ref = "openpdf" }
 commons-csv = { module = "org.apache.commons:commons-csv", version.ref = "commons-csv" }

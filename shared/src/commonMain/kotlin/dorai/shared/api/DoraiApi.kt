@@ -1,6 +1,26 @@
 package dorai.shared.api
 
 import dorai.shared.Dorai
+import dorai.shared.model.CreateInviteRequest
+import dorai.shared.model.CreateUserRequest
+import dorai.shared.model.CreatedUser
+import dorai.shared.model.Invite
+import dorai.shared.model.LoginRequest
+import dorai.shared.model.LoginResponse
+import dorai.shared.model.PasswordChangeRequest
+import dorai.shared.model.RedeemRequest
+import dorai.shared.model.RedeemResponse
+import dorai.shared.model.RefreshRequest
+import dorai.shared.model.Tokens
+import dorai.shared.model.User
+import io.ktor.client.plugins.api.createClientPlugin
+import io.ktor.client.request.HttpRequestBuilder
+import io.ktor.client.request.bearerAuth
+import io.ktor.client.request.setBody
+import io.ktor.http.HttpStatusCode
+import io.ktor.http.contentType
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import dorai.shared.model.ConcentrationReport
 import dorai.shared.model.DoraiJson
 import dorai.shared.model.Finding
@@ -33,18 +53,70 @@ import kotlinx.coroutines.CancellationException
  * Client for the DORAi server, used by the apps and the CLI.
  * Every call returns [ApiResult]; it never throws for HTTP or network errors.
  *
- * @param baseUrl server address without `/api`, for example `http://localhost:8080`.
+ * With a [tokens] store, every request carries the access token. When the server answers 401, the client
+ * refreshes once (the refresh token is single use, so refreshes are serialized) and repeats the request.
+ * If the refresh fails, the store is cleared and the caller sees the 401: the user must log in again.
+ *
+ * @param baseUrl server address without `/api`, for example `https://dorai.firm.local:8443`.
  * @param httpClient engine to use; the default picks OkHttp on desktop and Android. Tests pass their own.
+ * @param tokens where the app keeps the tokens; null for a server without auth (development, fixtures).
  */
-class DoraiApi(baseUrl: String, httpClient: HttpClient = HttpClient()) : AutoCloseable {
+class DoraiApi(
+    baseUrl: String,
+    httpClient: HttpClient = HttpClient(),
+    private val tokens: TokenStore? = null,
+) : AutoCloseable {
+
+    private val refreshLock = Mutex()
 
     private val http = httpClient.config {
         expectSuccess = false
         install(ContentNegotiation) { json(DoraiJson) }
         defaultRequest { url(baseUrl.trimEnd('/') + Dorai.API_PREFIX + "/") }
+        install(
+            createClientPlugin("DoraiBearer") {
+                onRequest { request, _ ->
+                    if (request.headers[HttpHeaders.Authorization] == null) {
+                        tokens?.load()?.let { request.bearerAuth(it.accessToken) }
+                    }
+                }
+            },
+        )
     }
 
     suspend fun health(): ApiResult<Health> = call { http.get("health") }
+
+    // Connecting and logging in. Successful logins, password changes and refreshes are saved to [tokens].
+
+    /** Tells which user an invite code is for. Does not log in. */
+    suspend fun redeem(code: String): ApiResult<RedeemResponse> =
+        call { http.post("auth/redeem") { json(RedeemRequest(code)) } }
+
+    suspend fun login(username: String, password: String): ApiResult<LoginResponse> =
+        call<LoginResponse> { http.post("auth/login") { json(LoginRequest(username, password)) } }
+            .also { r -> if (r is ApiResult.Success) r.value.tokens?.let { tokens?.save(it) } }
+
+    suspend fun changePassword(username: String, currentPassword: String, newPassword: String): ApiResult<Tokens> =
+        call<Tokens> { http.post("auth/password") { json(PasswordChangeRequest(username, currentPassword, newPassword)) } }
+            .also { r -> if (r is ApiResult.Success) tokens?.save(r.value) }
+
+    /** Revokes the refresh token on the server and forgets the tokens here. */
+    suspend fun logout(): ApiResult<Unit> {
+        val store = tokens ?: return ApiResult.Success(Unit)
+        val current = store.load() ?: return ApiResult.Success(Unit)
+        val result = call<Unit> { http.post("auth/logout") { json(RefreshRequest(current.refreshToken)) } }
+        store.save(null)
+        return result
+    }
+
+    // Administration (admin role)
+    suspend fun users(): ApiResult<List<User>> = call { http.get("admin/users") }
+    suspend fun createUser(request: CreateUserRequest): ApiResult<CreatedUser> = call { http.post("admin/users") { json(request) } }
+    suspend fun disableUser(username: String): ApiResult<User> = call { http.post("admin/users/$username/disable") }
+    /** Signs the user out on every device at once; they can log in again. */
+    suspend fun revokeSessions(username: String): ApiResult<Unit> = call { http.post("admin/users/$username/revoke") }
+    suspend fun invites(): ApiResult<List<Invite>> = call { http.get("admin/invites") }
+    suspend fun createInvite(username: String): ApiResult<Invite> = call { http.post("admin/invites") { json(CreateInviteRequest(username)) } }
 
     // Scan and inventory
     suspend fun scan(): ApiResult<ScanResult> = call { http.post("scan") }
@@ -96,14 +168,44 @@ class DoraiApi(baseUrl: String, httpClient: HttpClient = HttpClient()) : AutoClo
 
     private suspend inline fun <reified T> call(request: () -> HttpResponse): ApiResult<T> =
         try {
-            val response = request()
-            if (response.status.isSuccess()) ApiResult.Success(response.body<T>())
-            else ApiResult.Failure(response.toProblem())
+            val sentWith = tokens?.load()?.accessToken
+            var response = request()
+            if (response.status == HttpStatusCode.Unauthorized && sentWith != null && refresh(sentWith)) {
+                response = request()
+            }
+            when {
+                !response.status.isSuccess() -> ApiResult.Failure(response.toProblem())
+                T::class == Unit::class -> ApiResult.Success(Unit as T)
+                else -> ApiResult.Success(response.body<T>())
+            }
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
             ApiResult.Failure(Problem(title = "Network error", status = 0, detail = e.message))
         }
+
+    /**
+     * Swaps the refresh token for new tokens. Returns whether a retry makes sense. Another request may have
+     * refreshed while this one waited for the lock; then its new token is used instead of refreshing again,
+     * since reusing a spent refresh token makes the server revoke the whole session.
+     */
+    private suspend fun refresh(rejectedAccessToken: String): Boolean = refreshLock.withLock {
+        val store = tokens ?: return false
+        val current = store.load() ?: return false
+        if (current.accessToken != rejectedAccessToken) return true
+        val response = http.post("auth/refresh") { json(RefreshRequest(current.refreshToken)) }
+        if (!response.status.isSuccess()) {
+            store.save(null)
+            return false
+        }
+        store.save(response.body<Tokens>())
+        true
+    }
+
+    private inline fun <reified B> HttpRequestBuilder.json(body: B) {
+        contentType(ContentType.Application.Json)
+        setBody(body)
+    }
 
     private suspend fun HttpResponse.toProblem(): Problem {
         val text = bodyAsText()
