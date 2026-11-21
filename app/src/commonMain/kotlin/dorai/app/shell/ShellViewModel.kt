@@ -10,6 +10,8 @@ import dorai.app.components.AppLanguage
 import dorai.app.components.WorkspaceSection
 import dorai.app.components.matijaSections
 import dorai.app.connect.ConnectionViewModel
+import dorai.app.connect.InviteGateway
+import dorai.app.connect.InviteViewModel
 import dorai.app.connect.ServerProbe
 import dorai.app.connect.defaultServerAddress
 import dorai.app.findings.FindingsViewModel
@@ -53,16 +55,17 @@ class Workspace(val session: Tokens, api: DoraiApi) {
     val canReview: Boolean get() = session.role >= Role.Reviewer
 }
 
-/** Root state of the app: connection, login, section, theme and language. Kept in memory for now. */
+/**
+ * Root state of the app: server, connection, login, section, theme and language. Kept in memory for now.
+ * The server starts as the development address and changes when an invite link is opened.
+ * Tests replace [openApi] and the server calls ([probe], [gateway], [invites]); by default they go to the current server.
+ */
 class ShellViewModel(
     address: String = defaultServerAddress,
-    private val api: DoraiApi = DoraiApi(address, tokens = MemoryTokenStore()),
-    probe: ServerProbe = ServerProbe { api.health() },
-    gateway: LoginGateway = object : LoginGateway {
-        override suspend fun login(username: String, password: String) = api.login(username, password)
-        override suspend fun changePassword(username: String, currentPassword: String, newPassword: String) =
-            api.changePassword(username, currentPassword, newPassword)
-    },
+    private val openApi: (String) -> DoraiApi = { DoraiApi(it, tokens = MemoryTokenStore()) },
+    probe: ServerProbe? = null,
+    gateway: LoginGateway? = null,
+    invites: InviteGateway? = null,
 ) : ViewModel() {
     var state by mutableStateOf(ShellState())
         private set
@@ -71,8 +74,43 @@ class ShellViewModel(
     var workspace by mutableStateOf<Workspace?>(null)
         private set
 
-    val connection = ConnectionViewModel(address, probe)
-    val login = LoginViewModel(gateway)
+    /** Client for the current server; replaced when an invite link names another one. */
+    private var api: DoraiApi = openApi(address)
+
+    val connection = ConnectionViewModel(address, probe ?: ServerProbe { api.health() })
+    val login = LoginViewModel(gateway ?: object : LoginGateway {
+        override suspend fun login(username: String, password: String) = api.login(username, password)
+        override suspend fun changePassword(username: String, currentPassword: String, newPassword: String) =
+            api.changePassword(username, currentPassword, newPassword)
+    })
+    val invite = InviteViewModel(invites ?: InviteGateway { api.redeem(it) })
+
+    /**
+     * Opens an invite link (pasted on desktop, tapped on Android): switches to its server, redeems the
+     * one-time code and leaves an empty login page. Problems show in the invite field.
+     */
+    suspend fun openInvite(text: String = invite.state.text) {
+        if (invite.state.busy) return
+        val link = invite.read(text) ?: return
+        if (link.fingerprint != null) {
+            // Certificate pinning: DoraiApi must trust only the certificate with this SHA-256 (shared lane, Ignjat).
+            // Until it can, a secure link is refused instead of trusting any certificate.
+            invite.fail(InviteViewModel.SECURE_NOT_READY, text)
+            return
+        }
+        logout()
+        switchServer(link.server)
+        login.reset()
+        invite.redeem(link.code)
+        connection.check()
+    }
+
+    private fun switchServer(address: String) {
+        if (address == connection.address) return
+        api.close()
+        api = openApi(address)
+        connection.switchTo(address)
+    }
 
     /** Runs the login page and opens the platform when the server accepts it. */
     suspend fun login() {

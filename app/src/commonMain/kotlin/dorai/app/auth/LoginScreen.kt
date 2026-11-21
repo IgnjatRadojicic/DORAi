@@ -33,6 +33,7 @@ class LoginActions(
 /**
  * First screen of the app: the sign-in card, or the password change card after a temporary password.
  * [corner] is drawn in the top right corner; the shell puts the connection mark there.
+ * [below] is drawn under the sign-in card; the shell puts the invite link field there.
  */
 @Composable
 fun LoginScreen(
@@ -40,15 +41,19 @@ fun LoginScreen(
     actions: LoginActions,
     modifier: Modifier = Modifier,
     corner: @Composable () -> Unit = {},
+    below: @Composable () -> Unit = {},
 ) {
     Surface(modifier.fillMaxSize(), color = ProductStyle.colors.background) {
         Box(Modifier.fillMaxSize()) {
             Box(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp), contentAlignment = Alignment.Center) {
-                ProductPanel(Modifier.widthIn(max = 420.dp)) {
-                    when (state.step) {
-                        LoginStep.SIGN_IN -> SignInCard(state, actions)
-                        LoginStep.CHANGE_PASSWORD -> PasswordChangeCard(state, actions)
+                Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    ProductPanel(Modifier.widthIn(max = 420.dp)) {
+                        when (state.step) {
+                            LoginStep.SIGN_IN -> SignInCard(state, actions)
+                            LoginStep.CHANGE_PASSWORD -> PasswordChangeCard(state, actions)
+                        }
                     }
+                    if (state.step == LoginStep.SIGN_IN) below()
                 }
             }
             Box(Modifier.align(Alignment.TopEnd).padding(20.dp)) { corner() }

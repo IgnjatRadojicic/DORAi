@@ -34,7 +34,7 @@ class ShellViewModelTest {
     private fun shell(answer: ApiResult<LoginResponse> = ApiResult.Success(LoginResponse(false, tokens(Role.Reviewer)))) =
         ShellViewModel(
             address = "http://localhost:8080",
-            api = DoraiApi("http://localhost:8080"),
+            openApi = { DoraiApi(it) },
             probe = { ApiResult.Success(Health("ok", "DORAi")) },
             gateway = FakeLoginGateway(loginAnswer = answer, changeAnswer = ApiResult.Success(tokens(Role.Viewer))),
         )
