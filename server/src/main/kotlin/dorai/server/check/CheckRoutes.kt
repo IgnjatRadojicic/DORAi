@@ -7,9 +7,11 @@ import dorai.server.register.who
 import dorai.server.core.Services
 import dorai.shared.model.Finding
 import dorai.shared.rules.InvalidPlanException
+import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.content.PartData
 import io.ktor.http.content.forEachPart
+import io.ktor.server.request.contentType
 import io.ktor.server.request.receiveMultipart
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
@@ -29,9 +31,12 @@ private const val MAX_EXPLAINED = 20
 fun Route.checkRoutes(services: Services) {
     post("check") {
         var plan: ByteArray? = null
-        call.receiveMultipart().forEachPart { part ->
-            if (part is PartData.FileItem && part.name == "plan") plan = part.provider().readBuffer().readByteArray()
-            part.release()
+        // Only a multipart upload carries a plan; any other request (no body, JSON) checks the demo plan.
+        if (call.request.contentType().match(ContentType.MultiPart.FormData)) {
+            call.receiveMultipart().forEachPart { part ->
+                if (part is PartData.FileItem && part.name == "plan") plan = part.provider().readBuffer().readByteArray()
+                part.release()
+            }
         }
         val planJson = plan?.decodeToString() ?: services.demoPlan
         val findings = try {

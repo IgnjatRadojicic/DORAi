@@ -21,6 +21,10 @@ import dorai.shared.model.Finding
 import dorai.shared.model.Register
 import io.ktor.client.call.body
 import io.ktor.client.request.get
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.http.ContentType
+import io.ktor.http.contentType
 import io.ktor.client.request.forms.formData
 import io.ktor.client.request.forms.submitFormWithBinaryData
 import io.ktor.http.Headers
@@ -69,6 +73,16 @@ class PdfEndpointTest {
         val after = text(versionedClient().get("/api/export/pdf").body<ByteArray>())
         assertContains(after, "plan development checked")
         assertContains(after, "critical-function")
+    }
+
+    @Test
+    fun aCheckWithoutAnUploadUsesTheDemoPlanAndIsNotKept() = testApplication {
+        application { module(fixtureServices().copy(plans = InMemoryPlanRepository())) }
+        val json = versionedClient().post("/api/check") { contentType(ContentType.Application.Json); setBody("{}") }
+        assertEquals(200, json.status.value)
+        assertEquals(200, versionedClient().post("/api/check").status.value)
+        val pdf = Loader.loadPDF(versionedClient().get("/api/export/pdf").body<ByteArray>()).use { PDFTextStripper().getText(it) }
+        assertContains(pdf, "No Terraform plan has been checked")
     }
 
     @Test
