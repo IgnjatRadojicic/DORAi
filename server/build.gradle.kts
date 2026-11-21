@@ -36,6 +36,7 @@ dependencies {
     implementation(libs.aws.resourcegroupstaggingapi)
     implementation(libs.aws.costexplorer)
     implementation(libs.aws.resourceexplorer2)
+    implementation(libs.aws.securityhub)
     implementation(libs.aws.s3)
     implementation(libs.aws.dynamodb)
     implementation(libs.aws.lambda)

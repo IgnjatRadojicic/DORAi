@@ -13,6 +13,11 @@ import aws.sdk.kotlin.services.costexplorer.model.GroupDefinitionType
 import aws.sdk.kotlin.services.resourceexplorer2.ResourceExplorer2Client
 import aws.sdk.kotlin.services.resourceexplorer2.paginators.listResourcesPaginated
 import aws.sdk.kotlin.services.resourcegroupstaggingapi.ResourceGroupsTaggingClient
+import aws.sdk.kotlin.services.securityhub.SecurityHubClient
+import aws.sdk.kotlin.services.securityhub.model.AwsSecurityFindingFilters
+import aws.sdk.kotlin.services.securityhub.model.StringFilter
+import aws.sdk.kotlin.services.securityhub.model.StringFilterComparison
+import aws.sdk.kotlin.services.securityhub.paginators.getFindingsPaginated
 import aws.sdk.kotlin.services.resourcegroupstaggingapi.paginators.getResourcesPaginated
 import dorai.server.collect.LiveConfig
 import dorai.server.core.CloudCollector
@@ -52,7 +57,32 @@ class AwsTaggingCollector(private val config: LiveConfig) : CloudCollector {
             }
         }
         val tagged = resources.distinctBy(Resource::id)
-        return CollectResult(AwsArns.withUntagged(tagged, untagged()), ScanMode.Live)
+        val all = AwsArns.withUntagged(tagged, untagged())
+        val alerts = AwsArns.alertsByResource(securityHub())
+        return CollectResult(all.map { r -> alerts[r.id.lowercase()]?.let { r.copy(alerts = it) } ?: r }, ScanMode.Live)
+    }
+
+    /** Active, unresolved Security Hub findings of high or critical severity, per region. Best effort. */
+    private suspend fun securityHub(): List<AwsArns.HubFinding> = config.awsRegions.flatMap { region ->
+        try {
+            SecurityHubClient.fromEnvironment { this.region = region }.use { hub ->
+                hub.getFindingsPaginated {
+                    maxResults = 100
+                    filters = AwsSecurityFindingFilters {
+                        recordState = listOf(StringFilter { value = "ACTIVE"; comparison = StringFilterComparison.Equals })
+                        workflowStatus = listOf("NEW", "NOTIFIED").map { StringFilter { value = it; comparison = StringFilterComparison.Equals } }
+                        severityLabel = listOf("HIGH", "CRITICAL").map { StringFilter { value = it; comparison = StringFilterComparison.Equals } }
+                    }
+                }.toList().flatMap { it.findings.orEmpty() }.map { f ->
+                    AwsArns.HubFinding(f.id.orEmpty(), f.title.orEmpty(), f.severity?.label?.value.orEmpty(), f.resources.orEmpty().mapNotNull { it.id })
+                }
+            }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            log.warn("Security Hub unavailable in {}: {}", region, e.message)
+            emptyList()
+        }
     }
 
     /** ARN and region of every resource Resource Explorer knows, tagged or not. */

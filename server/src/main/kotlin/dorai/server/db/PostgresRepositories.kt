@@ -12,6 +12,7 @@ import dorai.shared.model.DoraiJson
 import dorai.shared.model.FinancialEntity
 import dorai.shared.model.Provider
 import dorai.shared.model.BackupInfo
+import dorai.shared.model.SecurityAlert
 import dorai.shared.model.RoiFields
 import dorai.shared.model.RoiRow
 import dorai.shared.model.Register
@@ -155,6 +156,7 @@ private fun ResultRow.toResource() = Resource(
     currency = this[Resources.currency],
     replicaCountries = this[Resources.replicaCountries],
     backup = this[Resources.backup]?.let { DoraiJson.decodeFromString<BackupInfo>(it) },
+    alerts = DoraiJson.decodeFromString<List<SecurityAlert>>(this[Resources.alerts]),
 )
 
 private fun ResultRow.toSuggestion() = Suggestion(
@@ -274,6 +276,7 @@ internal fun JdbcTransaction.writeScan(resources: List<Resource>, costs: List<Co
             it[currency] = r.currency
             it[replicaCountries] = r.replicaCountries
             it[backup] = r.backup?.let { b -> DoraiJson.encodeToString(b) }
+            it[alerts] = DoraiJson.encodeToString(r.alerts)
         }
     }
     costs.forEachIndexed { i, c ->

@@ -94,6 +94,7 @@ object Resources : Table("resources") {
     val currency = text("currency").nullable()
     val replicaCountries = array<String>("replica_countries")
     val backup = jsonb("backup").nullable()
+    val alerts = jsonb("alerts")
     override val primaryKey = PrimaryKey(id)
 }
 

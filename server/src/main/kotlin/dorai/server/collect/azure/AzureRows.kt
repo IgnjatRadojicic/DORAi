@@ -7,6 +7,7 @@ import dorai.server.core.Vendors
 import dorai.shared.model.BackupInfo
 import dorai.shared.model.Redundancy
 import dorai.shared.model.Resource
+import dorai.shared.model.SecurityAlert
 import dorai.shared.rules.ServiceTypeTable
 import kotlinx.datetime.LocalDate
 
@@ -14,6 +15,24 @@ import kotlinx.datetime.LocalDate
 object AzureRows {
 
     const val SUBSCRIPTIONS = "ResourceContainers | where type =~ 'microsoft.resources/subscriptions' | project subscriptionId"
+
+    /** Unhealthy Defender for Cloud assessments, one row per resource and recommendation. */
+    const val ALERTS = "securityresources | where type == 'microsoft.security/assessments'" +
+        " | where tostring(properties.status.code) == 'Unhealthy'" +
+        " | project alertId = id, resourceId = tolower(tostring(properties.resourceDetails.Id))," +
+        " title = tostring(properties.displayName), severity = tostring(properties.metadata.severity)"
+
+    /** Alert rows by lowercased resource id. */
+    fun alerts(rows: List<Map<String, Any?>>): Map<String, List<SecurityAlert>> =
+        rows.mapNotNull { row ->
+            val resource = row.str("resourceId").ifBlank { return@mapNotNull null }
+            resource.lowercase() to SecurityAlert(
+                source = "Defender for Cloud",
+                id = row.str("alertId"),
+                title = row.str("title").ifBlank { "Unnamed recommendation" },
+                severity = row.str("severity").uppercase().ifBlank { "UNKNOWN" },
+            )
+        }.groupBy({ it.first }, { it.second })
 
     /** [resourceGroup] is checked by LiveConfig (Azure name characters only) before it reaches the query. */
     fun query(resourceGroup: String?) = buildString {

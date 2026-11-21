@@ -190,3 +190,21 @@ class ConcentrationChecksTest {
         assertTrue("art28-no-exit-plan" in codes && "art28-no-alternative" in codes, codes.toString())
     }
 }
+
+class SecurityChecksTest {
+    private fun db(vararg severities: String) = Roi.resource("db", "microsoft.dbforpostgresql/flexibleservers", "NL")
+        .copy(alerts = severities.mapIndexed { i, s -> dorai.shared.model.SecurityAlert("Defender for Cloud", "a$i", "Finding $i", s) })
+
+    @Test
+    fun `open high findings on a critical function's resource are a warning`() {
+        val issue = SecurityChecks.check(Roi.register(), listOf(db("HIGH", "LOW", "CRITICAL"))).single()
+        assertEquals("ict-open-security-findings" to ValidationSeverity.Warning, issue.code to issue.severity)
+        assertTrue("2 open high or critical findings in Defender for Cloud" in issue.message, issue.message)
+    }
+
+    @Test
+    fun `low findings and non-critical functions raise nothing`() {
+        assertTrue(SecurityChecks.check(Roi.register(), listOf(db("LOW", "MEDIUM"))).isEmpty())
+        assertTrue(SecurityChecks.check(Roi.register(critical = false), listOf(db("HIGH"))).isEmpty())
+    }
+}

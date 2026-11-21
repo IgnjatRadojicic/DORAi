@@ -151,6 +151,19 @@ class AzureRowsTest {
     }
 
     @Test
+    fun securityToolFindingsAttachToResourcesByLowercasedId() {
+        val defender = AzureRows.alerts(listOf(
+            mapOf("alertId" to "/a/1", "resourceId" to "/subscriptions/s/resourcegroups/rg/providers/x/y", "title" to "Enable MFA", "severity" to "High"),
+            mapOf("alertId" to "/a/2", "resourceId" to "", "title" to "No resource"),
+        ))
+        assertEquals(listOf("HIGH"), defender.getValue("/subscriptions/s/resourcegroups/rg/providers/x/y").map { it.severity })
+        assertEquals(1, defender.size)
+        val hub = AwsArns.alertsByResource(listOf(AwsArns.HubFinding("f1", "S3 public", "CRITICAL", listOf("arn:aws:s3:::Bucket", "arn:aws:iam::1:role/r"))))
+        assertEquals(setOf("arn:aws:s3:::bucket", "arn:aws:iam::1:role/r"), hub.keys)
+        assertEquals("Security Hub", hub.values.first().single().source)
+    }
+
+    @Test
     fun theQueryNarrowsToTheResourceGroupOnlyWhenSet() {
         assertTrue("resourceGroup" !in AzureRows.query(null))
         assertTrue("| where resourceGroup =~ 'rg-finpay-prod'" in AzureRows.query("rg-finpay-prod"))

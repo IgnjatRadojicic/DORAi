@@ -64,6 +64,10 @@ on the subscriptions, an AWS IAM user or role with read-only access to tagging a
   cost for 14 days only and only after "resource-level data" is turned on in the AWS billing preferences.
   A second Cost Explorer call lists 12 months of spend per seller (legal entity), which shows Marketplace
   vendors. Each Cost Explorer request costs USD 0.01.
+- **Security findings**: unhealthy Defender for Cloud recommendations (Resource Graph, same Reader
+  role) and active high or critical Security Hub findings (needs `securityhub:GetFindings`) are kept on each
+  resource. DORAi's own rule warns when one sits on a resource of a critical function. Either source may
+  be off; the scan then continues without it.
 - **SaaS apps** (optional, `DORAI_APPS=entra,okta`): Entra ID enterprise apps through Microsoft Graph
   (the Azure principal needs `Application.Read.All`), and Okta apps (`DORAI_OKTA_URL`, and a read-only
   token in `DORAI_OKTA_TOKEN`). Each app becomes an S19 resource; a publisher missing from the register is

@@ -26,6 +26,19 @@ data class Resource(
     val replicaCountries: List<String> = emptyList(),
     /** Backups the scan found, or null when it saw none or could not tell. */
     val backup: BackupInfo? = null,
+    /** Open security findings the cloud's own tools report on this resource (Defender for Cloud, Security Hub). */
+    val alerts: List<SecurityAlert> = emptyList(),
+)
+
+/** One open finding from a cloud security tool, as data: DORAi's own rules decide what it means. */
+@Serializable
+data class SecurityAlert(
+    /** "Defender for Cloud" or "Security Hub". */
+    val source: String,
+    val id: String,
+    val title: String,
+    /** The tool's own label, upper case: CRITICAL, HIGH, MEDIUM, LOW. */
+    val severity: String,
 )
 
 /** Backups of one resource as the cloud reports them (DORA Art. 12). */

@@ -5,6 +5,7 @@ import dorai.server.collect.round2
 import dorai.server.core.CostEntry
 import dorai.server.core.Vendors
 import dorai.shared.model.Resource
+import dorai.shared.model.SecurityAlert
 import dorai.shared.rules.ServiceTypeTable
 import kotlinx.datetime.LocalDate
 
@@ -63,6 +64,14 @@ object AwsArns {
             .map { (arn, region) -> toResource(arn, emptyMap(), region.takeUnless { it == "global" }.orEmpty()) }
         return tagged + extra
     }
+
+    data class HubFinding(val id: String, val title: String, val severity: String, val resourceIds: List<String>)
+
+    /** Security Hub findings by lowercased resource ARN; one finding may name several resources. */
+    fun alertsByResource(findings: List<HubFinding>): Map<String, List<SecurityAlert>> =
+        findings.flatMap { f ->
+            f.resourceIds.map { it.lowercase() to SecurityAlert("Security Hub", f.id, f.title.ifBlank { "Unnamed finding" }, f.severity.uppercase().ifBlank { "UNKNOWN" }) }
+        }.groupBy({ it.first }, { it.second })
 
     data class SellerCost(val seller: String, val month: LocalDate, val amount: Double, val currency: String)
 

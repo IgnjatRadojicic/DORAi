@@ -74,7 +74,20 @@ class AzureCollector(private val clients: AzureClients, private val config: Live
     override val provider = ServiceTypeTable.AZURE
 
     override suspend fun collect() = withContext(Dispatchers.IO) {
-        CollectResult(clients.query(AzureRows.query(config.azureResourceGroup)).map(AzureRows::toResource), ScanMode.Live)
+        val resources = clients.query(AzureRows.query(config.azureResourceGroup)).map(AzureRows::toResource)
+        val alerts = try {
+            AzureRows.alerts(clients.query(AzureRows.ALERTS))
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            log.warn("Defender for Cloud findings unavailable: {}", e.message)
+            emptyMap()
+        }
+        CollectResult(resources.map { r -> alerts[r.id.lowercase()]?.let { r.copy(alerts = it) } ?: r }, ScanMode.Live)
+    }
+
+    private companion object {
+        val log = LoggerFactory.getLogger(AzureCollector::class.java)
     }
 }
 
