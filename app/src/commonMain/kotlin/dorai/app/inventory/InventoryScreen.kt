@@ -3,9 +3,14 @@ package dorai.app.inventory
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -69,11 +74,14 @@ private fun InventoryPanel(state: InventoryState, onRefresh: () -> Unit) {
 }
 
 @Composable
-private fun ResourceRow(resource: InventoryResource) {
+private fun ColumnScope.ResourceRow(resource: InventoryResource) {
+    var expanded by rememberSaveable(resource.id) { mutableStateOf(false) }
     ProductTableRow {
         Column(Modifier.weight(2.4f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Text(resource.name, style = MaterialTheme.typography.bodyMedium)
             Text(resource.type, fontFamily = ProductStyle.fonts.mono, fontSize = 12.sp, color = ProductStyle.colors.muted)
+            MissingTagsMark(resource)
+            DetailsToggle(expanded) { expanded = !expanded }
         }
         Column(Modifier.weight(1.3f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Text(resource.location, style = MaterialTheme.typography.bodyMedium)
@@ -83,6 +91,12 @@ private fun ResourceRow(resource: InventoryResource) {
         SourcedCell(resource.function, Modifier.weight(1.8f))
         Text(resource.monthlyCost?.let { "${formatCost(it)} ${resource.currency.orEmpty()}" } ?: "-",
             modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
+    }
+    ExpandDetails(expanded) {
+        Column {
+            ResourceDetails(resource)
+            HorizontalDivider(color = ProductStyle.colors.line.copy(alpha = 0.7f))
+        }
     }
 }
 
