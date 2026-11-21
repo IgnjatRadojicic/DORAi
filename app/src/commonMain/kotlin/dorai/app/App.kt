@@ -13,6 +13,7 @@ import dorai.app.auth.LoginActions
 import dorai.app.auth.LoginScreen
 import dorai.app.components.ControlCenterFrame
 import dorai.app.connect.ConnectionMark
+import dorai.app.connect.InviteField
 import dorai.app.export.ExportViewModel
 import dorai.app.export.ValidationExportRoute
 import dorai.app.export.rememberWorkspaceFiles
@@ -57,6 +58,14 @@ fun App(chrome: @Composable () -> Unit = {}) {
                     },
                     modifier = Modifier.weight(1f),
                     corner = { ConnectionMark(shell.connection.status, shell.connection.address) },
+                    below = {
+                        InviteField(
+                            state = shell.invite.state,
+                            onToggle = shell.invite::toggle,
+                            onTextChange = shell.invite::onTextChange,
+                            onUse = { scope.launch { shell.openInvite() } },
+                        )
+                    },
                 )
             } else {
                 WorkspaceShell(shell, workspace, onLogout = { scope.launch { shell.logout() } }, Modifier.weight(1f))
