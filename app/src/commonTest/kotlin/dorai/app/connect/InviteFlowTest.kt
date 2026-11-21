@@ -5,8 +5,10 @@ import dorai.app.auth.failure
 import dorai.app.components.runImmediate
 import dorai.app.shell.ShellViewModel
 import dorai.shared.api.ApiResult
+import dorai.shared.api.CertificateProblem
 import dorai.shared.api.DoraiApi
 import dorai.shared.model.Health
+import dorai.shared.model.Problem
 import dorai.shared.model.RedeemResponse
 import dorai.shared.model.Role
 import kotlin.test.Test
@@ -21,14 +23,15 @@ class InviteFlowTest {
     private val ok: ApiResult<RedeemResponse> = ApiResult.Success(RedeemResponse("DORAi", "tester", Role.Reviewer))
 
     private class Recorder {
-        val opened = mutableListOf<String>()
+        val links = mutableListOf<ServerLink>()
+        val opened get() = links.map { it.address }
         val redeemed = mutableListOf<String>()
     }
 
     // DoraiApi only builds a client here; every server call is a fake.
     private fun shell(recorder: Recorder = Recorder(), redeem: ApiResult<RedeemResponse> = ok) = ShellViewModel(
         address = "http://localhost:8080",
-        openApi = { recorder.opened += it; DoraiApi(it) },
+        openApi = { server, _ -> recorder.links += server; DoraiApi(server.address) },
         probe = { ApiResult.Success(Health("ok", "DORAi")) },
         gateway = FakeLoginGateway(),
         invites = { code -> recorder.redeemed += code; redeem },
@@ -83,14 +86,23 @@ class InviteFlowTest {
     }
 
     @Test
-    fun aSecureLinkWaitsForCertificatePinning() {
+    fun aSecureLinkOpensAClientPinnedToItsCertificate() {
         val recorder = Recorder()
         val shell = shell(recorder)
         val fp = "AB".repeat(32)
         runImmediate { shell.openInvite("dorai://connect?server=https%3A%2F%2Fdorai.firm.local%3A8443&code=C&fp=sha256:$fp") }
-        assertEquals(InviteViewModel.SECURE_NOT_READY, shell.invite.state.error)
-        assertEquals("http://localhost:8080", shell.connection.address)
-        assertTrue(recorder.redeemed.isEmpty())
+        assertNull(shell.invite.state.error)
+        assertEquals(ServerLink("https://dorai.firm.local:8443", fp), recorder.links.last())
+        assertEquals("https://dorai.firm.local:8443", shell.connection.address)
+        assertEquals(listOf("C"), recorder.redeemed)
+    }
+
+    @Test
+    fun aChangedCertificateAsksForANewInvite() {
+        val changed = ApiResult.Failure(Problem(type = CertificateProblem.CHANGED, title = "Server certificate changed", status = 0))
+        val shell = shell(redeem = changed)
+        runImmediate { shell.openInvite(link) }
+        assertEquals(InviteViewModel.CERTIFICATE_CHANGED, shell.invite.state.error)
     }
 
     @Test
