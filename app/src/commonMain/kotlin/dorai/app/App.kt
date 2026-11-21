@@ -12,7 +12,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import dorai.app.auth.LoginActions
 import dorai.app.auth.LoginScreen
 import dorai.app.components.ControlCenterFrame
-import dorai.app.connect.ConnectionMark
 import dorai.app.export.ExportViewModel
 import dorai.app.export.ValidationExportRoute
 import dorai.app.export.rememberWorkspaceFiles
@@ -20,6 +19,7 @@ import dorai.app.findings.FindingsRoute
 import dorai.app.inventory.InventoryRoute
 import dorai.app.review.ReviewRoute
 import dorai.app.shell.AccountBar
+import dorai.app.shell.LogoutButton
 import dorai.app.shell.Sections
 import dorai.app.shell.ShellViewModel
 import dorai.app.shell.Workspace
@@ -56,7 +56,6 @@ fun App(chrome: @Composable () -> Unit = {}) {
                         )
                     },
                     modifier = Modifier.weight(1f),
-                    corner = { ConnectionMark(shell.connection.status, shell.connection.address) },
                 )
             } else {
                 WorkspaceShell(shell, workspace, onLogout = { scope.launch { shell.logout() } }, Modifier.weight(1f))
@@ -78,16 +77,15 @@ private fun WorkspaceShell(shell: ShellViewModel, workspace: Workspace, onLogout
         modifier = modifier,
         sections = shellSections,
         onLanguage = shell::setLanguage,
+        account = { AccountBar(workspace.session) },
+        footer = { LogoutButton(onLogout) },
     ) { section ->
-        Column(Modifier.fillMaxSize()) {
-            AccountBar(workspace.session, onLogout)
-            Box(Modifier.weight(1f)) {
-                when (section) {
-                    Sections.INVENTORY -> InventoryRoute(workspace.inventory, canScan = workspace.canReview)
-                    Sections.REVIEW -> ReviewRoute(workspace.review, canDecide = workspace.canReview)
-                    Sections.FINDINGS -> FindingsRoute(workspace.findings, files, canCheck = workspace.canReview)
-                    else -> ValidationExportRoute(workspace.validation, export, canExport = workspace.canReview)
-                }
+        Box(Modifier.fillMaxSize()) {
+            when (section) {
+                Sections.INVENTORY -> InventoryRoute(workspace.inventory, canScan = workspace.canReview)
+                Sections.REVIEW -> ReviewRoute(workspace.review, canDecide = workspace.canReview)
+                Sections.FINDINGS -> FindingsRoute(workspace.findings, files, canCheck = workspace.canReview)
+                else -> ValidationExportRoute(workspace.validation, export, canExport = workspace.canReview)
             }
         }
     }
