@@ -1,5 +1,6 @@
 package dorai.server.fixtures
 
+import dorai.server.core.CostEntry
 import dorai.shared.model.BusinessFunction
 import dorai.shared.model.ChangeAction
 import dorai.shared.model.Citation
@@ -36,6 +37,7 @@ class FixtureData(
     val suggestions: List<Suggestion>,
 ) {
     val resources: List<Resource> = scan.resources.map { it.toResource(scan.costs) }
+    val costs: List<CostEntry> = scan.costs.map { CostEntry(it.resourceId, it.provider, it.month, it.amount, it.currency) }
 
     companion object {
         fun load(): FixtureData = FixtureData(
