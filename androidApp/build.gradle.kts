@@ -11,8 +11,9 @@ android {
         applicationId = "dorai.android"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionCode = 1
-        versionName = "1.0.0"
+        // From dorai.version in gradle.properties; the root build works out the code.
+        versionCode = project.extra["doraiVersionCode"] as Int
+        versionName = project.version.toString()
     }
 
     compileOptions {

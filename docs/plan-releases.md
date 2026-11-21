@@ -23,8 +23,9 @@ the server changed; nobody has to install it, because same major means compatibl
   problem, and the client shows who must update. No "continue anyway".
 - **Within a major, both sides tolerate the other.** `DoraiJson` already ignores unknown fields; every new
   field gets a default, so an older server that does not send it does not break a newer client.
-- **Versions are plain `X.Y.Z`**, major at least 1 (macOS refuses `0.x`), major and minor at most 255
-  (Windows MSI). No `-beta` suffix: a beta is a GitHub pre-release instead.
+- **Versions are plain `X.Y.Z`**: major 1 to 255 (macOS refuses `0.x`, Windows MSI stops at 255), minor and
+  patch 0 to 99 (so Android's `versionCode` always goes up). No `-beta` suffix: a beta is a GitHub
+  pre-release instead.
 - **Not every merge is a release.** Whoever cuts a release bumps the version in a PR, then tags `main`.
   The first app release is `1.0.0`.
 
@@ -34,16 +35,17 @@ the server changed; nobody has to install it, because same major means compatibl
 
 1. `gradle.properties` gets `dorai.version=1.0.0`. It is the only place the version is written.
    It is readable locally, and a version bump shows up as a one-line PR.
-2. The root build reads it and checks the format (`X.Y.Z`, the limits above); a bad value fails the build.
-3. A small Gradle task generates `dorai.shared.DoraiVersion` into `shared` (common code), so the server,
+2. The root build reads it, checks the format (`X.Y.Z`, the limits above) and sets it as every module's
+   version; a bad value fails the build.
+3. A small Gradle task generates `dorai.shared.DoraiBuild.VERSION` into `shared` (common code), so the server,
    the apps and the CLI all know their own version at runtime. Same idea as Android's `BuildConfig`, no plugin.
 4. `app/build.gradle.kts`: `packageVersion` comes from the property, and `windows { upgradeUuid = ... }`
    gets a fixed UUID, so installing `1.2.0` upgrades `1.1.0` instead of installing next to it.
 5. `androidApp/build.gradle.kts`: `versionName` from the property, `versionCode` worked out as
    `major * 10000 + minor * 100 + patch` (`1.2.3` gives `10203`), so it always goes up.
 6. `dorai --version` prints the version; the desktop and Android apps show it somewhere small (Luka
-   picks where, the value comes from `DoraiVersion`).
-7. Tests: version parsing and limits, the `versionCode` formula.
+   picks where, the value comes from `DoraiBuild.VERSION`).
+7. Tests: `dorai --version` prints the product version. A bad version fails the build itself.
 
 ### 1b. Release workflow (PR `david/release-workflow`)
 
@@ -103,12 +105,14 @@ New `.github/workflows/release.yml`, started by a `v*` tag, next to the existing
 - Client major higher: problem `server-outdated`, the admin must update the server.
 - Both as `application/problem+json`, same style as the existing types in `Problems.kt`, status
   `426 Upgrade Required`, the server version in the response header.
-- A request without the header passes (curl, scripts, health checks). Every DORAi client sends it.
+- A request without the header is blocked too (`400`, problem `client-version-missing`): every caller of the
+  API states its version. `/api/health` stays open, and scripts that call the API (for example
+  `scripts/dev-local.sh`) send the header.
 
 ### Clients
 
 - `DoraiApi` adds the header to every request and exposes the server version it last saw.
-- `dorai.shared` gets `DoraiVersion.isCompatible(other)` (same major) and, for later, a helper to check
+- `dorai.shared` gets a `Version` type with `isCompatibleWith(other)` (same major) and, for later, a helper to check
   that a server's minor is high enough for a given feature. No feature uses it yet.
 - Apps: both problem types become a clear blocking message ("Update DORAi to version 2" or "Your
   server runs 1.9; this app needs 2.x, ask your admin"). The login page shows the same from `/api/health`.
@@ -117,7 +121,7 @@ New `.github/workflows/release.yml`, started by a `v*` tag, next to the existing
 
 ### Tests
 
-- Server: same version, different minor, client major lower, client major higher, missing header,
+- Server: same version, different minor, client major lower, client major higher, missing or malformed header,
   `/api/health` never blocked, response header always present.
 - Client: header sent on every call, server version read from the response, both problem types mapped.
 - CLI: exit code on mismatch.
@@ -128,11 +132,11 @@ New `.github/workflows/release.yml`, started by a `v*` tag, next to the existing
 - `1.6` against `1.9` works with no warning.
 - `./gradlew build` passes offline.
 
-## Open choices (confirm before each phase)
+## Choices made
 
-| Choice | Recommendation | Alternative |
-|---|---|---|
-| Where the version lives | `gradle.properties`, tag must match it | CI passes it from the tag; local builds then need a placeholder version |
-| Release goes out as | Draft, a person publishes | Published at once by the workflow |
-| Request without a version header | Allowed | Blocked like a mismatch |
-| Status for a mismatch | `426 Upgrade Required` | `409 Conflict` |
+| Choice | Decided |
+|---|---|
+| Where the version lives | `gradle.properties`; the release fails if the tag does not match it |
+| Release goes out as | A draft; a person checks it and publishes it |
+| Request without a version header | Blocked; only `/api/health` stays open |
+| Status for a major mismatch | `426 Upgrade Required` |
