@@ -1,5 +1,7 @@
 package dorai.server.ai
 
+import dorai.server.ai.chat.FakeChatModel
+import dorai.server.ai.chat.KoogChatModel
 import dorai.server.ai.embed.FakeEmbedder
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -13,7 +15,7 @@ class AiConfigTest {
         val config = AiConfig.fromEnv(emptyMap())
 
         assertIs<FakeEmbedder>(config.embedder())
-        assertEquals(0.40, config.minSimilarity)
+        assertEquals(AiConfig.FAKE_MIN_SIMILARITY, config.minSimilarity)
         assertEquals(true, config.ingestOnStartup)
     }
 
@@ -23,6 +25,13 @@ class AiConfigTest {
 
         assertEquals(0.5, config.minSimilarity)
         assertEquals(false, config.ingestOnStartup)
+    }
+
+    @Test
+    fun openAiKeepsTheThresholdMeasuredForItsEmbeddingModel() {
+        val config = AiConfig.fromEnv(mapOf("DORAI_AI_PROVIDER" to "openai", "DORAI_AI_OPENAI_KEY" to "test-key-value"))
+
+        assertEquals(0.40, config.minSimilarity)
     }
 
     @Test
@@ -36,5 +45,19 @@ class AiConfigTest {
         val ai = AiConfig.fromEnv(mapOf("DORAI_AI_PROVIDER" to "openai", "DORAI_AI_OPENAI_KEY" to "test-key-value"))
 
         assertFalse("test-key-value" in ai.toString())
+    }
+
+    @Test
+    fun chatDefaultsToTheFakeModelAndReadsTheModelName() {
+        assertIs<FakeChatModel>(AiConfig.fromEnv(emptyMap()).chatModel())
+        assertEquals(KoogChatModel.DEFAULT_OPENAI_MODEL, AiConfig.fromEnv(emptyMap()).chatModelName)
+
+        val config = AiConfig.fromEnv(mapOf("DORAI_AI_PROVIDER" to "openai", "DORAI_AI_OPENAI_KEY" to "test-key-value", "DORAI_AI_CHAT_MODEL" to "gpt-5.4-mini"))
+        assertEquals("openai/gpt-5.4-mini", config.chatModel().modelId)
+    }
+
+    @Test
+    fun openAiChatWithoutKeyFails() {
+        assertFailsWith<IllegalArgumentException> { AiConfig.fromEnv(mapOf("DORAI_AI_PROVIDER" to "openai")).chatModel() }
     }
 }
