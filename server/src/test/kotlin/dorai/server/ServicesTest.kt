@@ -71,7 +71,7 @@ class ServicesTest {
     }
 
     @Test
-    fun noExporterMeansNotImplemented() = withServices(fixtureServices()) { api ->
+    fun noExporterMeansNotImplemented() = withServices(fixtureServices().copy(exporter = null)) { api ->
         assertIs<ApiResult.Failure>(api.exportCsv()).also { assertEquals(501, it.problem.status) }
     }
 }

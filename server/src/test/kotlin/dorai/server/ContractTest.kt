@@ -108,9 +108,9 @@ class ContractTest {
     }
 
     @Test
-    fun exportIsNotAvailableYet() = contract { api ->
-        assertEquals(501, api.exportCsv().failure().problem.status)
-        assertEquals(501, api.exportPdf().failure().problem.status)
+    fun csvAndPdfExportsAreAvailable() = contract { api ->
+        assertTrue(api.exportCsv().ok().take(2) == listOf(0x50.toByte(), 0x4b.toByte()))
+        assertEquals("%PDF-", api.exportPdf().ok().take(5).toByteArray().decodeToString())
     }
 
     @Test
