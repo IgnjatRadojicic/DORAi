@@ -298,7 +298,7 @@ class DoraiApi(
     /** The file name of a `Content-Disposition: attachment` header, without any folder part. */
     private fun HttpResponse.attachmentName(): String? =
         headers[HttpHeaders.ContentDisposition]?.let { runCatching { ContentDisposition.parse(it).parameter(ContentDisposition.Parameters.FileName) }.getOrNull() }
-            ?.substringAfterLast('/')?.substringAfterLast('\')?.takeIf { it.isNotBlank() }
+            ?.substringAfterLast('/')?.substringAfterLast('\\')?.takeIf { it.isNotBlank() }
 
     private suspend fun HttpResponse.toProblem(): Problem {
         val text = bodyAsText()
