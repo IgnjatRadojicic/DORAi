@@ -8,15 +8,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import dorai.app.components.*
+import dorai.shared.model.Tokens
 
-/** Shows which server the workspace talks to, with a way back to the Connect screen. */
+/** Who is signed in, with the way back to the login page. */
 @Composable
-fun ServerBar(address: String, onChangeServer: () -> Unit, modifier: Modifier = Modifier) {
+fun AccountBar(session: Tokens, onLogout: () -> Unit, modifier: Modifier = Modifier) {
     Row(modifier.fillMaxWidth().padding(bottom = 16.dp), verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-        LineIcon(ProductIcon.CLOUD, size = 14.dp)
-        MetaText(address, Modifier.weight(1f))
-        ProductButton("Change server", onChangeServer, outlined = true)
+        Spacer(Modifier.weight(1f))
+        MetaText(session.username)
+        OutlineChip(session.role.name)
+        ProductButton("Log out", onLogout, outlined = true)
     }
 }
 

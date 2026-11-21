@@ -4,16 +4,21 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import dorai.app.auth.LoginGateway
+import dorai.app.auth.LoginViewModel
 import dorai.app.components.AppLanguage
 import dorai.app.components.WorkspaceSection
 import dorai.app.components.matijaSections
-import dorai.app.connect.ConnectViewModel
+import dorai.app.connect.ConnectionViewModel
 import dorai.app.connect.ServerProbe
 import dorai.app.connect.defaultServerAddress
 import dorai.app.findings.FindingsViewModel
 import dorai.app.theme.ThemeMode
 import dorai.app.validation.ValidationViewModel
 import dorai.shared.api.DoraiApi
+import dorai.shared.api.MemoryTokenStore
+import dorai.shared.model.Role
+import dorai.shared.model.Tokens
 
 object Sections {
     const val INVENTORY = "inventory"
@@ -34,40 +39,45 @@ data class ShellState(
     val language: AppLanguage = AppLanguage.ENGLISH,
 )
 
-/** Everything that belongs to one server connection. Closed when the user changes server. */
-class Workspace(val address: String, val api: DoraiApi) : AutoCloseable {
+/** Everything that belongs to one signed-in user. Dropped on logout, so results never carry over. */
+class Workspace(val session: Tokens, api: DoraiApi) {
     val sources = ServerSources(api)
     val findings = FindingsViewModel(sources.findings)
     val validation = ValidationViewModel(sources.validation)
-    override fun close() = api.close()
+
+    /** The app only hides what the role can't use; the server checks every call. */
+    val canReview: Boolean get() = session.role >= Role.Reviewer
 }
 
-/** Root state of the app: which server, which section, theme and language. Kept in memory for now. */
+/** Root state of the app: connection, login, section, theme and language. Kept in memory for now. */
 class ShellViewModel(
-    probe: ServerProbe = ServerProbe { address -> DoraiApi(address).use { it.health() } },
-    private val openApi: (String) -> DoraiApi = { DoraiApi(it) },
+    address: String = defaultServerAddress,
+    private val api: DoraiApi = DoraiApi(address, tokens = MemoryTokenStore()),
+    probe: ServerProbe = ServerProbe { api.health() },
+    gateway: LoginGateway = LoginGateway { username, password -> api.login(username, password) },
 ) : ViewModel() {
     var state by mutableStateOf(ShellState())
         private set
 
-    /** The connected workspace, or null while the Connect screen is shown. */
+    /** The signed-in workspace, or null while the login page is shown. */
     var workspace by mutableStateOf<Workspace?>(null)
         private set
 
-    val connect = ConnectViewModel(defaultServerAddress, probe)
+    val connection = ConnectionViewModel(address, probe)
+    val login = LoginViewModel(gateway)
 
-    /** Runs the Connect screen's check and opens a fresh workspace when the server answers. */
-    suspend fun connect() {
-        val address = connect.connect() ?: return
-        workspace?.close()
-        workspace = Workspace(address, openApi(address))
+    /** Runs the login page and opens the platform when the server accepts it. */
+    suspend fun login() {
+        val session = login.login() ?: return
+        workspace = Workspace(session, api)
         state = state.copy(section = Sections.INVENTORY)
     }
 
-    /** Back to the Connect screen; results from the old server are dropped with its workspace. */
-    fun changeServer() {
-        workspace?.close()
+    /** Back to the login page at once, then ends the session on the server. */
+    suspend fun logout() {
+        if (workspace == null) return
         workspace = null
+        api.logout()
     }
 
     fun select(section: String) {
@@ -78,5 +88,5 @@ class ShellViewModel(
 
     fun setLanguage(language: AppLanguage) { state = state.copy(language = language) }
 
-    override fun onCleared() = changeServer()
+    override fun onCleared() = api.close()
 }

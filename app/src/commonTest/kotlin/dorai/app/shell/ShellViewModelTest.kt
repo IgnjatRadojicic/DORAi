@@ -2,58 +2,97 @@ package dorai.app.shell
 
 import dorai.app.components.AppLanguage
 import dorai.app.components.runImmediate
-import dorai.app.connect.ServerProbe
+import dorai.app.connect.ServerStatus
 import dorai.app.theme.ThemeMode
 import dorai.shared.api.ApiResult
 import dorai.shared.api.DoraiApi
 import dorai.shared.model.Health
+import dorai.shared.model.LoginResponse
 import dorai.shared.model.Problem
+import dorai.shared.model.Role
+import dorai.shared.model.Tokens
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNotSame
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
+import kotlin.time.ExperimentalTime
+import kotlin.time.Instant
 
+@OptIn(ExperimentalTime::class)
 class ShellViewModelTest {
-    private val healthy = ServerProbe { ApiResult.Success(Health("ok", "DORAi")) }
+    private fun tokens(role: Role) = Tokens(
+        accessToken = "access", accessExpiresAt = Instant.fromEpochSeconds(0),
+        refreshToken = "refresh", refreshExpiresAt = Instant.fromEpochSeconds(0),
+        username = "luka", role = role,
+    )
 
-    // DoraiApi only builds a client here; no test makes a request.
-    private fun shell(probe: ServerProbe = healthy) = ShellViewModel(probe) { DoraiApi(it) }
+    // DoraiApi only builds a client here; health and login are fakes, and logout has no tokens to send.
+    private fun shell(answer: ApiResult<LoginResponse> = ApiResult.Success(LoginResponse(false, tokens(Role.Reviewer)))) =
+        ShellViewModel(
+            address = "http://localhost:8080",
+            api = DoraiApi("http://localhost:8080"),
+            probe = { ApiResult.Success(Health("ok", "DORAi")) },
+            gateway = { _, _ -> answer },
+        )
 
-    @Test
-    fun startsOnTheConnectScreenWithTheDefaultAddress() {
-        val shell = shell()
-        assertNull(shell.workspace)
-        assertEquals(dorai.app.connect.defaultServerAddress, shell.connect.state.address)
+    private fun ShellViewModel.signIn() {
+        login.onUsernameChange("luka")
+        login.onPasswordChange("correct horse battery")
+        runImmediate { login() }
     }
 
     @Test
-    fun aHealthyServerOpensTheWorkspaceOnCloudInventory() {
+    fun startsOnTheLoginPage() {
+        val shell = shell()
+        assertNull(shell.workspace)
+        assertEquals("http://localhost:8080", shell.connection.address)
+        assertEquals(ServerStatus.CHECKING, shell.connection.status)
+    }
+
+    @Test
+    fun theConnectionMarkTurnsGreenWhenTheServerAnswers() {
+        val shell = shell()
+        runImmediate { shell.connection.check() }
+        assertEquals(ServerStatus.CONNECTED, shell.connection.status)
+    }
+
+    @Test
+    fun aSuccessfulLoginOpensThePlatformOnCloudInventory() {
         val shell = shell()
         shell.select(Sections.EXPORT)
-        shell.connect.onAddressChange("http://localhost:8080/")
-        runImmediate { shell.connect() }
-        assertEquals("http://localhost:8080", shell.workspace?.address)
+        shell.signIn()
+        assertEquals("luka", shell.workspace?.session?.username)
         assertEquals(Sections.INVENTORY, shell.state.section)
     }
 
     @Test
-    fun anUnreachableServerKeepsTheConnectScreen() {
-        val shell = shell { ApiResult.Failure(Problem(title = "Network error", status = 0)) }
-        runImmediate { shell.connect() }
+    fun aRefusedLoginStaysOnTheLoginPage() {
+        val shell = shell(ApiResult.Failure(Problem(title = "Unauthorized", status = 401, detail = "Wrong username or password.")))
+        shell.signIn()
         assertNull(shell.workspace)
-        assertNotNull(shell.connect.state.error)
+        assertNotNull(shell.login.state.error)
     }
 
     @Test
-    fun changingServerDropsTheWorkspaceAndANewConnectionStartsClean() {
+    fun logoutReturnsToLoginAndTheNextLoginStartsClean() {
         val shell = shell()
-        runImmediate { shell.connect() }
+        shell.signIn()
         val first = shell.workspace
-        shell.changeServer()
+        runImmediate { shell.logout() }
         assertNull(shell.workspace)
-        runImmediate { shell.connect() }
+        assertEquals("", shell.login.state.password)
+        shell.signIn()
         assertNotSame(first, shell.workspace)
+    }
+
+    @Test
+    fun reviewersAndAdminsMayCheckAndExportViewersMayNot() {
+        assertFalse(Workspace(tokens(Role.Viewer), DoraiApi("http://localhost:8080")).canReview)
+        assertTrue(Workspace(tokens(Role.Reviewer), DoraiApi("http://localhost:8080")).canReview)
+        assertTrue(Workspace(tokens(Role.Admin), DoraiApi("http://localhost:8080")).canReview)
     }
 
     @Test
