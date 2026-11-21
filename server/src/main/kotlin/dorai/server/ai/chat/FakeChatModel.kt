@@ -119,7 +119,7 @@ class FakeChatModel : ChatModel {
 
         /** Platform services first, so "db_instance" is a database and not a virtual machine. */
         val typeRules = listOf(
-            TypeRule("S18", "managed database (PaaS)", listOf("postgres", "sql", "cosmos", "database", "dynamodb", "rds", "redis", "cache")),
+            TypeRule("S18", "managed database (PaaS)", listOf("postgres", "sql", "cosmos", "database", "db_instance", "dynamodb", "rds", "redis", "cache")),
             TypeRule("S18", "managed application platform (PaaS)", listOf("microsoft.web/", "app_service", "function", "lambda", "kubernetes", "container", "aks", "eks")),
             TypeRule(
                 "S18",
