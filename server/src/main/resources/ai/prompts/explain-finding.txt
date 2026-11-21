@@ -1,0 +1,4 @@
+Task: explain-finding
+A deterministic rule has already produced the finding below. Do not question, change or re-rate it.
+Write one sentence on why it matters for the DORA register of information, based only on the supplied evidence.
+Answer with: explanation, citationIds (at least one id from the supplied evidence; no other ids).
