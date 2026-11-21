@@ -1,22 +1,9 @@
 # What the Docker deployment (deploy/, Dockerfile, server-image workflow) still needs.
-# The stack runs today: server on HTTP with fixtures, database, nightly backups.
+# The stack runs today: server on HTTP with the register in PostgreSQL, nightly backups.
 # Each item: what is missing, why it matters, who owns it, when it lands.
 # Remove an item when it is done.
 
 server:
-  - id: db-connection
-    missing: Server reads DORAI_DB_URL, DORAI_DB_USER, DORAI_DB_PASSWORD, opens a HikariCP pool and runs Flyway on start.
-    why: Compose already passes these, but the server ignores them and keeps everything in fixtures.
-    owner: Ignjat
-    phase: 2
-
-  - id: pgvector-extension
-    missing: First Flyway migration runs CREATE EXTENSION IF NOT EXISTS vector.
-    why: The image ships pgvector, but the extension must be enabled per database; doing it in a migration
-      also covers Testcontainers and firms that bring their own PostgreSQL.
-    owner: Ignjat (migration), David (vector tables)
-    phase: 2
-
   - id: tls
     missing: On first start, generate a self-signed keystore at DORAI_TLS_KEYSTORE (password DORAI_TLS_KEYSTORE_PASSWORD)
       if none exists, serve HTTPS on DORAI_TLS_PORT (8443), and log the SHA-256 fingerprint.
@@ -58,7 +45,8 @@ server:
     phase: 4
 
   - id: regulation-ingestion
-    missing: A way to load the DORA regulation texts into pgvector on a fresh install (command or first-start job).
+    missing: A Flyway migration for the regulation tables (pgvector is already enabled in V1), and a way to
+      load the DORA regulation texts into them on a fresh install (command or first-start job).
     why: AI answers need citations, so an empty vector store means every answer is "insufficient evidence".
     owner: David
     phase: 4
