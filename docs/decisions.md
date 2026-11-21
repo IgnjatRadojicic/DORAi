@@ -23,3 +23,6 @@ One line each: date, who, decision, why. Newest at the bottom.
 - 2026-11-21, Ignjat: File dialogs with FileKit. Why: one Compose API for desktop and Android, no platform code.
 - 2026-11-21, Ignjat: Server generates a self-signed TLS keystore on first start (ktor-network-tls-certificates) unless one is configured. Why: zero setup for firms and the demo; the fingerprint goes in the invite link.
 - 2026-11-21, Ignjat: ViewModel and Flow tests use Turbine. Why: short, readable assertions on StateFlow emissions.
+- 2026-11-21, Ignjat: Service interfaces live in `dorai.server.core` (collectors, cost, repositories, AI, exporter) and `dorai.shared.rules` (plan checker, validator); routes call only these. Why: each lane replaces a fixture or fake behind an interface without touching routes or other lanes.
+- 2026-11-21, Ignjat: Wiring by hand through one `Services` data class, no DI framework. Why: a dozen dependencies don't need a container, and tests swap one piece with `copy`.
+- 2026-11-21, Ignjat: AI services return `AiAnswer` (answer with at least one citation, insufficient evidence, or failed). Why: the type itself enforces the cite-or-say-so rule.
