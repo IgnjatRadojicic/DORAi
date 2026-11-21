@@ -1,7 +1,11 @@
 package dorai.server
 
+import dorai.server.ai.AiConfig
+import dorai.server.ai.regulationSearch
 import dorai.server.check.checkRoutes
 import dorai.server.core.Services
+import dorai.server.db.DatabaseConfig
+import dorai.server.db.connectDatabase
 import dorai.server.fixtures.fixtureServices
 import dorai.server.register.registerRoutes
 import dorai.server.review.suggestionRoutes
@@ -29,11 +33,19 @@ import io.ktor.server.routing.routing
 
 fun main() {
     val port = System.getenv("DORAI_PORT")?.toIntOrNull() ?: 8080
-    embeddedServer(Netty, port = port, module = Application::module).start(wait = true)
+    val services = serverServices()
+    embeddedServer(Netty, port = port) { module(services) }.start(wait = true)
 }
 
 /** Phase 1 wiring: fixtures, in-memory storage, no AI. Later phases pass real services. */
 fun Application.module() = module(fixtureServices())
+
+/** Fixtures, plus regulation search on PostgreSQL with pgvector when `DORAI_DB_URL` is set. */
+private fun serverServices(): Services {
+    val base = fixtureServices()
+    val database = DatabaseConfig.fromEnv()?.let(::connectDatabase) ?: return base
+    return base.copy(regulationSearch = regulationSearch(database, AiConfig.fromEnv()))
+}
 
 fun Application.module(services: Services) {
     install(ContentNegotiation) { json(DoraiJson) }
