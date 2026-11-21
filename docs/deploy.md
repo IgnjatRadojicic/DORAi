@@ -2,6 +2,7 @@
 
 The firm runs DORAi on its own host with Docker. Everything needed is in `deploy/`:
 `compose.yaml`, `.env.example` and `backup.sh`. No source code or JDK is needed on the host.
+What the deployment still lacks is tracked in `docs/docker-missing.yml`.
 
 ## What runs
 
