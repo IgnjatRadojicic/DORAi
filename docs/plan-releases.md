@@ -75,6 +75,19 @@ New `.github/workflows/release.yml`, started by a `v*` tag, next to the existing
   `macos-latest` builds for Apple Silicon only.
 - Uses only `gh` (already on the runners) and the actions the repo already uses; no new third-party action.
 
+### Android release key (once)
+
+Made once by whoever holds it, never committed (`*.jks` is ignored), backed up outside the repo:
+
+```bash
+keytool -genkeypair -v -keystore dorai-release.jks -alias dorai -keyalg RSA -keysize 4096 -validity 10000
+```
+
+Then a repository admin adds four secrets under Settings, Secrets and variables, Actions:
+`ANDROID_KEYSTORE_BASE64` (output of `base64 -w0 dorai-release.jks`), `ANDROID_KEYSTORE_PASSWORD`,
+`ANDROID_KEY_ALIAS` (`dorai`) and `ANDROID_KEY_PASSWORD`. Without them the `android` job fails with
+a message naming the missing secret. The build reads them as `DORAI_ANDROID_*` environment variables.
+
 ### Cutting a release
 
 1. PR that bumps `dorai.version` (and nothing else), merged to `main`.
