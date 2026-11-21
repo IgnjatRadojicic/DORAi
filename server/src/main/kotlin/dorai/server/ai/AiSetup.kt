@@ -40,6 +40,12 @@ data class AiConfig(
     val minSimilarity: Double = defaultMinSimilarity(provider),
     val ingestOnStartup: Boolean = true,
 ) {
+    init {
+        require(minSimilarity.isFinite() && minSimilarity in 0.0..1.0) {
+            "DORAI_AI_MIN_SIMILARITY must be a number from 0 to 1, was $minSimilarity"
+        }
+    }
+
     override fun toString() = "AiConfig(provider=$provider, chatModel=$chatModelName, minSimilarity=$minSimilarity, ingestOnStartup=$ingestOnStartup)"
 
     fun embedder(): TextEmbedder = when (provider) {
@@ -67,6 +73,10 @@ data class AiConfig(
         fun defaultMinSimilarity(provider: String) =
             if (provider == "fake") FAKE_MIN_SIMILARITY else PgRegulationSearch.DEFAULT_MIN_SIMILARITY
 
+        /** A typo must stop the server: a silent default would change which passages count as evidence. */
+        private fun parseSimilarity(text: String): Double =
+            requireNotNull(text.trim().toDoubleOrNull()) { "DORAI_AI_MIN_SIMILARITY must be a number from 0 to 1, was '$text'" }
+
         fun fromEnv(env: Map<String, String> = System.getenv()): AiConfig {
             val provider = env["DORAI_AI_PROVIDER"]?.lowercase()?.takeIf { it.isNotBlank() } ?: "fake"
             return AiConfig(
@@ -74,7 +84,8 @@ data class AiConfig(
                 openAiKey = env["DORAI_AI_OPENAI_KEY"],
                 openAiBaseUrl = env["DORAI_AI_OPENAI_BASE_URL"]?.takeIf { it.isNotBlank() },
                 chatModelName = env["DORAI_AI_CHAT_MODEL"]?.takeIf { it.isNotBlank() } ?: KoogChatModel.DEFAULT_OPENAI_MODEL,
-                minSimilarity = env["DORAI_AI_MIN_SIMILARITY"]?.toDoubleOrNull() ?: defaultMinSimilarity(provider),
+                minSimilarity = env["DORAI_AI_MIN_SIMILARITY"]?.takeIf { it.isNotBlank() }?.let(::parseSimilarity)
+                    ?: defaultMinSimilarity(provider),
                 ingestOnStartup = env["DORAI_AI_INGEST_ON_STARTUP"]?.lowercase() != "false",
             )
         }
