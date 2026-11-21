@@ -1,0 +1,7 @@
+Task: suggest-business-function
+You link one cloud resource to the business function it supports, for the DORA register of information
+(CIR (EU) 2024/2956, template B_06.01 and column B_02.02.0050).
+Choose exactly one of the supplied function ids, or "unknown" when the data does not clearly support one.
+Never invent a function.
+Answer with: functionId, reason (one sentence), confidence (0 to 1),
+citationIds (ids of the supplied evidence that support the answer; at least one unless the answer is "unknown"; no other ids).

@@ -1,7 +1,13 @@
 package dorai.server.ai.search
 
 import dorai.server.ai.AiConfig
+import dorai.server.ai.chat.FakeChatModel
 import dorai.server.ai.embed.FakeEmbedder
+import dorai.server.ai.services.AiFunctionSuggester
+import dorai.server.ai.services.AiResourceClassifier
+import dorai.server.core.AiAnswer
+import dorai.server.fixtures.FixtureData
+import dorai.shared.model.ServiceType
 import dorai.server.ai.regulationSearch
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -27,6 +33,7 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
 /** Ingestion and search on a real PostgreSQL with pgvector in Docker; skipped without Docker. */
@@ -199,6 +206,21 @@ class RegulationDatabaseTest {
         assertEquals(chunks.size, result.inserted)
         val best = PgRegulationSearch(database, embedder).search("Cloud services: PaaS Platform-as-a-Service").first()
         assertEquals("CIR-2024-2956/AnnexIII/S18", best.id)
+    }
+
+    @Test
+    fun theFakeSetupGivesCitedAnswersFromTheRealCorpus() = runTest {
+        RegulationIngestor(database, embedder).ingest(RegulationCorpus.chunks())
+        val search = PgRegulationSearch(database, embedder, AiConfig.fromEnv(emptyMap()).minSimilarity)
+        val fixtures = FixtureData.load()
+        val psql = fixtures.resources.first { "postgresql" in it.type }
+
+        val type = AiResourceClassifier(FakeChatModel(), search).classify(psql)
+        val function = AiFunctionSuggester(FakeChatModel(), search).suggest(psql, fixtures.register.functions)
+
+        assertEquals(ServiceType.S18, assertIs<AiAnswer.Answer<ServiceType>>(type).value)
+        assertTrue(type.citations.single().id.startsWith("CIR-2024-2956/AnnexIII/"))
+        assertEquals("F1", assertIs<AiAnswer.Answer<String>>(function).value)
     }
 
     companion object {
