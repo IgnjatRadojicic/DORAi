@@ -11,3 +11,9 @@ captures/
 *.keystore
 .env
 *.env
+
+# Personal briefs, shared over Discord only
+ignjat.md
+david.md
+luka.md
+matija.md
