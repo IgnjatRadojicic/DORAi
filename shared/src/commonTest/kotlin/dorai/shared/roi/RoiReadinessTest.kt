@@ -159,3 +159,34 @@ class SaasAppChecksTest {
         assertTrue("Slack, Slack Huddles" in issue.message, issue.message)
     }
 }
+
+class ConcentrationChecksTest {
+    private val parent = dorai.shared.rules.leiFrom("TEST00PARENT000001")
+
+    private fun twoFromOneGroup(): Register {
+        val base = Roi.register(providerRoi = mapOf("B_05.01.0110" to parent, "B_05.01.0120" to "LEI"))
+        val p2 = base.providers.single().copy(id = "P2", name = "Microsoft Germany GmbH", lei = Roi.field(dorai.shared.rules.leiFrom("TEST00PROVIDER0002")))
+        val c2 = Roi.contract(listOf(Roi.service(id = "C2-S1"))).copy(id = "C2", providerId = "P2")
+        return base.copy(providers = base.providers + p2, contracts = base.contracts + c2)
+    }
+
+    private fun check(r: Register) = ConcentrationChecks.check(RoiTables.build(r, emptyList(), Roi.date), r)
+
+    @Test
+    fun `providers of one group behind a critical function are flagged`() {
+        val issue = check(twoFromOneGroup()).single { it.code == "art29-same-group" }
+        assertTrue("Microsoft Germany GmbH" in issue.message && parent in issue.message, issue.message)
+    }
+
+    @Test
+    fun `a single provider is not a group concentration`() {
+        assertTrue(check(Roi.register()).none { it.code.startsWith("art29") })
+    }
+
+    @Test
+    fun `a hard to substitute contract without exit plan or alternative is flagged`() {
+        val c = Roi.contract(listOf(Roi.service(roi = mapOf("B_07.01.0050" to "1", "B_07.01.0080" to "false", "B_07.01.0110" to "2"))))
+        val codes = check(Roi.register(listOf(c))).map { it.code }.toSet()
+        assertTrue("art28-no-exit-plan" in codes && "art28-no-alternative" in codes, codes.toString())
+    }
+}

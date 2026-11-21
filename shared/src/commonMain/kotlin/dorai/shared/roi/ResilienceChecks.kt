@@ -1,5 +1,6 @@
 package dorai.shared.roi
 
+import dorai.shared.model.BusinessFunction
 import dorai.shared.model.ProvenanceLabel
 import dorai.shared.model.Redundancy
 import dorai.shared.model.Register
@@ -16,8 +17,7 @@ object ResilienceChecks {
 
     fun check(register: Register, resources: List<Resource>): List<ValidationIssue> = buildList {
         register.functions.forEach { f ->
-            val critical = f.roi["B_06.01.0060"]?.takeIf { it.provenance.label != ProvenanceLabel.AiSuggested }?.value?.let { it == "1" } ?: f.isCritical
-            if (!critical) return@forEach
+            if (!isCritical(f)) return@forEach
             val own = resources.filter { it.functionId == f.id }
             if (own.isEmpty()) return@forEach
             val stores = own.filter { ResourceKinds.storesData(it.type) }
@@ -38,6 +38,10 @@ object ResilienceChecks {
             }
         }
     }
+
+    /** The reviewer's criticality (B_06.01.0060, option 1) when set, otherwise the function's own flag. */
+    fun isCritical(f: BusinessFunction): Boolean =
+        f.roi["B_06.01.0060"]?.takeIf { it.provenance.label != ProvenanceLabel.AiSuggested }?.value?.let { it == "1" } ?: f.isCritical
 
     private fun warn(code: String, field: String, message: String, id: String) =
         ValidationIssue(ValidationSeverity.Warning, code, "B_06.01", field, message, id)
