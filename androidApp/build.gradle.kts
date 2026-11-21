@@ -16,6 +16,25 @@ android {
         versionName = project.version.toString()
     }
 
+    // The release workflow signs with the one release key through DORAI_ANDROID_* variables.
+    // Without them (local builds) the release APK stays unsigned; debug builds always use the debug key.
+    val releaseKeystore = providers.environmentVariable("DORAI_ANDROID_KEYSTORE").orNull
+    signingConfigs {
+        if (releaseKeystore != null) {
+            create("release") {
+                storeFile = file(releaseKeystore)
+                storePassword = providers.environmentVariable("DORAI_ANDROID_KEYSTORE_PASSWORD").get()
+                keyAlias = providers.environmentVariable("DORAI_ANDROID_KEY_ALIAS").get()
+                keyPassword = providers.environmentVariable("DORAI_ANDROID_KEY_PASSWORD").get()
+            }
+        }
+    }
+    buildTypes {
+        release {
+            if (releaseKeystore != null) signingConfig = signingConfigs.getByName("release")
+        }
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
