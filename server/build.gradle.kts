@@ -35,6 +35,7 @@ dependencies {
     implementation(libs.azure.resourcemanager.costmanagement)
     implementation(libs.aws.resourcegroupstaggingapi)
     implementation(libs.aws.costexplorer)
+    implementation(libs.aws.resourceexplorer2)
     implementation(libs.aws.s3)
     implementation(libs.aws.dynamodb)
     implementation(libs.aws.lambda)

@@ -87,6 +87,7 @@ password4j = { module = "com.password4j:password4j", version.ref = "password4j" 
 aws-sts = { module = "aws.sdk.kotlin:sts", version.ref = "aws-sdk-kotlin" }
 aws-resourcegroupstaggingapi = { module = "aws.sdk.kotlin:resourcegroupstaggingapi", version.ref = "aws-sdk-kotlin" }
 aws-costexplorer = { module = "aws.sdk.kotlin:costexplorer", version.ref = "aws-sdk-kotlin" }
+aws-resourceexplorer2 = { module = "aws.sdk.kotlin:resourceexplorer2", version.ref = "aws-sdk-kotlin" }
 # Demo only: LocalStack has no Tagging API results, so the collector lists these services one by one.
 aws-s3 = { module = "aws.sdk.kotlin:s3", version.ref = "aws-sdk-kotlin" }
 aws-dynamodb = { module = "aws.sdk.kotlin:dynamodb", version.ref = "aws-sdk-kotlin" }

@@ -53,6 +53,17 @@ object AwsArns {
 
     data class DailyCost(val resourceId: String, val day: LocalDate, val amount: Double, val currency: String)
 
+    /**
+     * Adds the resources only Resource Explorer returned (never tagged, so no function or contract yet).
+     * Global resources come back with region "global"; their ARN carries no region either.
+     */
+    fun withUntagged(tagged: List<Resource>, explorer: List<Pair<String, String>>): List<Resource> {
+        val seen = tagged.map { it.id.lowercase() }.toMutableSet()
+        val extra = explorer.filter { seen.add(it.first.lowercase()) }
+            .map { (arn, region) -> toResource(arn, emptyMap(), region.takeUnless { it == "global" }.orEmpty()) }
+        return tagged + extra
+    }
+
     data class SellerCost(val seller: String, val month: LocalDate, val amount: Double, val currency: String)
 
     /** Seller rows to vendor cost entries; AWS's own billing entities are the cloud itself, not a vendor. */

@@ -137,6 +137,20 @@ class AzureRowsTest {
     }
 
     @Test
+    fun resourceExplorerAddsOnlyResourcesTheTaggingApiMissed() {
+        val tagged = listOf(AwsArns.toResource("arn:aws:s3:::finpay-statements", mapOf("dora-function" to "F3"), "eu-central-1"))
+        val all = AwsArns.withUntagged(tagged, listOf(
+            "arn:aws:s3:::finpay-statements" to "eu-central-1",
+            "arn:aws:s3:::finpay-logs" to "eu-west-1",
+            "arn:aws:iam::1:role/x" to "global",
+        ))
+        assertEquals(3, all.size)
+        assertEquals("F3", all.first().functionId)
+        val logs = all.single { it.id == "arn:aws:s3:::finpay-logs" }
+        assertEquals("eu-west-1" to null, logs.location to logs.functionId)
+    }
+
+    @Test
     fun theQueryNarrowsToTheResourceGroupOnlyWhenSet() {
         assertTrue("resourceGroup" !in AzureRows.query(null))
         assertTrue("| where resourceGroup =~ 'rg-finpay-prod'" in AzureRows.query("rg-finpay-prod"))

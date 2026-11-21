@@ -10,6 +10,8 @@ import aws.sdk.kotlin.services.costexplorer.model.Expression
 import aws.sdk.kotlin.services.costexplorer.model.Granularity
 import aws.sdk.kotlin.services.costexplorer.model.GroupDefinition
 import aws.sdk.kotlin.services.costexplorer.model.GroupDefinitionType
+import aws.sdk.kotlin.services.resourceexplorer2.ResourceExplorer2Client
+import aws.sdk.kotlin.services.resourceexplorer2.paginators.listResourcesPaginated
 import aws.sdk.kotlin.services.resourcegroupstaggingapi.ResourceGroupsTaggingClient
 import aws.sdk.kotlin.services.resourcegroupstaggingapi.paginators.getResourcesPaginated
 import dorai.server.collect.LiveConfig
@@ -30,8 +32,10 @@ import kotlinx.datetime.minus
 import org.slf4j.LoggerFactory
 
 /**
- * Real AWS: the Resource Groups Tagging API, one call chain per configured region. Credentials come from the
- * standard chain (AWS_* variables, profile, role). Limit: resources that were never tagged are not returned.
+ * Real AWS: the Resource Groups Tagging API, one call chain per configured region, plus Resource Explorer
+ * for resources that were never tagged. Credentials come from the standard chain (AWS_* variables, profile,
+ * role). Resource Explorer needs an index (and a default view) in the region; without one the scan keeps
+ * the tagged resources only and logs why.
  */
 class AwsTaggingCollector(private val config: LiveConfig) : CloudCollector {
     override val provider = ServiceTypeTable.AWS
@@ -47,7 +51,28 @@ class AwsTaggingCollector(private val config: LiveConfig) : CloudCollector {
                     }
             }
         }
-        return CollectResult(resources.distinctBy(Resource::id), ScanMode.Live)
+        val tagged = resources.distinctBy(Resource::id)
+        return CollectResult(AwsArns.withUntagged(tagged, untagged()), ScanMode.Live)
+    }
+
+    /** ARN and region of every resource Resource Explorer knows, tagged or not. */
+    private suspend fun untagged(): List<Pair<String, String>> = config.awsRegions.flatMap { region ->
+        try {
+            ResourceExplorer2Client.fromEnvironment { this.region = region }.use { client ->
+                client.listResourcesPaginated { maxResults = 1000 }.toList()
+                    .flatMap { it.resources.orEmpty() }
+                    .mapNotNull { r -> r.arn?.let { it to (r.region ?: region) } }
+            }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            log.warn("Resource Explorer unavailable in {}, untagged resources are not scanned: {}", region, e.message)
+            emptyList()
+        }
+    }
+
+    private companion object {
+        val log = LoggerFactory.getLogger(AwsTaggingCollector::class.java)
     }
 }
 
