@@ -42,6 +42,10 @@ What it does:
 
 On Windows use `gradlew.bat` or `.\gradlew`.
 
+To run the whole app locally with no cloud keys, use `scripts/dev-local.sh` (Git Bash on Windows). It starts a
+database in Docker, the server with the FinPay demo data and the fake AI, and the desktop app; log in as
+`admin` / `dorai-local-dev`. `--server` skips the app, `--stop` stops the database, `--reset` deletes it.
+
 Troubleshooting on Windows: if Gradle or the Android tools fail with "Unable to establish loopback
 connection", set `JAVA_TOOL_OPTIONS=-Djdk.net.unixdomain.tmpdir=C:\tmp` (any short existing folder).
 
