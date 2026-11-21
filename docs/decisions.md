@@ -26,3 +26,7 @@ One line each: date, who, decision, why. Newest at the bottom.
 - 2026-11-21, Ignjat: Service interfaces live in `dorai.server.core` (collectors, cost, repositories, AI, exporter) and `dorai.shared.rules` (plan checker, validator); routes call only these. Why: each lane replaces a fixture or fake behind an interface without touching routes or other lanes.
 - 2026-11-21, Ignjat: Wiring by hand through one `Services` data class, no DI framework. Why: a dozen dependencies don't need a container, and tests swap one piece with `copy`.
 - 2026-11-21, Ignjat: AI services return `AiAnswer` (answer with at least one citation, insufficient evidence, or failed). Why: the type itself enforces the cite-or-say-so rule.
+- 2026-11-21, Ignjat: Firms run the server with Docker Compose (`deploy/`); CI publishes the image to GHCR on version tags for amd64 and arm64. Why: firms pull a tagged image and need no source or JDK.
+- 2026-11-21, Ignjat: Server image based on eclipse-temurin:21-jre. Why: official, patched, has a shell for debugging and the health check.
+- 2026-11-21, Ignjat: The server terminates TLS itself on 8443 with the keystore in a Docker volume; plain HTTP only on the host. Why: the pinned fingerprint is exactly the server's, no proxy to configure.
+- 2026-11-21, Ignjat: A compose backup service runs pg_dump nightly and keeps 14 days. Why: backups happen by default; firms copy the folder offsite.

@@ -1,0 +1,76 @@
+# DORAi on one host: server, PostgreSQL with pgvector, nightly backups.
+# Copy .env.example to .env, fill it in, then: docker compose up -d
+# Developers who only need the database: docker compose up -d db
+
+name: dorai
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "5"
+
+services:
+  db:
+    image: pgvector/pgvector:0.8.7-pg16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: dorai
+      POSTGRES_USER: ${DORAI_DB_USER:-dorai}
+      POSTGRES_PASSWORD: ${DORAI_DB_PASSWORD:?set DORAI_DB_PASSWORD in .env}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    # Only reachable from this host, for developers running the server with Gradle.
+    ports:
+      - "127.0.0.1:${DORAI_DB_HOST_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d dorai"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging: *logging
+
+  server:
+    image: ghcr.io/ignjatradojicic/dorai-server:${DORAI_VERSION:-latest}
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file: .env
+    environment:
+      DORAI_PORT: "8080"
+      DORAI_TLS_PORT: "8443"
+      DORAI_TLS_KEYSTORE: /var/lib/dorai/tls/keystore.p12
+      DORAI_DB_URL: jdbc:postgresql://db:5432/dorai
+    volumes:
+      - server-data:/var/lib/dorai
+    ports:
+      # HTTPS for the apps and the CLI; the certificate fingerprint goes in invite links.
+      - "${DORAI_HTTPS_PORT:-8443}:8443"
+      # Plain HTTP stays on this host only (health checks, local admin).
+      - "127.0.0.1:${DORAI_HTTP_PORT:-8080}:8080"
+    logging: *logging
+
+  backup:
+    image: pgvector/pgvector:0.8.7-pg16
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    entrypoint: ["/bin/sh", "/backup.sh"]
+    environment:
+      PGHOST: db
+      PGDATABASE: dorai
+      PGUSER: ${DORAI_DB_USER:-dorai}
+      PGPASSWORD: ${DORAI_DB_PASSWORD:?set DORAI_DB_PASSWORD in .env}
+      BACKUP_TIME: ${DORAI_BACKUP_TIME:-02:00}
+      BACKUP_KEEP_DAYS: ${DORAI_BACKUP_KEEP_DAYS:-14}
+      TZ: ${DORAI_TIMEZONE:-UTC}
+    volumes:
+      - ./backup.sh:/backup.sh:ro
+      - ${DORAI_BACKUP_DIR:-./backups}:/backups
+    logging: *logging
+
+volumes:
+  db-data:
+  server-data:

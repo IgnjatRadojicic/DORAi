@@ -1,0 +1,103 @@
+# What the Docker deployment (deploy/, Dockerfile, server-image workflow) still needs.
+# The stack runs today: server on HTTP with fixtures, database, nightly backups.
+# Each item: what is missing, why it matters, who owns it, when it lands.
+# Remove an item when it is done.
+
+server:
+  - id: db-connection
+    missing: Server reads DORAI_DB_URL, DORAI_DB_USER, DORAI_DB_PASSWORD, opens a HikariCP pool and runs Flyway on start.
+    why: Compose already passes these, but the server ignores them and keeps everything in fixtures.
+    owner: Ignjat
+    phase: 2
+
+  - id: pgvector-extension
+    missing: First Flyway migration runs CREATE EXTENSION IF NOT EXISTS vector.
+    why: The image ships pgvector, but the extension must be enabled per database; doing it in a migration
+      also covers Testcontainers and firms that bring their own PostgreSQL.
+    owner: Ignjat (migration), David (vector tables)
+    phase: 2
+
+  - id: tls
+    missing: On first start, generate a self-signed keystore at DORAI_TLS_KEYSTORE (password DORAI_TLS_KEYSTORE_PASSWORD)
+      if none exists, serve HTTPS on DORAI_TLS_PORT (8443), and log the SHA-256 fingerprint.
+    why: The apps pin this fingerprint from the invite link. Today port 8443 is published but nothing listens on it.
+    owner: Ignjat
+    phase: 3
+
+  - id: jwt-secret
+    missing: Read DORAI_JWT_SECRET and refuse to start without it when auth is on.
+    why: Tokens must be signed with a firm-specific secret, never a default.
+    owner: Ignjat
+    phase: 3
+
+  - id: invite-links
+    missing: Build invite links from DORAI_PUBLIC_URL and the keystore fingerprint.
+    why: The server cannot know the DNS name staff use; the admin sets it in .env.
+    owner: Ignjat
+    phase: 3
+
+  - id: first-admin
+    missing: Decide and build how the first admin is created on a fresh install.
+    why: Only an admin can create users, so an empty database has no way in.
+      Options to decide, for example DORAI_ADMIN_USERNAME plus a temporary password in .env that must be
+      changed at first login, or a one-time setup code printed in the server log.
+    owner: Ignjat (decision)
+    phase: 3
+
+  - id: live-collectors
+    missing: With DORAI_DATA_SOURCE=live, read the standard AZURE_* and AWS_* variables and scan.
+    why: .env.example already reserves the names; collectors are not written yet.
+    owner: Ignjat
+    phase: 4
+
+  - id: llm-settings
+    missing: Names of the LLM settings (endpoint, key, model, Azure OpenAI or OpenAI) for DORAI_AI=real,
+      added to deploy/.env.example and docs/deploy.md.
+    why: The AI lane decides them; until then the server only runs with the fake model.
+    owner: David
+    phase: 4
+
+  - id: regulation-ingestion
+    missing: A way to load the DORA regulation texts into pgvector on a fresh install (command or first-start job).
+    why: AI answers need citations, so an empty vector store means every answer is "insufficient evidence".
+    owner: David
+    phase: 4
+
+image:
+  - id: jvm-memory
+    missing: Set JAVA_OPTS="-XX:MaxRAMPercentage=75" in the Dockerfile or compose file.
+    why: Without it the JVM sizes its heap from defaults rather than the container memory limit.
+    owner: Ignjat
+    phase: before first release
+
+  - id: healthcheck-http-fallback
+    missing: Once HTTPS ships, decide whether the health check keeps the HTTP fallback on 8080.
+    why: The fallback exists only because the server has no HTTPS yet.
+    owner: Ignjat
+    phase: 3
+
+ci-and-release:
+  - id: first-release
+    missing: Push the first version tag (for example v0.1.0) so the workflow publishes the image.
+    why: Until then ghcr.io/ignjatradojicic/dorai-server does not exist and firms cannot pull it.
+    owner: Ignjat
+    phase: 6
+
+  - id: package-visibility
+    missing: Make the GHCR package public after the first publish, or give firms pull credentials.
+    why: New GHCR packages are private, so docker compose pull fails for firms.
+    owner: Ignjat
+    phase: 6
+
+  - id: image-build-on-pr
+    missing: Build the Docker image (without pushing) in the PR workflow.
+    why: Today a broken Dockerfile is only found when a release tag is pushed.
+    owner: Ignjat
+    phase: 5
+
+operations:
+  - id: offsite-backups
+    missing: Copy deploy/backups to storage off the host.
+    why: Backups on the same disk do not survive a disk failure. This is the firm's job; docs/deploy.md says so.
+    owner: each firm
+    phase: at install
