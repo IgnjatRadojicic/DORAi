@@ -58,5 +58,5 @@ drafting and error headers. Desktop tests verify the shared API-to-file-saver pa
 Tests use fixtures and local fakes, without live clouds or model calls. Android compilation and picker
 testing still require the Android SDK and a device or emulator.
 
-Verified on JDK 21: 261 tests pass, with 32 environment-dependent tests skipped. A real fixture-server
+Verified after integrating the latest shell on JDK 21: 290 tests pass, with 32 environment-dependent tests skipped. A real fixture-server
 download returns HTTP 200 and a readable PDF; rendered pages were also inspected locally.

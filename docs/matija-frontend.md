@@ -74,9 +74,9 @@ allprojects {
 The generated local init script changes the launch class immediately before execution, after Compose
 configures its normal entry point. Add `--offline` when the dependencies are already cached.
 
-The feature window title is `DORAi`. A centered product name belongs to the
-original app entry point. The local init script is not committed; use the IDE preview entry point
-on other workstations, or recreate this local launch override.
+The feature window title is `DORAi`. The normal desktop entry point now opens Luka's production login
+and workspace shell. The local init script opens the feature preview and is not committed; use the IDE
+preview entry point on other workstations, or recreate this local launch override.
 
 ## Shell integration for Luka
 

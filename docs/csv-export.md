@@ -76,5 +76,5 @@ Endpoint tests exercise real ZIP responses and 422 problem details through the s
 Desktop integration tests use a loopback-only fake HTTP server and verify that the returned archive
 reaches the file saver. No live cloud, model, or external service is used by these tests.
 
-Verified with the updated main on JDK 21: 245 tests pass and 32 environment-dependent tests are skipped.
+Verified with the latest shell and both export formats on JDK 21: 290 tests pass and 32 environment-dependent tests are skipped.
 Android compilation still requires the Android SDK described in the repository README.
