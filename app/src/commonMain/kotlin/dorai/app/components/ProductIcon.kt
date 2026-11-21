@@ -14,7 +14,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import dorai.app.theme.ProductStyle
 
-enum class ProductIcon { UPLOAD, FILE, SHIELD, ALERT, CHECK, ARROW, DOWNLOAD, CLOSE, CHEVRON, BOOK, LOCATION, FILTER, REFRESH, CLOUD, SUN, MOON, ARCHIVE, GLOBE }
+enum class ProductIcon { UPLOAD, FILE, SHIELD, ALERT, CHECK, ARROW, DOWNLOAD, CLOSE, CHEVRON, BOOK, LOCATION, FILTER, REFRESH, CLOUD, SUN, MOON, ARCHIVE, GLOBE, LOGOUT }
 
 @Composable
 fun LineIcon(icon: ProductIcon, modifier: Modifier = Modifier, color: Color = ProductStyle.colors.muted, size: Dp = 18.dp) {
@@ -54,6 +54,11 @@ fun LineIcon(icon: ProductIcon, modifier: Modifier = Modifier, color: Color = Pr
                 else path(8f to 12f, 11f to 15f, 16f to 9f)
             }
             ProductIcon.ARROW -> { line(4f, 12f, 20f, 12f); path(14f to 6f, 20f to 12f, 14f to 18f) }
+            ProductIcon.LOGOUT -> {
+                path(10f to 4f, 4f to 4f, 4f to 20f, 10f to 20f)
+                line(9f, 12f, 21f, 12f)
+                path(17f to 8f, 21f to 12f, 17f to 16f)
+            }
             ProductIcon.CLOSE -> { line(6f, 6f, 18f, 18f); line(6f, 18f, 18f, 6f) }
             ProductIcon.CHEVRON -> path(7f to 9f, 12f to 14f, 17f to 9f)
             ProductIcon.BOOK -> { path(3f to 3f, 9f to 3f, 12f to 5f, 15f to 3f, 21f to 3f, 21f to 20f, 15f to 20f, 12f to 22f, 9f to 20f, 3f to 20f, closed = true); line(12f, 5f, 12f, 22f) }
