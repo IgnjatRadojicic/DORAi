@@ -21,6 +21,8 @@ data class Provenance(
     val updatedAt: Instant,
     val citation: Citation? = null,
     val reason: String? = null,
+    /** The username of the person who confirmed the value; set only on `human-confirmed` values. */
+    val confirmedBy: String? = null,
 )
 
 /** A register value together with its provenance. */

@@ -100,10 +100,10 @@ class PostgresTest {
         val repo = PostgresSuggestionRepository(seeded(), clock = object : Clock { override fun now() = now })
         val first = data.suggestions.first { it.status == SuggestionStatus.Pending }
 
-        val done = assertIs<Decision.Done>(repo.decide(first.id, SuggestionStatus.Accepted)).suggestion
-        assertEquals(first.copy(status = SuggestionStatus.Accepted, decidedAt = now), done)
-        assertEquals(done, assertIs<Decision.AlreadyDecided>(repo.decide(first.id, SuggestionStatus.Rejected)).suggestion)
-        assertEquals(Decision.NotFound, repo.decide("missing", SuggestionStatus.Accepted))
+        val done = assertIs<Decision.Done>(repo.decide(first.id, SuggestionStatus.Accepted, "luka")).suggestion
+        assertEquals(first.copy(status = SuggestionStatus.Accepted, decidedAt = now, decidedBy = "luka"), done)
+        assertEquals(done, assertIs<Decision.AlreadyDecided>(repo.decide(first.id, SuggestionStatus.Rejected, "matija")).suggestion)
+        assertEquals(Decision.NotFound, repo.decide("missing", SuggestionStatus.Accepted, "luka"))
 
         val pending = data.suggestions.filter { it.status == SuggestionStatus.Pending && it.id != first.id }
         assertEquals(pending, repo.pending())

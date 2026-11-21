@@ -92,7 +92,7 @@ private fun <T> AiAnswer<T>.toSuggestion(
 
 private suspend fun RoutingContext.decide(services: Services, status: SuggestionStatus) {
     val id = call.parameters["id"].orEmpty()
-    when (val result = services.suggestions.decide(id, status)) {
+    when (val result = services.suggestions.decide(id, status, call.who())) {
         is Decision.Done -> {
             val s = result.suggestion
             // An accepted register value goes into the register at once, as the person's value.

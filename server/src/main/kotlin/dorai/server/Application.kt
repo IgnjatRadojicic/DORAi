@@ -154,9 +154,13 @@ private fun Route.exportRoutes(services: Services) = route("export") {
     get("pdf") {
         val exporter = services.exporter ?: throw exportUnavailable()
         val register = services.register.register()
-        val findings = services.planChecker.check(services.demoPlan, register)
+        // The firm's latest checked plan, never the demo one: without a plan the report says so.
+        val plan = services.plans.latest()
+        val findings = plan?.let { services.planChecker.check(it.json, register) }.orEmpty()
+        val source = plan?.let { "Findings from the Terraform plan ${it.checkedBy} checked at ${it.checkedAt}." }
+            ?: "No Terraform plan has been checked on this server yet, so there are no plan findings. Check a plan under Findings first."
         // Built before the attachment header, so a failure is answered as problem details.
-        val bytes = exporter.pdf(register, services.register.resources(), call.referenceDate(), findings)
+        val bytes = exporter.pdf(register, services.register.resources(), call.referenceDate(), findings, source)
         call.response.header(HttpHeaders.ContentDisposition, attachment("dorai-report.pdf"))
         call.respondBytes(bytes, ContentType.Application.Pdf)
     }

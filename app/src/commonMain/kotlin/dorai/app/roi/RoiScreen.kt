@@ -131,7 +131,7 @@ private fun Cell(cell: RoiCell?, editable: Boolean, modifier: Modifier) {
     Column(modifier, verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Text(cell?.value ?: if (editable) "Add" else "", fontFamily = ProductStyle.fonts.mono, fontSize = 12.sp,
             color = if (cell?.value == null) ProductStyle.colors.muted else ProductStyle.colors.ink)
-        cell?.let { MetaText(it.label?.let(::labelText) ?: "derived") }
+        cell?.let { MetaText((it.label?.let(::labelText) ?: "derived") + (it.confirmedBy?.let { by -> " by $by" } ?: "")) }
     }
 }
 

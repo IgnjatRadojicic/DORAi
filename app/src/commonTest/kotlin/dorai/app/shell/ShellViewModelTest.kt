@@ -97,6 +97,7 @@ class ShellViewModelTest {
         runImmediate { shell.logout() }
         assertNull(shell.workspace)
         assertEquals("", shell.login.state.password)
+        assertNull(shell.login.state.error)
         shell.signIn()
         assertNotSame(first, shell.workspace)
     }

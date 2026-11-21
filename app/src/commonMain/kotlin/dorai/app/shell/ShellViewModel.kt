@@ -89,8 +89,18 @@ class ShellViewModel(
     var ready by mutableStateOf(false)
         private set
 
-    /** Forgetting the tokens (logout, or a refresh the server refused) always ends on the login page. */
-    private val tokens = SavedTokenStore(storage.tokens).apply { onCleared = { workspace = null } }
+    /**
+     * Forgetting the tokens always ends on the login page. A logout has already closed the workspace;
+     * when it is still open the server refused the refresh, so the login page says the session ended.
+     */
+    private val tokens = SavedTokenStore(storage.tokens).apply {
+        onCleared = {
+            if (workspace != null) {
+                workspace = null
+                login.sessionEnded()
+            }
+        }
+    }
 
     private var server = ServerLink(address)
     private var saved = SavedSettings()

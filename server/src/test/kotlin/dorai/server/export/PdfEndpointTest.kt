@@ -7,6 +7,7 @@ import dorai.server.ApiProblem
 import dorai.server.core.AiAnswer
 import dorai.server.core.DraftText
 import dorai.server.core.FindingNote
+import dorai.server.core.InMemoryPlanRepository
 import dorai.server.core.RegisterExporter
 import dorai.server.core.ReportDrafter
 import dorai.server.fixtures.FixtureData
@@ -20,6 +21,9 @@ import dorai.shared.model.Finding
 import dorai.shared.model.Register
 import io.ktor.client.call.body
 import io.ktor.client.request.get
+import io.ktor.client.request.forms.formData
+import io.ktor.client.request.forms.submitFormWithBinaryData
+import io.ktor.http.Headers
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.testing.testApplication
@@ -44,6 +48,27 @@ class PdfEndpointTest {
             val bytes = assertIs<ApiResult.Success<ByteArray>>(api.exportPdf()).value
             Loader.loadPDF(bytes).use { assertContains(PDFTextStripper().getText(it), "ICT register review") }
         }
+    }
+
+    @Test
+    fun pdfUsesTheFirmsLatestCheckedPlanNeverTheDemoOne() = testApplication {
+        val data = FixtureData.load()
+        application { module(fixtureServices(data).copy(plans = InMemoryPlanRepository())) }
+        fun text(bytes: ByteArray) = Loader.loadPDF(bytes).use { PDFTextStripper().getText(it) }
+
+        val before = text(versionedClient().get("/api/export/pdf").body<ByteArray>())
+        assertContains(before, "No Terraform plan has been checked")
+        assertFalse(before.contains("critical-function"))
+
+        val checked = versionedClient().submitFormWithBinaryData("/api/check", formData {
+            append("plan", data.planEastus, Headers.build {
+                append(HttpHeaders.ContentDisposition, "filename=\"plan.json\"")
+            })
+        })
+        assertEquals(200, checked.status.value)
+        val after = text(versionedClient().get("/api/export/pdf").body<ByteArray>())
+        assertContains(after, "plan development checked")
+        assertContains(after, "critical-function")
     }
 
     @Test
@@ -105,7 +130,7 @@ class PdfEndpointTest {
     fun generationFailureHasProblemDetailsAndNoAttachmentHeader() = testApplication {
         val services = fixtureServices()
         val failing = object : RegisterExporter by checkNotNull(services.exporter) {
-            override suspend fun pdf(register: Register, resources: List<Resource>, referenceDate: LocalDate, findings: List<Finding>): ByteArray =
+            override suspend fun pdf(register: Register, resources: List<Resource>, referenceDate: LocalDate, findings: List<Finding>, planSource: String): ByteArray =
                 throw ApiProblem(HttpStatusCode.ServiceUnavailable, "Report unavailable", "Please retry.")
         }
         application { module(services.copy(exporter = failing)) }

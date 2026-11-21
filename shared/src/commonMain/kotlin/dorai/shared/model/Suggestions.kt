@@ -21,6 +21,8 @@ data class Suggestion(
     val status: SuggestionStatus,
     val createdAt: Instant,
     val decidedAt: Instant? = null,
+    /** The username of the reviewer who accepted or rejected it. */
+    val decidedBy: String? = null,
     /**
      * For [SuggestionKind.RoiValue]: the RoI column code the value is for (for example `B_02.02.0170`).
      * [resourceId] then names the register item (service, provider, function) instead of a cloud resource.
