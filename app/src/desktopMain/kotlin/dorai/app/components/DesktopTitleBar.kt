@@ -59,7 +59,7 @@ private fun CaptionButton(description: String, action: CaptionAction, onClick: (
         tween(ProductMotion.FEEDBACK), label = "caption-hover")
     val ink = if (hovered && action == CaptionAction.CLOSE) Color.White else ProductStyle.colors.ink
     Surface(onClick = onClick, interactionSource = interaction, color = fill,
-        modifier = Modifier.width(44.dp).fillMaxHeight().hoverable(interaction).semantics { contentDescription = label }) {
+        modifier = Modifier.width(44.dp).fillMaxHeight().hoverable(interaction).actionPointer().semantics { contentDescription = label }) {
         Box(contentAlignment = Alignment.Center) {
             Canvas(Modifier.size(12.dp)) {
                 val u = size.width / 12f

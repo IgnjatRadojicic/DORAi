@@ -156,7 +156,7 @@ private fun NavigationItem(section: WorkspaceSection, active: Boolean, onSection
         if (!section.enabled) colors.muted.copy(alpha = 0.45f) else if (active) colors.ink else colors.muted,
         tween(ProductMotion.FEEDBACK), label = "navigation-label")
     Surface(onClick = { onSection(section.id) }, enabled = section.enabled, interactionSource = interaction,
-        modifier = Modifier.fillMaxWidth().hoverable(interaction).semantics { selected = active },
+        modifier = Modifier.fillMaxWidth().hoverable(interaction).actionPointer(section.enabled).semantics { selected = active },
         shape = RoundedCornerShape(8.dp), color = fill,
         border = if (active) BorderStroke(1.dp, colors.accent.copy(alpha = 0.14f)) else null) {
         Row(Modifier.height(42.dp).padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically,
@@ -176,7 +176,7 @@ private fun ThemeToggle(mode: ThemeMode, onTheme: (ThemeMode) -> Unit) {
     val currentLabel = uiText(if (dark) UiCopy.DARK_THEME else UiCopy.LIGHT_THEME)
     OutlinedIconButton(
         onClick = { onTheme(if (dark) ThemeMode.LIGHT else ThemeMode.DARK) },
-        modifier = Modifier.size(36.dp).semantics {
+        modifier = Modifier.size(36.dp).actionPointer().semantics {
             contentDescription = actionLabel
             stateDescription = currentLabel
         },
