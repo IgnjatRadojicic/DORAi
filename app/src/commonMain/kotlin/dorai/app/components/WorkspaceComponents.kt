@@ -220,15 +220,20 @@ fun MetricGrid(metrics: List<Metric>) {
 fun ProductTable(headers: List<String>, weights: List<Float>, minWidth: Int = 850, content: @Composable ColumnScope.() -> Unit) {
     BoxWithConstraints(Modifier.fillMaxWidth()) {
         val tableWidth = maxOf(maxWidth, minWidth.dp)
-        Box(Modifier.horizontalScroll(rememberScrollState())) {
-            Column(Modifier.width(tableWidth)) {
-                Row(Modifier.fillMaxWidth().background(ProductStyle.colors.tableHead).padding(horizontal = 24.dp, vertical = 15.dp),
-                    horizontalArrangement = Arrangement.spacedBy(20.dp)) {
-                    headers.forEachIndexed { index, label -> MetaText(uiText(label).uppercase(), Modifier.weight(weights[index])) }
+        val scroll = rememberScrollState()
+        Column {
+            TableScrollbar(scroll, Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 4.dp))
+            Box(Modifier.horizontalScroll(scroll)) {
+                Column(Modifier.width(tableWidth)) {
+                    Row(Modifier.fillMaxWidth().background(ProductStyle.colors.tableHead).padding(horizontal = 24.dp, vertical = 15.dp),
+                        horizontalArrangement = Arrangement.spacedBy(20.dp)) {
+                        headers.forEachIndexed { index, label -> MetaText(uiText(label).uppercase(), Modifier.weight(weights[index])) }
+                    }
+                    HorizontalDivider(color = ProductStyle.colors.line)
+                    content()
                 }
-                HorizontalDivider(color = ProductStyle.colors.line)
-                content()
             }
+            TableScrollbar(scroll, Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 4.dp))
         }
     }
 }
