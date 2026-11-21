@@ -1,5 +1,7 @@
 package dorai.server
 
+import dorai.server.ai.AiConfig
+import dorai.server.ai.regulationSearch
 import dorai.server.check.checkRoutes
 import dorai.server.collect.LiveConfig
 import dorai.server.collect.withLiveScan
@@ -40,7 +42,7 @@ fun main() {
 }
 
 /**
- * Storage: PostgreSQL when DORAI_DB_URL is set, otherwise fixtures in memory.
+ * Storage: PostgreSQL with pgvector regulation search when DORAI_DB_URL is set, otherwise fixtures in memory.
  * Scan: the firm's clouds when DORAI_DATA_SOURCE=live, otherwise the FinPay fixtures.
  */
 fun servicesFromEnv(): Services {
@@ -51,7 +53,8 @@ fun servicesFromEnv(): Services {
         log.info("DORAI_DB_URL is not set: running on fixtures in memory.")
         fixtureServices(data)
     } else {
-        postgresServices(Db.open(db), data)
+        val database = Db.open(db)
+        postgresServices(database, data).copy(regulationSearch = regulationSearch(database, AiConfig.fromEnv()))
     }
     val live = LiveConfig.fromEnv() ?: return base
     log.info("Live scan of {}{}.", live.clouds, live.awsEndpoint?.let { " (AWS through $it)" } ?: "")
