@@ -57,7 +57,7 @@ fun LogoutButton(onLogout: () -> Unit) {
     val foreground by animateColorAsState(if (hovered || focused) colors.ink else colors.muted,
         tween(ProductMotion.FEEDBACK), label = "logout-label")
     Surface(onClick = onLogout, interactionSource = interaction,
-        modifier = Modifier.fillMaxWidth().hoverable(interaction),
+        modifier = Modifier.fillMaxWidth().hoverable(interaction).actionPointer(),
         shape = RoundedCornerShape(8.dp), color = fill,
         border = BorderStroke(1.dp, if (focused) colors.accent else colors.line)) {
         Row(Modifier.heightIn(min = 44.dp).padding(horizontal = 14.dp, vertical = 11.dp),

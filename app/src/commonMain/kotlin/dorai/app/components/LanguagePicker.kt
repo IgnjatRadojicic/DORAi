@@ -23,7 +23,7 @@ fun LanguagePicker(onSelect: (AppLanguage) -> Unit) {
     Box {
         Surface(onClick = { expanded = true }, color = ProductStyle.colors.panel,
             shape = RoundedCornerShape(9.dp), border = BorderStroke(1.dp, ProductStyle.colors.line),
-            modifier = Modifier.semantics { contentDescription = description; stateDescription = current.nativeName }) {
+            modifier = Modifier.actionPointer().semantics { contentDescription = description; stateDescription = current.nativeName }) {
             Row(Modifier.height(36.dp).padding(horizontal = 11.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                 LineIcon(ProductIcon.GLOBE, size = 16.dp)
                 Text(current.code, fontFamily = ProductStyle.fonts.mono, fontSize = 11.sp)
@@ -34,6 +34,7 @@ fun LanguagePicker(onSelect: (AppLanguage) -> Unit) {
             containerColor = ProductStyle.colors.panel, border = BorderStroke(1.dp, ProductStyle.colors.line)) {
             AppLanguage.entries.forEach { language ->
                 DropdownMenuItem(
+                    modifier = Modifier.actionPointer(),
                     text = {
                         Row(Modifier.width(175.dp), verticalAlignment = Alignment.CenterVertically) {
                             Text(language.nativeName, modifier = Modifier.weight(1f), fontWeight = if (language == current) FontWeight.Medium else FontWeight.Normal)
