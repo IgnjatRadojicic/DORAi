@@ -45,7 +45,9 @@ compose.desktop {
         nativeDistributions {
             targetFormats(TargetFormat.Msi, TargetFormat.Dmg, TargetFormat.Deb)
             packageName = "DORAi"
-            packageVersion = "1.0.0"
+            packageVersion = project.version.toString()
+            // Fixed for the life of the product: it lets a new MSI upgrade an older install in place.
+            windows { upgradeUuid = "8f23d603-e143-41e8-901e-1074dce8fd1c" }
         }
     }
 }
