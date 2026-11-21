@@ -38,6 +38,10 @@ dependencies {
     implementation(libs.aws.dynamodb)
     implementation(libs.aws.lambda)
     implementation(libs.aws.sqs)
+    implementation(libs.pgvector)
+    implementation(libs.pdfbox)
+    implementation(libs.koog.agents)
+    implementation(libs.koog.embeddings.llm)
 
     testImplementation(libs.ktor.server.test.host)
     testImplementation(libs.kotlin.test)

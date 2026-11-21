@@ -4,7 +4,7 @@ import dorai.shared.model.Role
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.datetime.timestamp
 
-// Mirrors db/migration/V2__auth.sql.
+// Mirrors db/migration/V3__auth.sql.
 
 object Users : Table("users") {
     val username = text("username")

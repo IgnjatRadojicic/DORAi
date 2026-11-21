@@ -1,5 +1,7 @@
 package dorai.server
 
+import dorai.server.ai.AiConfig
+import dorai.server.ai.regulationSearch
 import dorai.server.check.checkRoutes
 import dorai.server.auth.AuthConfig
 import dorai.server.auth.AuthService
@@ -67,7 +69,7 @@ fun main() {
 }
 
 /**
- * Storage: PostgreSQL when DORAI_DB_URL is set, otherwise fixtures in memory.
+ * Storage: PostgreSQL with pgvector regulation search when DORAI_DB_URL is set, otherwise fixtures in memory.
  * Auth: on with a database (DORAI_JWT_SECRET required), off on fixtures in memory.
  * Scan: the firm's clouds when DORAI_DATA_SOURCE=live, otherwise the FinPay fixtures.
  */
@@ -82,7 +84,7 @@ fun servicesFromEnv(fingerprint: String? = null, defaultPublicUrl: String = "htt
         val db = Db.open(dbConfig)
         val auth = AuthService(db, AuthConfig.fromEnv(defaultPublicUrl = defaultPublicUrl), fingerprint)
         auth.bootstrap()
-        postgresServices(db, data).copy(auth = auth)
+        postgresServices(db, data).copy(auth = auth, regulationSearch = regulationSearch(db, AiConfig.fromEnv()))
     }
     val live = LiveConfig.fromEnv() ?: return base
     log.info("Live scan of {}{}.", live.clouds, live.awsEndpoint?.let { " (AWS through $it)" } ?: "")
