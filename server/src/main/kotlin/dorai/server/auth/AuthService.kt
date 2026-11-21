@@ -32,7 +32,11 @@ import kotlin.time.toJavaInstant
 data class Principal(val username: String, val role: Role)
 
 /** An auth failure the routes turn into a problem response. Messages are safe to show to the user. */
-class AuthException(val status: Int, override val message: String) : RuntimeException(message)
+class AuthException(
+    val status: Int,
+    override val message: String,
+    val retryAfterSeconds: Long? = null,
+) : RuntimeException(message)
 
 /**
  * Users, logins, tokens and invites (plan section 5). Passwords are Argon2id hashes; refresh tokens and
@@ -40,13 +44,14 @@ class AuthException(val status: Int, override val message: String) : RuntimeExce
  */
 class AuthService(
     private val db: Database,
-    private val config: AuthConfig,
+    val config: AuthConfig,
     /** SHA-256 of the server certificate for invite links; null when the server has no TLS. */
     private val fingerprint: String?,
     private val clock: Clock = Clock.System,
 ) {
     private val algorithm = Algorithm.HMAC256(config.jwtSecret)
     private val verifier = JWT.require(algorithm).withIssuer(ISSUER).acceptLeeway(5).build()
+    private val throttle = LoginThrottle(config.maxFailedLogins, config.failedLoginWindow, config.lockout, clock)
 
     // Access tokens
 
@@ -87,22 +92,37 @@ class AuthService(
         RedeemResponse(Dorai.NAME, user[Users.username], user[Users.role])
     }
 
-    suspend fun login(username: String, password: String): LoginResponse = db.tx {
-        val user = checkPassword(username, password)
-        if (user[Users.passwordChangeRequired]) LoginResponse(passwordChangeRequired = true)
-        else LoginResponse(passwordChangeRequired = false, tokens = startSession(user))
+    suspend fun login(username: String, password: String): LoginResponse = throttled(username) {
+        db.tx {
+            val user = checkPassword(username, password)
+            if (user[Users.passwordChangeRequired]) LoginResponse(passwordChangeRequired = true)
+            else LoginResponse(passwordChangeRequired = false, tokens = startSession(user))
+        }
     }
 
     /** Sets a new password and ends every other session of the user. */
-    suspend fun changePassword(username: String, current: String, new: String): Tokens = db.tx {
-        val user = checkPassword(username, current)
-        Passwords.problem(new, user[Users.username], current)?.let { throw AuthException(400, it) }
-        Users.update({ Users.username eq user[Users.username] }) {
-            it[passwordHash] = Passwords.hash(new)
-            it[passwordChangeRequired] = false
+    suspend fun changePassword(username: String, current: String, new: String): Tokens = throttled(username) {
+        db.tx {
+            val user = checkPassword(username, current)
+            Passwords.problem(new, user[Users.username], current)?.let { throw AuthException(400, it) }
+            Users.update({ Users.username eq user[Users.username] }) {
+                it[passwordHash] = Passwords.hash(new)
+                it[passwordChangeRequired] = false
+            }
+            revokeAll(user[Users.username])
+            startSession(user(user[Users.username])!!)
         }
-        revokeAll(user[Users.username])
-        startSession(user(user[Users.username])!!)
+    }
+
+    /** Refuses a locked username, counts a wrong password, and clears the count on success. */
+    private suspend fun <T> throttled(username: String, block: suspend () -> T): T {
+        throttle.check(username)
+        return try {
+            block().also { throttle.clear(username) }
+        } catch (e: AuthException) {
+            if (e.status == 401) throttle.failed(username)
+            throw e
+        }
     }
 
     /**
@@ -158,11 +178,12 @@ class AuthService(
         user(name)!!.toUser()
     }
 
-    /** Signs the user out everywhere at once; they can log in again. */
+    /** Signs the user out everywhere at once and lifts a login lockout; they can log in again. */
     suspend fun revokeSessions(username: String): Unit = db.tx {
         val name = Usernames.normalize(username)
         if (user(name) == null) throw AuthException(404, "No user '$name'.")
         revokeAll(name)
+        throttle.clear(name)
     }
 
     suspend fun invites(): List<Invite> = db.tx { Invites.selectAll().orderBy(Invites.createdAt).map { it.toInvite() } }

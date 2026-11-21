@@ -7,6 +7,7 @@ import dorai.server.auth.AuthConfig
 import dorai.server.auth.AuthService
 import dorai.server.auth.accessControl
 import dorai.server.auth.authRoutes
+import dorai.server.auth.installAuthRateLimit
 import dorai.server.collect.LiveConfig
 import dorai.server.collect.withLiveScan
 import dorai.server.core.Services
@@ -98,7 +99,10 @@ fun Application.module(services: Services) {
     install(ContentNegotiation) { json(DoraiJson) }
     installProblems()
 
-    services.auth?.let { install(accessControl(it)) }
+    services.auth?.let {
+        install(accessControl(it))
+        installAuthRateLimit(it)
+    }
 
     routing {
         route(Dorai.API_PREFIX) {

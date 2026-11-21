@@ -27,6 +27,7 @@ dependencies {
     runtimeOnly(libs.flyway.postgresql)
     runtimeOnly(libs.postgresql)
     implementation(libs.ktor.server.auth.jwt)
+    implementation(libs.ktor.server.rate.limit)
     implementation(libs.ktor.network.tls.certificates)
     implementation(libs.password4j)
     implementation(libs.azure.identity)
