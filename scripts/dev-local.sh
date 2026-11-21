@@ -98,15 +98,17 @@ $(tail -n 15 "$LOG")"
 done
 curl -s -o /dev/null "http://localhost:$PORT/api/health" || fail "The server did not answer on port $PORT. See $LOG"
 
-# 4. Admin: on a first start, swap the temporary password for the fixed local one
+# 4. Admin: on a first start, swap the temporary password for the fixed local one.
+# The server refuses API calls that do not say the client's version (docs/plan-releases.md).
+VERSION=$(sed -n 's/^dorai\.version=//p' gradle.properties)
 login() {
     curl -s -o /dev/null -w '%{http_code}' -X POST "http://localhost:$PORT/api/auth/login" \
-        -H 'Content-Type: application/json' -d "{\"username\":\"$ADMIN_USER\",\"password\":\"$1\"}"
+        -H "Dorai-Client-Version: $VERSION" -H 'Content-Type: application/json' -d "{\"username\":\"$ADMIN_USER\",\"password\":\"$1\"}"
 }
 TEMP=$(grep -o 'Temporary password (shown once): [^ ]*' "$LOG" | head -n 1 | sed 's/.*: //' || true)
 if [[ -n "$TEMP" ]]; then
     code=$(curl -s -o /dev/null -w '%{http_code}' -X POST "http://localhost:$PORT/api/auth/password" \
-        -H 'Content-Type: application/json' \
+        -H "Dorai-Client-Version: $VERSION" -H 'Content-Type: application/json' \
         -d "{\"username\":\"$ADMIN_USER\",\"currentPassword\":\"$TEMP\",\"newPassword\":\"$ADMIN_PASSWORD\"}")
     [[ "$code" == 200 ]] || fail "Could not set the admin password (HTTP $code). Try: scripts/dev-local.sh --reset"
     say "First start: admin password set"

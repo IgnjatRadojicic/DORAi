@@ -1,5 +1,6 @@
 package dorai.server.auth
 
+import dorai.server.versionedClient
 import dorai.server.db.TestPostgres
 import dorai.server.db.postgresServices
 import dorai.server.fixtures.FixtureData
@@ -208,7 +209,7 @@ class AuthFlowTest {
         repeat(5) { assertEquals(401, lee.login("lee", "a wrong guess $it").status()) }
 
         // Locked: even the right password is refused, with the time to wait.
-        val response = client.post("/api/auth/login") {
+        val response = versionedClient().post("/api/auth/login") {
             contentType(ContentType.Application.Json)
             setBody("""{"username":"lee","password":"lee password 2026"}""")
         }
@@ -225,7 +226,7 @@ class AuthFlowTest {
     fun guessingCallsAreLimitedPerAddress() = flow { _ ->
         val api = api()
         repeat(10) { assertEquals(404, api.redeem("AAAA-AAA$it").status()) }
-        val response = client.post("/api/auth/redeem") {
+        val response = versionedClient().post("/api/auth/redeem") {
             contentType(ContentType.Application.Json)
             setBody("""{"code":"AAAA-AAAA"}""")
         }

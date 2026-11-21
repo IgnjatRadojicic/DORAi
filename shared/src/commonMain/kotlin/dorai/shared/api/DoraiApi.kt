@@ -1,6 +1,8 @@
 package dorai.shared.api
 
 import dorai.shared.Dorai
+import dorai.shared.Version
+import kotlin.concurrent.Volatile
 import dorai.shared.model.CreateInviteRequest
 import dorai.shared.model.CreateUserRequest
 import dorai.shared.model.CreatedUser
@@ -69,10 +71,29 @@ class DoraiApi(
 
     private val refreshLock = Mutex()
 
+    /**
+     * The server's version from the last response, null before the first one. Every request says this
+     * client's version; a server with another major answers with a [dorai.shared.VersionProblem] type.
+     */
+    @Volatile
+    var serverVersion: Version? = null
+        private set
+
     private val http = httpClient.config {
         expectSuccess = false
         install(ContentNegotiation) { json(DoraiJson) }
-        defaultRequest { url(baseUrl.trimEnd('/') + Dorai.API_PREFIX + "/") }
+        defaultRequest {
+            url(baseUrl.trimEnd('/') + Dorai.API_PREFIX + "/")
+            // Once, even when the caller's client already sets it.
+            if (!headers.contains(Version.CLIENT_HEADER)) headers.append(Version.CLIENT_HEADER, Version.CURRENT.toString())
+        }
+        install(
+            createClientPlugin("DoraiServerVersion") {
+                onResponse { response ->
+                    response.headers[Version.SERVER_HEADER]?.let(Version::parse)?.let { serverVersion = it }
+                }
+            },
+        )
         install(
             createClientPlugin("DoraiBearer") {
                 onRequest { request, _ ->

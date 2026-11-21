@@ -1,5 +1,6 @@
 package dorai.server.export
 
+import dorai.server.versionedClient
 import dorai.server.ApiProblem
 import dorai.server.core.AiAnswer
 import dorai.server.core.DraftText
@@ -29,7 +30,7 @@ class PdfEndpointTest {
     @Test
     fun realEndpointAndSharedClientReturnReadablePdfAttachments() = testApplication {
         application { module(fixtureServices()) }
-        val response = client.get("/api/export/pdf")
+        val response = versionedClient().get("/api/export/pdf")
         assertEquals(HttpStatusCode.OK, response.status)
         assertTrue(response.headers[HttpHeaders.ContentType].orEmpty().startsWith("application/pdf"))
         assertTrue(response.headers[HttpHeaders.ContentDisposition].orEmpty().contains("dorai-report.pdf"))
@@ -48,8 +49,8 @@ class PdfEndpointTest {
         val data = FixtureData.load()
         val register = data.register.copy(entity = data.register.entity.copy(name = ""))
         application { module(fixtureServices(data).copy(register = InMemoryRegisterRepository(register, data.resources, data.costs))) }
-        assertEquals(422, client.get("/api/export/csv").status.value)
-        val pdf = client.get("/api/export/pdf")
+        assertEquals(422, versionedClient().get("/api/export/csv").status.value)
+        val pdf = versionedClient().get("/api/export/pdf")
         assertEquals(200, pdf.status.value)
         Loader.loadPDF(pdf.body<ByteArray>()).use {
             assertContains(PDFTextStripper().getText(it), "Basic validation: action required")
@@ -72,7 +73,7 @@ class PdfEndpointTest {
         }
         val services = fixtureServices().let { it.copy(reportDrafter = drafter, exporter = RegisterDocumentExporter(drafter, it.validator)) }
         application { module(services) }
-        val response = client.get("/api/export/pdf")
+        val response = versionedClient().get("/api/export/pdf")
         assertEquals(200, response.status.value)
         assertEquals(1, calls.get())
         Loader.loadPDF(response.body<ByteArray>()).use {
@@ -91,7 +92,7 @@ class PdfEndpointTest {
                 throw ApiProblem(HttpStatusCode.ServiceUnavailable, "Report unavailable", "Please retry.")
         }
         application { module(services.copy(exporter = failing)) }
-        val response = client.get("/api/export/pdf")
+        val response = versionedClient().get("/api/export/pdf")
         assertEquals(503, response.status.value)
         assertTrue(response.headers[HttpHeaders.ContentType].orEmpty().startsWith("application/problem+json"))
         assertNull(response.headers[HttpHeaders.ContentDisposition])
