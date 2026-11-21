@@ -31,6 +31,18 @@ Data lives in two Docker volumes: `db-data` (database) and `server-data` (TLS ke
 Cloud credentials for live scans should be read-only: an Azure service principal with Reader
 on the subscriptions, an AWS IAM user or role with read-only access to tagging and cost data.
 
+### What a live scan reads (`DORAI_DATA_SOURCE=live`)
+- **Azure**: one Resource Graph query over every subscription the principal can read (or
+  `DORAI_AZURE_SUBSCRIPTIONS` / `DORAI_AZURE_RESOURCE_GROUP`), and actual cost per resource per month
+  from Cost Management for the last 12 months. Billing data lags a day or two.
+- **AWS**: the Resource Groups Tagging API in each region of `DORAI_AWS_REGIONS`. Resources that were
+  never tagged are not returned by that API. Cost comes from Cost Explorer, which keeps per-resource
+  cost for 14 days only and only after "resource-level data" is turned on in the AWS billing preferences.
+  Each Cost Explorer request costs USD 0.01.
+- If a cloud cannot be scanned, the scan fails with 502 and the stored inventory stays as it was.
+  If cost is unavailable, the scan continues without that cloud's cost.
+- Cost of deleted resources is ignored in the concentration report.
+
 ## Update
 ```
 docker compose pull
@@ -69,6 +81,14 @@ DORAI_DB_URL=jdbc:postgresql://localhost:5432/dorai DORAI_DB_PASSWORD=... ./grad
 On start the server runs the Flyway migrations in `server/src/main/resources/db/migration`, and
 loads the FinPay demo register when the database holds no register yet. Without `DORAI_DB_URL` it runs
 on the fixtures in memory and stores nothing.
+
+For the demo, AWS can come from LocalStack instead of a real account: set `DORAI_AWS_ENDPOINT`
+(for example `http://localhost:4566`). The scan then lists S3, DynamoDB, Lambda and SQS one by one,
+because free LocalStack returns nothing from the Tagging API, and takes AWS cost from the FinPay
+fixture, because LocalStack has no billing. The scan reports the cost source as `Mixed`.
+
+Against the real clouds with your own `az login` and AWS profile, read-only and without Cost Explorer:
+`DORAI_LIVE_TESTS=1 ./gradlew :server:test --tests "dorai.server.collect.LiveSmokeTest"`.
 Build the image locally from the repository root: `docker build -t ghcr.io/ignjatradojicic/dorai-server:dev .`
 and run it with `DORAI_VERSION=dev`.
 
