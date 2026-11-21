@@ -25,15 +25,14 @@ import dorai.shared.model.ScanMode
 import dorai.shared.model.ServiceType
 import dorai.shared.model.Suggestion
 import dorai.shared.model.SuggestionStatus
-import dorai.shared.model.ValidationReport
-import dorai.shared.rules.RegisterValidator
 import dorai.shared.rules.RulesPlanChecker
+import dorai.shared.rules.RulesRegisterValidator
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.datetime.LocalDate
 import kotlin.time.Clock
 
-/** Fixture wiring: FinPay data, in-memory storage, the real rules and an AI that never answers. */
+/** Fixture wiring: FinPay data, in-memory storage, the real rules and validator, and an AI that never answers. */
 fun fixtureServices(data: FixtureData = FixtureData.load()): Services {
     val costs = data.scan.costs.map { CostEntry(it.resourceId, it.provider, it.month, it.amount, it.currency) }
     return Services(
@@ -41,7 +40,7 @@ fun fixtureServices(data: FixtureData = FixtureData.load()): Services {
         costs = FixtureCostProvider(costs),
         register = InMemoryRegisterRepository(data.register, data.resources, costs),
         suggestions = InMemorySuggestionRepository(data.suggestions),
-        validator = RegisterValidator { ValidationReport(isValid = true, errorCount = 0, warningCount = 0, issues = emptyList()) },
+        validator = RulesRegisterValidator(),
         planChecker = RulesPlanChecker(),
         demoPlan = data.planEastus.decodeToString(),
         classifier = NoAi,
