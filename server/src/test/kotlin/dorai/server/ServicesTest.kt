@@ -50,10 +50,10 @@ class ServicesTest {
         }
         withServices(fixtureServices().copy(classifier = classifier)) { api ->
             val pending = api.generateSuggestions().ok()
-            // 19 resources have no service type; one already has a service type suggestion in the fixtures.
-            assertEquals(3 + 18, pending.size)
+            // 9 resources have a type the service type table does not know; one already has a suggestion in the fixtures.
+            assertEquals(3 + 8, pending.size)
             assertTrue(pending.filter { it.kind == SuggestionKind.ServiceType }.all { it.citations.isNotEmpty() })
-            assertEquals(21, api.generateSuggestions().ok().size, "a second run must not duplicate")
+            assertEquals(11, api.generateSuggestions().ok().size, "a second run must not duplicate")
         }
     }
 

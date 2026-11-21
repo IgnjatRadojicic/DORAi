@@ -7,7 +7,6 @@ import dorai.shared.model.Contract
 import dorai.shared.model.ContractService
 import dorai.shared.model.DoraiJson
 import dorai.shared.model.FinancialEntity
-import dorai.shared.model.Finding
 import dorai.shared.model.Provenance
 import dorai.shared.model.ProvenanceLabel
 import dorai.shared.model.Provider
@@ -22,6 +21,8 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.doubleOrNull
 import kotlin.math.roundToLong
+import dorai.shared.rules.Regions
+import dorai.shared.rules.ServiceTypeTable
 import kotlin.time.Instant
 
 /**
@@ -32,7 +33,6 @@ class FixtureData(
     val scan: ScanSeed,
     val register: Register,
     val planEastus: ByteArray,
-    val findingsEastus: List<Finding>,
     val suggestions: List<Suggestion>,
 ) {
     val resources: List<Resource> = scan.resources.map { it.toResource(scan.costs) }
@@ -42,7 +42,6 @@ class FixtureData(
             scan = DoraiJson.decodeFromString(text("finpay-scan.json")),
             register = DoraiJson.decodeFromString<RegisterSeed>(text("finpay-register.json")).toRegister(),
             planEastus = bytes("plan-eastus.json"),
-            findingsEastus = DoraiJson.decodeFromString(text("findings-eastus.json")),
             suggestions = DoraiJson.decodeFromString(text("suggestions.json")),
         )
 
@@ -94,6 +93,8 @@ private fun ResourceSeed.toResource(costs: List<CostSeed>): Resource {
         type = type,
         provider = provider,
         location = location,
+        country = Regions.countryOf(location),
+        serviceType = ServiceTypeTable.find(type)?.code,
         source = source,
         changeAction = changeAction,
         tags = tags,
