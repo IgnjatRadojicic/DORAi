@@ -13,6 +13,8 @@ import dorai.app.connect.ConnectionViewModel
 import dorai.app.connect.ServerProbe
 import dorai.app.connect.defaultServerAddress
 import dorai.app.findings.FindingsViewModel
+import dorai.app.inventory.InventoryViewModel
+import dorai.app.review.ReviewViewModel
 import dorai.app.theme.ThemeMode
 import dorai.app.validation.ValidationViewModel
 import dorai.shared.api.DoraiApi
@@ -42,6 +44,8 @@ data class ShellState(
 /** Everything that belongs to one signed-in user. Dropped on logout, so results never carry over. */
 class Workspace(val session: Tokens, api: DoraiApi) {
     val sources = ServerSources(api)
+    val inventory = InventoryViewModel(sources.inventory)
+    val review = ReviewViewModel(sources.review)
     val findings = FindingsViewModel(sources.findings)
     val validation = ValidationViewModel(sources.validation)
 
