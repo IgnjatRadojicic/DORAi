@@ -27,6 +27,22 @@ Data lives in two Docker volumes: `db-data` (database) and `server-data` (TLS ke
 3. Pin a release: set `DORAI_VERSION` to a version such as `1.0.0` rather than `latest`.
 4. `docker compose up -d`, then check `docker compose ps` until all services are healthy.
 5. `curl http://localhost:8080/api/health` on the host returns `{"status":"ok",...}`.
+6. First login. On its first start the server creates a self-signed certificate and the admin
+   (`DORAI_ADMIN_USERNAME`, default `admin`), and logs both once:
+   `docker compose logs server | grep -E "Certificate SHA-256|First start"`.
+   The log line has a temporary password and an invite link. Open the link in the app, log in with the
+   temporary password and set a new one (at least 12 characters). The temporary password is not shown again.
+
+### Users
+The admin creates users in the app (or `POST /api/admin/users`) with a role: viewer (read), reviewer
+(scan, check, review suggestions, export) or admin (users and invites). Each new user gets a temporary
+password and an invite link valid for 72 hours; send them through different channels. Access tokens
+last 15 minutes, sessions 30 days. Disabling a user, or revoking their sessions
+(`POST /api/admin/users/{username}/revoke`, which signs them out everywhere but lets them log in again),
+takes effect on their next call. The server checks the session on every API call.
+
+The invite link pins the certificate fingerprint. If `tls/keystore.p12` in the `server-data` volume is
+deleted, the server makes a new certificate and every app must connect again with a new invite.
 
 Cloud credentials for live scans should be read-only: an Azure service principal with Reader
 on the subscriptions, an AWS IAM user or role with read-only access to tagging and cost data.
@@ -80,7 +96,8 @@ DORAI_DB_URL=jdbc:postgresql://localhost:5432/dorai DORAI_DB_PASSWORD=... ./grad
 ```
 On start the server runs the Flyway migrations in `server/src/main/resources/db/migration`, and
 loads the FinPay demo register when the database holds no register yet. Without `DORAI_DB_URL` it runs
-on the fixtures in memory and stores nothing.
+on the fixtures in memory, stores nothing and has no auth (every route is open).
+With a database, auth is on and the server needs `DORAI_JWT_SECRET`.
 
 For the demo, AWS can come from LocalStack instead of a real account: set `DORAI_AWS_ENDPOINT`
 (for example `http://localhost:4566`). The scan then lists S3, DynamoDB, Lambda and SQS one by one,
