@@ -55,3 +55,12 @@ dependencies {
 }
 
 tasks.test { useJUnitPlatform() }
+
+// The FinPay RoI package for the offline taxonomy check (scripts/validate-roi.sh).
+tasks.register<JavaExec>("roiSample") {
+    group = "verification"
+    description = "Writes the FinPay RoI xBRL-CSV package to build/roi-sample."
+    classpath = sourceSets["main"].runtimeClasspath
+    mainClass = "dorai.server.export.SamplePackageKt"
+    args(layout.buildDirectory.dir("roi-sample").get().asFile.path)
+}
