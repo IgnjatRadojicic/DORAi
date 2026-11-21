@@ -39,6 +39,10 @@ kotlin {
             implementation(libs.ktor.client.mock)
             implementation(libs.kotlinx.coroutines.test)
         }
+        jvmTest.dependencies {
+            // A self-signed certificate for the pinning test, built the way the server builds its own.
+            implementation(libs.ktor.network.tls.certificates)
+        }
     }
 }
 

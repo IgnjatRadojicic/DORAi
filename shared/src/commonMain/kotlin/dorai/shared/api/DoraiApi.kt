@@ -72,13 +72,16 @@ import kotlinx.coroutines.CancellationException
  * If the refresh fails, the store is cleared and the caller sees the 401: the user must log in again.
  *
  * @param baseUrl server address without `/api`, for example `https://dorai.firm.local:8443`.
- * @param httpClient engine to use; the default picks OkHttp on desktop and Android. Tests pass their own.
+ * @param httpClient engine to use; by default OkHttp on desktop and Android, pinned when [fingerprint] is set. Tests pass their own.
  * @param tokens where the app keeps the tokens; null for a server without auth (development, fixtures).
+ * @param fingerprint SHA-256 of the server certificate from the invite link: only that certificate is
+ *   trusted, and a different one fails with [CertificateProblem.CHANGED]. Null for a plain `http` server.
  */
 class DoraiApi(
     baseUrl: String,
-    httpClient: HttpClient = HttpClient(),
+    httpClient: HttpClient? = null,
     private val tokens: TokenStore? = null,
+    fingerprint: String? = null,
 ) : AutoCloseable {
 
     private val refreshLock = Mutex()
@@ -91,7 +94,7 @@ class DoraiApi(
     var serverVersion: Version? = null
         private set
 
-    private val http = httpClient.config {
+    private val http = (httpClient ?: fingerprint?.let(::pinnedHttpClient) ?: HttpClient()).config {
         expectSuccess = false
         install(ContentNegotiation) { json(DoraiJson) }
         defaultRequest {
@@ -251,7 +254,12 @@ class DoraiApi(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            ApiResult.Failure(Problem(title = "Network error", status = 0, detail = e.message))
+            val changed = generateSequence<Throwable>(e) { it.cause }.filterIsInstance<CertificateChanged>().firstOrNull()
+            if (changed != null) {
+                ApiResult.Failure(Problem(type = CertificateProblem.CHANGED, title = "Server certificate changed", status = 0, detail = changed.message))
+            } else {
+                ApiResult.Failure(Problem(title = "Network error", status = 0, detail = e.message))
+            }
         }
 
     /**
