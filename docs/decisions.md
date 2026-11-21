@@ -9,3 +9,7 @@ One line each: date, who, decision, why. Newest at the bottom.
 - 2026-11-21, team: Admin sets a temporary password that must be changed at first login; roles admin, reviewer, viewer. Why: simple, no external identity provider needed.
 - 2026-11-21, Ignjat: Rules, validator and Terraform plan reader live in `shared` (`dorai.shared.rules`). Why: server and CLI must produce identical findings.
 - 2026-11-21, Ignjat: compileSdk 37 (Compose 1.12 requires it), targetSdk 36, minSdk 26. Why: library requirement; target stays on the stable runtime behaviour.
+- 2026-11-21, Ignjat: Contract keeps the established field names and JSON values; Kotlin types drop any suffix (`Finding`, `Resource`). Why: fixtures parse as they are and every lane works from the same shapes.
+- 2026-11-21, Ignjat: Dates use `kotlinx-datetime` (`LocalDate`) and `kotlin.time.Instant`; money is `Double`, the server rounds to 2 decimals before sending. Why: plain JSON numbers, and `BigDecimal` is not available in common code.
+- 2026-11-21, Ignjat: `DoraiApi` returns a sealed `ApiResult` (success or problem details) and never throws for HTTP or network errors. Why: screens must handle the error case explicitly.
+- 2026-11-21, Ignjat: Phase 1 server serves the FinPay demo data (a fictional firm) from `server/src/main/resources/fixtures`; suggestions are decided in memory. Why: the apps and AI can start before the database exists.
