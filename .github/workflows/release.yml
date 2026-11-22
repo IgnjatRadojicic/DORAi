@@ -1,8 +1,10 @@
 name: release
 
-# A tag vX.Y.Z builds the desktop installers, the Android APK and the CLI, and attaches them to a draft
-# GitHub Release. A person checks the draft and publishes it. The server image comes from server-image.yml.
-# Asset names carry no version, so the website links to releases/latest/download/<name> and never changes.
+# A tag vX.Y.Z builds the server setup bundle, the desktop installers, the Android APK and the CLI, and
+# attaches them to a draft GitHub Release. A person checks the draft and publishes it. The server image
+# itself comes from server-image.yml.
+# Asset names follow dorai-<part>-<os>-<arch>.<format> and carry no version, so a link to
+# releases/latest/download/<name> always gets the newest release. The notes come from .github/release-notes.md.
 # How to cut a release: docs/plan-releases.md.
 on:
   push:
@@ -24,23 +26,62 @@ jobs:
             exit 1
           fi
 
+  server:
+    needs: check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # The Docker Compose setup a firm runs, pinned to this release's server image. Never deploy/.env.
+      - name: Build the server setup bundle
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          bundle="$RUNNER_TEMP/dorai-server"
+          mkdir -p "$bundle" dist
+          cp deploy/compose.yaml deploy/backup.sh "$bundle/"
+          cp docs/deploy.md "$bundle/README.md"
+          sed "s/^DORAI_VERSION=.*/DORAI_VERSION=$version/" deploy/.env.example > "$bundle/.env.example"
+          sed -i "s/\${DORAI_VERSION:-latest}/\${DORAI_VERSION:-$version}/" "$bundle/compose.yaml"
+          grep -q "DORAI_VERSION=$version" "$bundle/.env.example"
+          grep -q "DORAI_VERSION:-$version" "$bundle/compose.yaml"
+          chmod +x "$bundle/backup.sh"
+          (cd "$RUNNER_TEMP" && zip -qr "$GITHUB_WORKSPACE/dist/dorai-server-docker-compose.zip" dorai-server)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dorai-server-docker-compose.zip
+          path: dist/dorai-server-docker-compose.zip
+          if-no-files-found: error
+
   desktop:
     needs: check
     strategy:
+      # One missing platform should not hide whether the others build.
+      fail-fast: false
       matrix:
         include:
           - os: windows-latest
             format: msi
             task: packageMsi
-            asset: DORAi-windows.msi
+            asset: dorai-app-windows-amd64.msi
+          - os: windows-11-arm
+            format: msi
+            task: packageMsi
+            asset: dorai-app-windows-arm64.msi
           - os: macos-latest
             format: dmg
             task: packageDmg
-            asset: DORAi-macos.dmg
+            asset: dorai-app-darwin-arm64.dmg
+          - os: macos-15-intel
+            format: dmg
+            task: packageDmg
+            asset: dorai-app-darwin-amd64.dmg
           - os: ubuntu-latest
             format: deb
             task: packageDeb
-            asset: DORAi-linux.deb
+            asset: dorai-app-linux-amd64.deb
+          - os: ubuntu-24.04-arm
+            format: deb
+            task: packageDeb
+            asset: dorai-app-linux-arm64.deb
     runs-on: ${{ matrix.os }}
     defaults:
       run:
@@ -142,11 +183,11 @@ jobs:
       - name: Name the asset
         run: |
           mkdir dist
-          cp androidApp/build/outputs/apk/release/androidApp-release.apk dist/DORAi-android.apk
+          cp androidApp/build/outputs/apk/release/androidApp-release.apk dist/dorai-app-android-universal.apk
       - uses: actions/upload-artifact@v4
         with:
-          name: DORAi-android.apk
-          path: dist/DORAi-android.apk
+          name: dorai-app-android-universal.apk
+          path: dist/dorai-app-android-universal.apk
           if-no-files-found: error
 
   cli:
@@ -164,19 +205,20 @@ jobs:
       - name: Name the asset
         run: |
           mkdir dist
-          cp cli/build/distributions/dorai-*.zip dist/dorai-cli.zip
+          cp cli/build/distributions/dorai-*.zip dist/dorai-cli-jvm.zip
       - uses: actions/upload-artifact@v4
         with:
-          name: dorai-cli.zip
-          path: dist/dorai-cli.zip
+          name: dorai-cli-jvm.zip
+          path: dist/dorai-cli-jvm.zip
           if-no-files-found: error
 
   release:
-    needs: [desktop, android, cli]
+    needs: [server, desktop, android, cli]
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
+      - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
           path: dist
