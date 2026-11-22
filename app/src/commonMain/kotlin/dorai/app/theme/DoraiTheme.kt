@@ -65,18 +65,19 @@ fun DoraiTheme(mode: ThemeMode = ThemeMode.SYSTEM, language: AppLanguage = AppLa
         surfaceVariant = palette.hover, onSurfaceVariant = palette.muted,
         outline = palette.muted, outlineVariant = palette.line,
     )
+    // One scale: page title 24, section 17, card title 15, body 14, caption 12. Monospace only for codes and IDs.
     val type = Typography(
-        headlineLarge = TextStyle(fontFamily = fonts.body, fontSize = 47.sp, lineHeight = 53.sp, fontWeight = FontWeight.Medium, letterSpacing = (-2).sp),
-        headlineMedium = TextStyle(fontFamily = fonts.body, fontSize = 27.sp, lineHeight = 34.sp, fontWeight = FontWeight.SemiBold, letterSpacing = (-0.7).sp),
+        headlineLarge = TextStyle(fontFamily = fonts.body, fontSize = 32.sp, lineHeight = 40.sp, fontWeight = FontWeight.SemiBold, letterSpacing = (-0.8).sp),
+        headlineMedium = TextStyle(fontFamily = fonts.body, fontSize = 24.sp, lineHeight = 32.sp, fontWeight = FontWeight.SemiBold, letterSpacing = (-0.4).sp),
         titleLarge = TextStyle(fontFamily = fonts.body, fontSize = 17.sp, lineHeight = 24.sp, fontWeight = FontWeight.SemiBold),
-        titleMedium = TextStyle(fontFamily = fonts.body, fontSize = 15.sp, lineHeight = 22.sp, fontWeight = FontWeight.Medium),
-        titleSmall = TextStyle(fontFamily = fonts.body, fontSize = 13.sp, lineHeight = 20.sp, fontWeight = FontWeight.Medium),
-        bodyLarge = TextStyle(fontFamily = fonts.body, fontSize = 14.sp, lineHeight = 23.sp),
-        bodyMedium = TextStyle(fontFamily = fonts.body, fontSize = 13.sp, lineHeight = 21.sp),
-        bodySmall = TextStyle(fontFamily = fonts.body, fontSize = 12.sp, lineHeight = 19.sp),
-        labelLarge = TextStyle(fontFamily = fonts.body, fontSize = 13.sp, lineHeight = 20.sp, fontWeight = FontWeight.SemiBold),
-        labelMedium = TextStyle(fontFamily = fonts.mono, fontSize = 11.sp, lineHeight = 17.sp),
-        labelSmall = TextStyle(fontFamily = fonts.mono, fontSize = 10.sp, lineHeight = 15.sp, letterSpacing = 0.65.sp),
+        titleMedium = TextStyle(fontFamily = fonts.body, fontSize = 15.sp, lineHeight = 22.sp, fontWeight = FontWeight.SemiBold),
+        titleSmall = TextStyle(fontFamily = fonts.body, fontSize = 14.sp, lineHeight = 20.sp, fontWeight = FontWeight.Medium),
+        bodyLarge = TextStyle(fontFamily = fonts.body, fontSize = 14.sp, lineHeight = 22.sp),
+        bodyMedium = TextStyle(fontFamily = fonts.body, fontSize = 14.sp, lineHeight = 21.sp),
+        bodySmall = TextStyle(fontFamily = fonts.body, fontSize = 12.sp, lineHeight = 18.sp),
+        labelLarge = TextStyle(fontFamily = fonts.body, fontSize = 14.sp, lineHeight = 20.sp, fontWeight = FontWeight.SemiBold),
+        labelMedium = TextStyle(fontFamily = fonts.mono, fontSize = 12.sp, lineHeight = 18.sp),
+        labelSmall = TextStyle(fontFamily = fonts.body, fontSize = 12.sp, lineHeight = 18.sp),
     )
     CompositionLocalProvider(LocalProductPalette provides palette, LocalProductFonts provides fonts, LocalAppLanguage provides language) {
         MaterialTheme(colorScheme = colors, typography = type, content = content)

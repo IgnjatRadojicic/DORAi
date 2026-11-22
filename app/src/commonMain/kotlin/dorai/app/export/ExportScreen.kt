@@ -93,13 +93,7 @@ private fun ExportDownloads(state: ExportState, onDownload: (ExportFormat) -> Un
         }
         if (!canExport && !isDemo) Text(uiText("Read-only access"), color = ProductStyle.colors.muted)
         state.error?.let { ErrorView(it) }
-        state.savedLocation?.let { location ->
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                LineIcon(ProductIcon.CHECK, color = ProductStyle.colors.green)
-                Text(uiText("File saved") + " / " + location, color = ProductStyle.colors.green)
-            }
-        }
-        if (state.cancelled) Text(uiText("Save cancelled. No new file was saved."), color = ProductStyle.colors.muted)
+        NoticeEffect(state.savedLocation?.let { "File saved: $it" } ?: if (state.cancelled) "Save cancelled. No new file was saved." else null)
     }
 }
 

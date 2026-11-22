@@ -51,7 +51,9 @@ fun ControlCenterFrame(
 ) {
     val colors = ProductStyle.colors
     val sectionState = rememberSaveableStateHolder()
+    val notices = remember { SnackbarHostState() }
     Surface(modifier.fillMaxSize(), color = colors.background) {
+      CompositionLocalProvider(LocalNotices provides notices) {
         BoxWithConstraints {
             val desktop = maxWidth >= 1000.dp
             val wideHeader = maxWidth >= 600.dp
@@ -110,7 +112,9 @@ fun ControlCenterFrame(
                     }
                 }
             }
+            NoticeHost(notices, Modifier.align(Alignment.BottomCenter))
         }
+      }
     }
 }
 

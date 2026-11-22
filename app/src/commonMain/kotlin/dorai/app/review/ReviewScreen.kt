@@ -28,9 +28,10 @@ fun ReviewScreen(
         PageHeading("AI review") {
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 ProductButton("Refresh", onRefresh, outlined = true, enabled = !state.busy, icon = ProductIcon.REFRESH)
-                if (canDecide) ProductButton(if (state.generating) "Asking the AI..." else "Ask the AI", onGenerate, enabled = !state.busy, icon = ProductIcon.BOOK)
+                if (canDecide) ProductButton(if (state.generating) "Getting AI suggestions..." else "Get AI suggestions", onGenerate, enabled = !state.busy, icon = ProductIcon.BOOK)
             }
         }
+        NoticeEffect(state.notice, key = state.noticeCount)
         state.suggestions?.let {
             MetricGrid(listOf(
                 Metric("To review", state.pending.size, "", ProductIcon.BOOK, state.pending.isNotEmpty()),
@@ -40,11 +41,11 @@ fun ReviewScreen(
         }
         state.error?.let { if (state.suggestions != null) ErrorView(it) }
         when {
-            state.generating && state.suggestions.isNullOrEmpty() -> ProductPanel { LoadingView("Asking the AI...") }
+            state.generating && state.suggestions.isNullOrEmpty() -> ProductPanel { LoadingView("Getting AI suggestions...") }
             state.loading && state.suggestions == null -> ProductPanel { LoadingView("Loading suggestions...") }
             state.error != null && state.suggestions == null -> ProductPanel { Box(Modifier.padding(24.dp)) { ErrorView(state.error, onRefresh) } }
             state.suggestions.isNullOrEmpty() -> ProductPanel {
-                EmptyView("No suggestions", "Ask the AI to suggest service types and business functions for resources that have none.", ProductIcon.BOOK)
+                EmptyView("No suggestions", "Get AI suggestions for the service types and business functions of resources that have none.", ProductIcon.BOOK)
             }
             else -> {
                 SuggestionGroup("To review", state.pending, state, canDecide, onAccept, onReject)

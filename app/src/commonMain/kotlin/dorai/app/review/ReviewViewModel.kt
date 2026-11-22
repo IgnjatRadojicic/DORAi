@@ -40,6 +40,9 @@ data class ReviewState(
     val deciding: String? = null,
     val suggestions: List<ReviewSuggestion>? = null,
     val error: String? = null,
+    /** The result of the last Get AI suggestions, shown once as a message; [noticeCount] tells repeats apart. */
+    val notice: String? = null,
+    val noticeCount: Int = 0,
 ) {
     val busy: Boolean get() = loading || generating || deciding != null
     val pending: List<ReviewSuggestion> get() = suggestions.orEmpty().filter { it.status == ReviewStatus.PENDING }
@@ -68,8 +71,13 @@ class ReviewViewModel(private val source: ReviewSource) : ViewModel() {
         if (state.busy) return
         state = state.copy(generating = true, error = null)
         try {
+            val before = state.pending.size
             source.generate()
-            state = state.copy(generating = false, suggestions = source.suggestions())
+            val suggestions = source.suggestions()
+            val added = suggestions.count { it.status == ReviewStatus.PENDING } - before
+            state = state.copy(generating = false, suggestions = suggestions,
+                notice = if (added > 0) "The AI added $added suggestions to review." else "The AI found nothing new to suggest.",
+                noticeCount = state.noticeCount + 1)
         } catch (cancelled: CancellationException) {
             state = state.copy(generating = false)
             throw cancelled

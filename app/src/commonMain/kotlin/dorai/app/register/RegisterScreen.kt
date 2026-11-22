@@ -18,6 +18,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import dorai.app.components.NoticeEffect
+import dorai.app.components.SelectChip
 import dorai.app.components.ConfirmDialog
 import dorai.app.components.EmptyView
 import dorai.app.components.ErrorView
@@ -86,11 +88,11 @@ fun RegisterScreen(state: RegisterState, editable: Boolean, actions: RegisterAct
         MetaText("The entity, providers, contracts and functions the register of information is built from. " +
             "Single RoI cells are set on the Register of Information page.")
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            ItemKind.entries.forEach { ProductButton(it.title, { actions.kind(it) }, outlined = it != state.kind) }
+            ItemKind.entries.forEach { SelectChip(it.title, it == state.kind, { actions.kind(it) }) }
         }
         if (state.kind == ItemKind.ROWS) {
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                RegisterForms.handTemplates.forEach { ProductButton(it, { actions.template(it) }, outlined = it != state.template) }
+                RegisterForms.handTemplates.forEach { SelectChip(it, it == state.template, { actions.template(it) }) }
             }
             MetaText(RoiSpec.template(state.template).name)
         }
@@ -103,7 +105,7 @@ fun RegisterScreen(state: RegisterState, editable: Boolean, actions: RegisterAct
             ConfirmDialog("Delete $title?", "$title ($id) is removed from the register. This can't be undone.",
                 "Delete", { actions.delete(id) }, actions.cancelDelete)
         }
-        state.message?.let { MetaText(it) }
+        NoticeEffect(state.message)
         when {
             state.busy && state.register == null -> LoadingView("Loading the register...")
             state.error != null -> ErrorView(state.error, actions.refresh)

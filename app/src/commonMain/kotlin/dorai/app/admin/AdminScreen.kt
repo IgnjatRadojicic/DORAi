@@ -22,6 +22,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import dorai.app.components.NoticeEffect
+import dorai.app.components.SelectChip
 import dorai.app.components.EmptyView
 import dorai.app.components.ErrorView
 import dorai.app.components.LoadingView
@@ -93,13 +95,13 @@ fun AdminScreen(state: AdminState, actions: AdminActions, modifier: Modifier = M
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                     MetaText("Role")
-                    Role.entries.forEach { role -> ProductButton(role.name, { actions.role(role) }, outlined = role != state.newRole, enabled = !state.busy) }
+                    Role.entries.forEach { role -> SelectChip(role.name, role == state.newRole, { actions.role(role) }, enabled = !state.busy) }
                 }
                 MetaText("Admin: users, invites and settings. Reviewer: scan, accept or reject, export. Viewer: read only.")
                 ProductButton("Create user", actions.create, enabled = state.canCreate)
             }
         }
-        state.message?.let { MetaText(it) }
+        NoticeEffect(state.message)
         when {
             state.busy && state.users.isEmpty() -> LoadingView("Loading users...")
             state.error != null -> ErrorView(state.error, actions.refresh)

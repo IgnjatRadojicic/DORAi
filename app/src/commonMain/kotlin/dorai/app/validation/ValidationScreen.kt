@@ -28,7 +28,7 @@ fun ValidationScreen(state: ValidationState, onRefresh: () -> Unit, modifier: Mo
 fun ValidationMetrics(state: ValidationState) {
     state.report?.let { report ->
         MetricGrid(listOf(
-            Metric("Errors", report.errorCount, "", ProductIcon.SHIELD, report.errorCount > 0),
+            Metric("Errors", report.errorCount, "", ProductIcon.SHIELD, error = true),
             Metric("Warnings", report.warningCount, "", ProductIcon.ALERT, report.warningCount > 0),
             Metric("Templates", 15, "", ProductIcon.ARCHIVE),
         ))

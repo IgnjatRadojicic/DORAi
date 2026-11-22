@@ -20,6 +20,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import dorai.app.components.NoticeEffect
+import dorai.app.components.SelectChip
 import dorai.app.components.EmptyView
 import dorai.app.components.ErrorView
 import dorai.app.components.LoadingView
@@ -61,7 +63,7 @@ fun RoiScreen(state: RoiState, actions: RoiActions, modifier: Modifier = Modifie
         }
         state.view?.let { view ->
             MetricGrid(listOf(
-                Metric("Errors", view.errorCount, "Block the final export", ProductIcon.SHIELD, view.errorCount > 0),
+                Metric("Errors", view.errorCount, "Block the final export", ProductIcon.SHIELD, error = true),
                 Metric("Warnings", view.warningCount, "To review", ProductIcon.ALERT, view.warningCount > 0),
                 Metric("Templates", view.tables.size, "Reference date ${view.referenceDate}", ProductIcon.ARCHIVE),
             ))
@@ -74,7 +76,7 @@ fun RoiScreen(state: RoiState, actions: RoiActions, modifier: Modifier = Modifie
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     state.templates.forEach { t ->
                         val label = t.code + if (t.errors > 0) " (${t.errors})" else ""
-                        ProductButton(label, { actions.select(t.code) }, outlined = t.code != state.template)
+                        SelectChip(label, t.code == state.template, { actions.select(t.code) })
                     }
                 }
                 TemplatePanel(state, actions)
@@ -94,7 +96,7 @@ private fun TemplatePanel(state: RoiState, actions: RoiActions) {
             OutlineChip(if (errors == 0) "Ready" else "$errors to fix", if (errors == 0) ProductStyle.colors.accent else ProductStyle.colors.amber, dot = true)
         }
         state.edit?.takeIf { it.template == template.code }?.let { edit -> EditBar(edit, state.saving, actions) }
-        state.message?.let { Box(Modifier.padding(horizontal = 24.dp, vertical = 8.dp)) { MetaText(it) } }
+        NoticeEffect(state.message)
         if (rows.isEmpty()) {
             EmptyView("No rows", "Nothing in the register feeds this template yet.")
         } else {

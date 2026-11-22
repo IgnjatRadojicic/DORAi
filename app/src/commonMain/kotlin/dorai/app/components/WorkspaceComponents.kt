@@ -27,10 +27,45 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dorai.app.theme.ProductStyle
+import dorai.app.theme.ProductShapes
+import dorai.app.theme.ProductSpacing
 
 @Composable
 fun MetaText(text: String, modifier: Modifier = Modifier, color: Color = ProductStyle.colors.muted) {
     Text(uiText(text), modifier, color = color, style = MaterialTheme.typography.labelSmall)
+}
+
+/** Codes and identifiers (LEIs, rule ids, Terraform types): the one place for monospace. */
+@Composable
+fun CodeText(text: String, modifier: Modifier = Modifier, color: Color = ProductStyle.colors.muted) {
+    Text(text, modifier, color = color, style = MaterialTheme.typography.labelMedium)
+}
+
+/**
+ * One option of a choice (a kind, a template, a role). Selected shows as a tinted chip with a check,
+ * never as the blue primary button, so it can't be mistaken for an action.
+ */
+@Composable
+fun SelectChip(text: String, selected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true) {
+    val colors = ProductStyle.colors
+    val interaction = remember { MutableInteractionSource() }
+    val hovered by interaction.collectIsHoveredAsState()
+    val fill by animateColorAsState(when {
+        selected -> colors.accent.copy(alpha = 0.14f)
+        hovered && enabled -> colors.hover
+        else -> Color.Transparent
+    }, tween(ProductMotion.FEEDBACK), label = "chip-fill")
+    Surface(onClick = onClick, enabled = enabled, interactionSource = interaction,
+        modifier = modifier.hoverable(interaction).actionPointer(enabled).semantics { this.selected = selected; role = Role.Tab },
+        shape = ProductShapes.pill, color = fill,
+        border = BorderStroke(1.dp, if (selected) colors.accent.copy(alpha = 0.45f) else colors.line)) {
+        Row(Modifier.defaultMinSize(minHeight = 34.dp).padding(horizontal = 14.dp, vertical = 6.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+            if (selected) LineIcon(ProductIcon.CHECK, color = colors.accent, size = 14.dp)
+            Text(uiText(text), color = if (selected) colors.ink else colors.muted, style = MaterialTheme.typography.bodyMedium,
+                fontWeight = if (selected) FontWeight.Medium else FontWeight.Normal)
+        }
+    }
 }
 
 @Composable
@@ -43,10 +78,10 @@ fun ProductPanel(modifier: Modifier = Modifier, highlighted: Boolean = false, on
         tween(ProductMotion.FEEDBACK), label = "panel-border")
     val fill by animateColorAsState(if (highlighted) lerp(colors.panel, colors.accent, 0.045f) else colors.panel,
         tween(ProductMotion.FEEDBACK), label = "panel-fill")
-    if (onClick == null) Surface(modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp), color = fill,
+    if (onClick == null) Surface(modifier.fillMaxWidth(), shape = ProductShapes.card, color = fill,
         border = BorderStroke(1.dp, border)) { Column(content = content) }
     else Surface(onClick = onClick, interactionSource = interaction, modifier = modifier.fillMaxWidth().hoverable(interaction).actionPointer(),
-        shape = RoundedCornerShape(10.dp), color = fill, border = BorderStroke(1.dp, border)) { Column(content = content) }
+        shape = ProductShapes.card, color = fill, border = BorderStroke(1.dp, border)) { Column(content = content) }
 }
 
 @Composable
@@ -86,11 +121,11 @@ fun ProductButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifi
         else -> main
     }, tween(ProductMotion.FEEDBACK), label = "button-fill")
     Surface(onClick = onClick, enabled = enabled, interactionSource = interaction,
-        modifier = modifier.hoverable(interaction).actionPointer(enabled).graphicsLayer { scaleX = scale; scaleY = scale }, shape = RoundedCornerShape(7.dp),
+        modifier = modifier.hoverable(interaction).actionPointer(enabled).graphicsLayer { scaleX = scale; scaleY = scale }, shape = ProductShapes.control,
         color = fill,
         contentColor = if (outlined) colors.ink else colors.background,
         border = BorderStroke(if (focused) 2.dp else 1.dp, if (focused) colors.accent else if (outlined) colors.line else main.copy(alpha = if (enabled) 1f else 0.28f))) {
-        Row(Modifier.defaultMinSize(minHeight = 36.dp).padding(horizontal = 14.dp, vertical = 8.dp),
+        Row(Modifier.defaultMinSize(minHeight = ProductSpacing.control).padding(horizontal = 16.dp, vertical = 8.dp),
             horizontalArrangement = Arrangement.spacedBy(9.dp), verticalAlignment = Alignment.CenterVertically) {
             val foreground = if (!enabled) colors.muted else if (outlined) colors.ink else colors.background
             if (icon != null) LineIcon(icon, color = foreground, size = 15.dp)
@@ -101,11 +136,11 @@ fun ProductButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifi
 
 @Composable
 fun OutlineChip(text: String, color: Color = ProductStyle.colors.muted, dot: Boolean = false) {
-    Surface(color = Color.Transparent, shape = RoundedCornerShape(24.dp),
+    Surface(color = Color.Transparent, shape = ProductShapes.pill,
         border = BorderStroke(1.dp, if (color == ProductStyle.colors.muted) ProductStyle.colors.line else color.copy(alpha = 0.4f))) {
         Row(Modifier.padding(horizontal = 10.dp, vertical = 5.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(7.dp)) {
             if (dot) Box(Modifier.size(6.dp).background(color, RoundedCornerShape(50)))
-            Text(uiText(text), color = color, fontFamily = ProductStyle.fonts.mono, fontSize = 10.sp, lineHeight = 14.sp)
+            Text(uiText(text), color = color, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Medium)
         }
     }
 }
@@ -131,7 +166,7 @@ fun ProvenanceBadge(provenance: Provenance) {
 
 @Composable
 fun CitationView(citation: EvidenceCitation) {
-    Surface(color = ProductStyle.colors.background, shape = RoundedCornerShape(4.dp), border = BorderStroke(1.dp, ProductStyle.colors.line)) {
+    Surface(color = ProductStyle.colors.background, shape = ProductShapes.control, border = BorderStroke(1.dp, ProductStyle.colors.line)) {
         SelectionContainer {
             Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -177,7 +212,7 @@ fun LoadingView(message: String) {
 
 @Composable
 fun DemoNotice(message: String) {
-    Surface(color = ProductStyle.colors.note, border = BorderStroke(1.dp, ProductStyle.colors.noteBorder), shape = RoundedCornerShape(5.dp)) {
+    Surface(color = ProductStyle.colors.note, border = BorderStroke(1.dp, ProductStyle.colors.noteBorder), shape = ProductShapes.card) {
         Row(Modifier.fillMaxWidth().padding(16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             LineIcon(ProductIcon.ALERT, color = ProductStyle.colors.noteInk, size = 17.dp)
             Text(uiText(message), color = ProductStyle.colors.noteInk, style = MaterialTheme.typography.bodySmall)
@@ -185,8 +220,12 @@ fun DemoNotice(message: String) {
     }
 }
 
+/**
+ * A count at the top of a page. [attention] colours it amber (something to look at);
+ * [error] colours it red with the alert icon (something that blocks), so an error never reads as "OK".
+ */
 data class Metric(val label: String, val value: Int, val description: String, val icon: ProductIcon, val attention: Boolean = false,
-    val selected: Boolean = false, val onClick: (() -> Unit)? = null)
+    val selected: Boolean = false, val onClick: (() -> Unit)? = null, val error: Boolean = false)
 
 @Composable
 fun MetricGrid(metrics: List<Metric>) {
@@ -200,13 +239,22 @@ fun MetricGrid(metrics: List<Metric>) {
                             Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                                 Row(verticalAlignment = Alignment.Top) {
                                     Text(uiText(metric.label), Modifier.weight(1f), color = ProductStyle.colors.muted, style = MaterialTheme.typography.bodySmall)
-                                    LineIcon(metric.icon, color = if (metric.attention) ProductStyle.colors.amber else ProductStyle.colors.muted, size = 17.dp)
+                                    val tone = when {
+                                        metric.error && metric.value > 0 -> ProductStyle.colors.red
+                                        metric.attention -> ProductStyle.colors.amber
+                                        else -> null
+                                    }
+                                    LineIcon(if (metric.error && metric.value > 0) ProductIcon.ALERT else metric.icon, color = tone ?: ProductStyle.colors.muted, size = 17.dp)
                                 }
                                 AnimatedContent(targetState = metric.value,
                                     transitionSpec = { fadeIn(tween(ProductMotion.CONTENT)).togetherWith(fadeOut(tween(ProductMotion.FEEDBACK))) },
                                     label = "metric-value") { count ->
-                                    Text(count.toString(), fontFamily = ProductStyle.fonts.mono, fontSize = 30.sp, lineHeight = 38.sp,
-                                        color = if (metric.attention) ProductStyle.colors.amber else ProductStyle.colors.ink)
+                                    Text(count.toString(), style = MaterialTheme.typography.headlineMedium.copy(fontFeatureSettings = "tnum"),
+                                        color = when {
+                                            metric.error && count > 0 -> ProductStyle.colors.red
+                                            metric.attention -> ProductStyle.colors.amber
+                                            else -> ProductStyle.colors.ink
+                                        })
                                 }
                                 if (metric.description.isNotBlank()) Text(uiText(metric.description), color = ProductStyle.colors.muted, style = MaterialTheme.typography.bodySmall)
                             }
