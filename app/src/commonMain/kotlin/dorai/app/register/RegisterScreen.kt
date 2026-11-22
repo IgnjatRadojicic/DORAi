@@ -36,6 +36,10 @@ import dorai.app.theme.ProductStyle
 import dorai.shared.roi.RoiOption
 import dorai.shared.roi.RoiSpec
 import kotlinx.coroutines.launch
+import dorai.app.components.UiCopy
+import dorai.app.components.uiFormat
+import dorai.app.components.uiText
+import dorai.app.components.onEscape
 
 @Composable
 fun RegisterRoute(model: RegisterViewModel, modifier: Modifier = Modifier) {
@@ -102,7 +106,7 @@ fun RegisterScreen(state: RegisterState, editable: Boolean, actions: RegisterAct
             "Discard changes", actions.discard, actions.keepEditing, dismiss = "Keep editing")
         state.confirmDelete?.let { id ->
             val title = state.lines.firstOrNull { it.id == id }?.title ?: id
-            ConfirmDialog("Delete $title?", "$title ($id) is removed from the register. This can't be undone.",
+            ConfirmDialog(uiFormat(UiCopy.DELETE_ITEM_TITLE, "title" to title), uiFormat(UiCopy.DELETE_ITEM_BODY, "title" to title, "id" to id),
                 "Delete", { actions.delete(id) }, actions.cancelDelete)
         }
         NoticeEffect(state.message)
@@ -118,7 +122,7 @@ fun RegisterScreen(state: RegisterState, editable: Boolean, actions: RegisterAct
 @Composable
 private fun ListPanel(state: RegisterState, editable: Boolean, actions: RegisterActions) {
     ProductPanel {
-        PanelHeading(state.kind.title, "${state.lines.size} in the register") {
+        PanelHeading(state.kind.title, uiFormat(UiCopy.IN_REGISTER, "count" to state.lines.size)) {
             if (editable && state.kind != ItemKind.ENTITY) ProductButton("Add", actions.new, enabled = !state.busy)
         }
         if (state.lines.isEmpty()) {
@@ -146,13 +150,13 @@ private fun ListPanel(state: RegisterState, editable: Boolean, actions: Register
 
 @Composable
 private fun FormPanel(form: ItemForm, state: RegisterState, actions: RegisterActions) {
-    ProductPanel(highlighted = true) {
-        PanelHeading(form.template ?: form.kind.title, if (form.isNew) "New" else "Edit ${form.id}")
+    ProductPanel(Modifier.onEscape(!state.busy, actions.cancel), highlighted = true) {
+        PanelHeading(form.template ?: form.kind.title, if (form.isNew) "New" else uiFormat(UiCopy.EDIT_ITEM, "id" to form.id.orEmpty()))
         Column(Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             form.fields.forEach { field ->
                 if (field.choices.isEmpty()) {
                     OutlinedTextField(field.text, { actions.type(field.key, it) }, Modifier.fillMaxWidth(),
-                        label = { Text(field.label + if (field.required) " *" else "") }, singleLine = true, enabled = !state.busy)
+                        label = { Text(uiText(field.label) + if (field.required) " *" else "") }, singleLine = true, enabled = !state.busy)
                 } else {
                     ChoiceField(field, enabled = !state.busy) { actions.type(field.key, it) }
                 }
@@ -177,13 +181,13 @@ fun ChoiceField(field: FormField, enabled: Boolean, onPick: (String) -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         OutlinedTextField(field.text, onPick, Modifier.fillMaxWidth(), singleLine = true, enabled = enabled,
             label = { Text(field.label + if (field.required) " *" else "") },
-            supportingText = { Text(picked?.label ?: "Type to search ${field.choices.size} options") })
+            supportingText = { Text(picked?.label ?: uiFormat(UiCopy.SEARCH_OPTIONS, "count" to field.choices.size)) })
         if (picked == null) {
             val matches = matching(field.choices, field.text)
             FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 matches.take(MAX_SHOWN).forEach { option -> ProductButton("${option.key}: ${option.label}", { onPick(option.key) }, outlined = true, enabled = enabled) }
             }
-            if (matches.size > MAX_SHOWN) MetaText("${matches.size - MAX_SHOWN} more; type more of the name to narrow the list.")
+            if (matches.size > MAX_SHOWN) MetaText(uiFormat(UiCopy.MORE_MATCHES, "count" to matches.size - MAX_SHOWN))
         }
     }
 }

@@ -93,7 +93,7 @@ private fun ExportDownloads(state: ExportState, onDownload: (ExportFormat) -> Un
         }
         if (!canExport && !isDemo) Text(uiText("Read-only access"), color = ProductStyle.colors.muted)
         state.error?.let { ErrorView(it) }
-        NoticeEffect(state.savedLocation?.let { "File saved: $it" } ?: if (state.cancelled) "Save cancelled. No new file was saved." else null)
+        NoticeEffect(state.savedLocation?.let { uiFormat(UiCopy.FILE_SAVED, "path" to it) } ?: if (state.cancelled) uiText(UiCopy.SAVE_CANCELLED) else null)
     }
 }
 

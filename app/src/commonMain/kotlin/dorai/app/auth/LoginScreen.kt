@@ -65,7 +65,7 @@ private fun SignInCard(state: LoginState, actions: LoginActions) {
             OutlinedTextField(
                 value = state.username,
                 onValueChange = actions.onUsernameChange,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().focusOnShow(state.username.isEmpty()),
                 label = { Text(uiText("Username")) },
                 singleLine = true,
                 enabled = !state.busy,
@@ -93,7 +93,8 @@ private fun PasswordChangeCard(state: LoginState, actions: LoginActions) {
             uiText("Your password is temporary. Choose a new one with at least 12 characters to continue."),
             color = ProductStyle.colors.muted, style = MaterialTheme.typography.bodyMedium,
         )
-        PasswordField("New password", state.newPassword, actions.onNewPasswordChange, !state.busy, ImeAction.Next)
+        PasswordField("New password", state.newPassword, actions.onNewPasswordChange, !state.busy, ImeAction.Next,
+            modifier = Modifier.focusOnShow())
         PasswordField("Repeat new password", state.repeatPassword, actions.onRepeatPasswordChange, !state.busy) {
             if (state.canChange) actions.onChangePassword()
         }
@@ -109,12 +110,12 @@ private fun PasswordChangeCard(state: LoginState, actions: LoginActions) {
 @Composable
 private fun PasswordField(
     label: String, value: String, onChange: (String) -> Unit, enabled: Boolean,
-    imeAction: ImeAction = ImeAction.Go, onGo: () -> Unit = {},
+    imeAction: ImeAction = ImeAction.Go, modifier: Modifier = Modifier, onGo: () -> Unit = {},
 ) {
     OutlinedTextField(
         value = value,
         onValueChange = onChange,
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         label = { Text(uiText(label)) },
         singleLine = true,
         enabled = enabled,

@@ -67,10 +67,10 @@ private fun InventoryPanel(state: InventoryState, onRefresh: () -> Unit) {
                 }
             }
         }
-        NoticeEffect(state.lastScan?.let { "Scan finished: ${it.resourceCount} resources, ${it.newSuggestionCount} new suggestions to review." }, key = state.lastScan?.scannedAt)
+        NoticeEffect(state.lastScan?.let { uiFormat(UiCopy.SCAN_FINISHED, "resources" to it.resourceCount, "count" to it.newSuggestionCount) }, key = state.lastScan?.scannedAt)
         Row(Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 16.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-            MetaText(resources?.let { "${it.size} resources" } ?: "")
-            state.lastScan?.let { MetaText("Last scan ${it.scannedAt.take(16).replace('T', ' ')} UTC, ${it.newSuggestionCount} suggestions to review") }
+            MetaText(resources?.let { uiFormat(UiCopy.RESOURCE_COUNT, "count" to it.size) } ?: "")
+            state.lastScan?.let { MetaText(uiFormat(UiCopy.LAST_SCAN, "time" to it.scannedAt.take(16).replace('T', ' '), "count" to it.newSuggestionCount)) }
         }
     }
 }

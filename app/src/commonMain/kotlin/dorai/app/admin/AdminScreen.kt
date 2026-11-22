@@ -40,6 +40,13 @@ import dorai.app.components.ProductTableRow
 import dorai.app.theme.ProductStyle
 import dorai.shared.model.Role
 import kotlinx.coroutines.launch
+import dorai.app.components.UiCopy
+import dorai.app.components.uiFormat
+import dorai.app.components.uiText
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 
 @Composable
 fun AdminRoute(model: AdminViewModel, modifier: Modifier = Modifier) {
@@ -89,9 +96,12 @@ fun AdminScreen(state: AdminState, actions: AdminActions, modifier: Modifier = M
             PanelHeading("New user", "Create a user and an invite link")
             Column(Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    OutlinedTextField(state.newUsername, actions.username, Modifier.width(240.dp), label = { Text("Username") }, singleLine = true, enabled = !state.busy)
-                    OutlinedTextField(state.newPassword, actions.password, Modifier.width(260.dp), label = { Text("Temporary password (blank: generated)") },
-                        singleLine = true, enabled = !state.busy, visualTransformation = PasswordVisualTransformation())
+                    OutlinedTextField(state.newUsername, actions.username, Modifier.width(240.dp), label = { Text(uiText("Username")) }, singleLine = true, enabled = !state.busy,
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next))
+                    OutlinedTextField(state.newPassword, actions.password, Modifier.width(260.dp), label = { Text(uiText("Temporary password (blank: generated)")) },
+                        singleLine = true, enabled = !state.busy, visualTransformation = PasswordVisualTransformation(),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Go),
+                        keyboardActions = KeyboardActions(onGo = { if (state.canCreate) actions.create() }))
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                     MetaText("Role")
@@ -129,16 +139,16 @@ private fun UsersPanel(state: AdminState, actions: AdminActions) {
     state.confirm?.let { pending ->
         val name = pending.username
         when (pending.action) {
-            AdminAction.DISABLE -> ConfirmDialog("Disable $name?",
-                "$name can no longer sign in and every session ends now. There is no way to enable the user again from the app yet.",
-                "Disable $name", { actions.act(AdminAction.DISABLE, name) }, actions.cancelConfirm)
-            AdminAction.REVOKE -> ConfirmDialog("Sign out $name everywhere?",
-                "Every session of $name ends now, on all devices. $name can sign in again with the password.",
+            AdminAction.DISABLE -> ConfirmDialog(uiFormat(UiCopy.DISABLE_USER_TITLE, "name" to name),
+                uiFormat(UiCopy.DISABLE_USER_BODY, "name" to name),
+                uiFormat(UiCopy.DISABLE_USER_CONFIRM, "name" to name), { actions.act(AdminAction.DISABLE, name) }, actions.cancelConfirm)
+            AdminAction.REVOKE -> ConfirmDialog(uiFormat(UiCopy.REVOKE_USER_TITLE, "name" to name),
+                uiFormat(UiCopy.REVOKE_USER_BODY, "name" to name),
                 "Sign out everywhere", { actions.act(AdminAction.REVOKE, name) }, actions.cancelConfirm)
         }
     }
     ProductPanel {
-        PanelHeading("Users", "${state.users.size} on this server")
+        PanelHeading("Users", uiFormat(UiCopy.USERS_ON_SERVER, "count" to state.users.size))
         ProductTable(listOf("User", "Role", "Status", "Actions"), listOf(1f, 0.7f, 1f, 2.2f), minWidth = 900) {
             state.users.forEach { user ->
                 ProductTableRow {
@@ -151,7 +161,7 @@ private fun UsersPanel(state: AdminState, actions: AdminActions) {
                             else -> OutlineChip("Active", ProductStyle.colors.accent, dot = true)
                         }
                     }
-                    Row(Modifier.weight(2.2f), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    FlowRow(Modifier.weight(2.2f), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         if (!user.disabled) ProductButton("New invite", { actions.invite(user.username) }, outlined = true, enabled = !state.busy)
                         if (actions.canActOn(user.username)) {
                             // The labels never change, so the row stays still; the dialog below asks.
@@ -168,13 +178,13 @@ private fun UsersPanel(state: AdminState, actions: AdminActions) {
 @Composable
 private fun HandoverPanel(handover: Handover, close: () -> Unit) {
     ProductPanel(highlighted = true) {
-        PanelHeading("Hand over to ${handover.username}", "Shown once") {
+        PanelHeading(uiFormat(UiCopy.HANDOVER_TITLE, "name" to handover.username), uiText(UiCopy.HANDOVER_SHOWN_ONCE)) {
             ProductButton("Done", close, outlined = true)
         }
         SelectionContainer {
             Column(Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 handover.link?.let {
-                    MetaText("Invite link (valid until ${handover.expiresAt}). It carries the server address and certificate, never a password:")
+                    MetaText(uiFormat(UiCopy.HANDOVER_LINK, "until" to handover.expiresAt))
                     Text(it, style = MaterialTheme.typography.bodyMedium)
                 }
                 handover.temporaryPassword?.let {

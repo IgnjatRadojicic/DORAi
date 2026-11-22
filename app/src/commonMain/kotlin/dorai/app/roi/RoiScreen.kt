@@ -58,6 +58,8 @@ import dorai.shared.model.ValidationSeverity
 import dorai.shared.roi.RoiCell
 import dorai.shared.roi.RoiSpec
 import dorai.app.register.matching
+import dorai.app.components.UiCopy
+import dorai.app.components.uiFormat
 
 /** Callbacks of the RoI screen; the screen never talks to the server itself. */
 class RoiActions(
@@ -81,7 +83,7 @@ fun RoiScreen(state: RoiState, actions: RoiActions, modifier: Modifier = Modifie
             MetricGrid(listOf(
                 Metric("Errors", view.errorCount, "Block the final export", ProductIcon.SHIELD, error = true),
                 Metric("Warnings", view.warningCount, "To review", ProductIcon.ALERT, view.warningCount > 0),
-                Metric("Templates", view.tables.size, "Reference date ${view.referenceDate}", ProductIcon.ARCHIVE),
+                Metric("Templates", view.tables.size, uiFormat(UiCopy.REFERENCE_DATE, "date" to view.referenceDate), ProductIcon.ARCHIVE),
             ))
         }
         when {
@@ -109,7 +111,7 @@ private fun TemplatePanel(state: RoiState, actions: RoiActions) {
     ProductPanel {
         PanelHeading(template.code, template.name) {
             val errors = issues.count { it.severity == ValidationSeverity.Error }
-            OutlineChip(if (errors == 0) "Ready" else "$errors to fix", if (errors == 0) ProductStyle.colors.accent else ProductStyle.colors.amber, dot = true)
+            OutlineChip(if (errors == 0) "Ready" else uiFormat(UiCopy.TO_FIX, "count" to errors), if (errors == 0) ProductStyle.colors.accent else ProductStyle.colors.amber, dot = true)
         }
         state.edit?.takeIf { it.template == template.code }?.let { edit -> CellEditor(edit, state.saving, actions) }
         NoticeEffect(state.message)
@@ -154,7 +156,10 @@ private fun Cell(cell: RoiCell?, column: String, editable: Boolean, modifier: Mo
         val named = value?.let { v -> RoiSpec.column(column)?.label(v)?.let { "$v $it" } ?: v }
         Text(named ?: if (editable) uiText("Add") else "", style = MaterialTheme.typography.bodyMedium,
             color = if (value == null) (if (editable) ProductStyle.colors.accent else ProductStyle.colors.muted) else ProductStyle.colors.ink)
-        cell?.let { MetaText((it.label?.let(::labelText) ?: "derived") + (it.confirmedBy?.let { by -> " by $by" } ?: "")) }
+        cell?.let {
+            val label = uiText(it.label?.let(::labelText) ?: "derived")
+            MetaText(it.confirmedBy?.let { by -> uiFormat(UiCopy.CONFIRMED_BY, "label" to label, "name" to by) } ?: label)
+        }
     }
 }
 
@@ -206,7 +211,8 @@ private fun EditorContent(edit: CellEdit, saving: Boolean, actions: RoiActions, 
                 Text("${picked.key} ${picked.label}", color = ProductStyle.colors.accent, style = MaterialTheme.typography.bodyMedium)
             } else {
                 val matches = matching(options, edit.text)
-                MetaText(if (edit.text.isBlank()) "Type to search ${options.size} options, then pick one." else "${matches.size} of ${options.size} options match.")
+                MetaText(if (edit.text.isBlank()) uiFormat(UiCopy.PICK_OPTION, "count" to options.size)
+                    else uiFormat(UiCopy.OPTIONS_MATCH, "count" to matches.size, "total" to options.size))
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     matches.take(12).forEach { option -> SelectChip("${option.key} ${option.label}", false, { actions.type(option.key) }, enabled = !saving) }
                 }
