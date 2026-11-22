@@ -61,6 +61,9 @@ compose.desktop {
             windows {
                 upgradeUuid = "8f23d603-e143-41e8-901e-1074dce8fd1c"
                 iconFile.set(project.file("icons/icon.ico"))
+                shortcut = true
+                menu = true
+                menuGroup = "DORAi"
             }
             linux { iconFile.set(project.file("icons/icon-512.png")) }
             // Signed and notarized only when the release workflow has Apple's certificate (see docs/plan-releases.md).
