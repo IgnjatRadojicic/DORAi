@@ -3,11 +3,17 @@ package dorai.app
 import dorai.app.roi.RoiRoute
 import dorai.app.admin.AdminRoute
 import dorai.app.register.RegisterRoute
+import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
@@ -29,6 +35,8 @@ import dorai.app.shell.Sections
 import dorai.app.shell.ShellViewModel
 import dorai.app.shell.Workspace
 import dorai.app.theme.DoraiTheme
+import dorai.app.theme.ProductStyle
+import dorai.app.theme.ThemeMode
 import kotlinx.coroutines.launch
 
 /** An invite link the platform opened the app with. A new object each time, so the same link tapped twice is handled twice. */
@@ -39,17 +47,30 @@ class OpenedInvite(val link: String)
  * [chrome] is drawn above everything inside the theme, for example the desktop title bar.
  * [invite] is a `dorai://connect` link the platform opened the app with (Android deep link).
  * [storage] keeps the server, settings and session between starts; the platform builds it.
+ * [onDarkTheme] tells the platform which theme is showing (Android colours the status bar icons with it).
+ * [backHandler] is the platform's Back button (Android); the app passes whether it wants Back and what Back does.
  */
 @Composable
-fun App(chrome: @Composable () -> Unit = {}, invite: OpenedInvite? = null, storage: AppStorage = AppStorage.inMemory()) {
+fun App(
+    chrome: @Composable () -> Unit = {},
+    invite: OpenedInvite? = null,
+    storage: AppStorage = AppStorage.inMemory(),
+    onDarkTheme: (Boolean) -> Unit = {},
+    backHandler: @Composable (enabled: Boolean, onBack: () -> Unit) -> Unit = { _, _ -> },
+) {
     val shell = viewModel { ShellViewModel(storage = storage) }
     LaunchedEffect(shell) { shell.restore() }
     LaunchedEffect(shell) { shell.connection.watch() }
     // After restore, so the saved server never replaces the one in the link.
     LaunchedEffect(invite, shell.ready) { if (shell.ready) invite?.let { shell.openInvite(it.link) } }
     val scope = rememberCoroutineScope()
+    val dark = shell.state.theme == ThemeMode.DARK || (shell.state.theme == ThemeMode.SYSTEM && isSystemInDarkTheme())
+    SideEffect { onDarkTheme(dark) }
+    // Back returns to the previous section; with none left the platform handles it (Android closes the app).
+    backHandler(shell.workspace != null && shell.canGoBack, shell::back)
     DoraiTheme(shell.state.theme, shell.state.language) {
-        Column(Modifier.fillMaxSize()) {
+        // The background runs under the system bars (Android edge to edge); the content stays clear of them and of the keyboard.
+        Column(Modifier.fillMaxSize().background(ProductStyle.colors.background).windowInsetsPadding(WindowInsets.safeDrawing)) {
             chrome()
             val workspace = shell.workspace
             if (!shell.ready) {

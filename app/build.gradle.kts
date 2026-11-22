@@ -15,6 +15,8 @@ kotlin {
         compileSdk = libs.versions.android.compileSdk.get().toInt()
         minSdk = libs.versions.android.minSdk.get().toInt()
         compilerOptions { jvmTarget.set(JvmTarget.JVM_17) }
+        // The logos in composeResources reach the Android build through its resources.
+        androidResources { enable = true }
     }
 
     sourceSets {
@@ -24,6 +26,7 @@ kotlin {
             implementation(libs.compose.foundation)
             implementation(libs.compose.ui)
             implementation(libs.compose.material3)
+            implementation(libs.compose.components.resources)
             implementation(libs.compose.ui.tooling.preview)
             implementation(libs.androidx.lifecycle.viewmodel.compose)
             implementation(libs.datastore.preferences)
@@ -41,6 +44,12 @@ kotlin {
     }
 }
 
+// Logos and icons from the designer (composeResources/drawable); the Res class stays inside the app module.
+compose.resources {
+    packageOfResClass = "dorai.app.resources"
+    publicResClass = false
+}
+
 compose.desktop {
     application {
         mainClass = "dorai.app.MainKt"
@@ -49,10 +58,15 @@ compose.desktop {
             packageName = "DORAi"
             packageVersion = project.version.toString()
             // Fixed for the life of the product: it lets a new MSI upgrade an older install in place.
-            windows { upgradeUuid = "8f23d603-e143-41e8-901e-1074dce8fd1c" }
+            windows {
+                upgradeUuid = "8f23d603-e143-41e8-901e-1074dce8fd1c"
+                iconFile.set(project.file("icons/icon.ico"))
+            }
+            linux { iconFile.set(project.file("icons/icon-512.png")) }
             // Signed and notarized only when the release workflow has Apple's certificate (see docs/plan-releases.md).
             macOS {
                 bundleID = "dorai.desktop"
+                iconFile.set(project.file("icons/icon.icns"))
                 System.getenv("DORAI_MACOS_SIGN_IDENTITY")?.takeIf { it.isNotBlank() }?.let { id ->
                     signing {
                         sign.set(true)

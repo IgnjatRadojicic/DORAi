@@ -58,7 +58,7 @@ fun LoginScreen(
 private fun SignInCard(state: LoginState, actions: LoginActions) {
     Column(Modifier.padding(28.dp), verticalArrangement = Arrangement.spacedBy(24.dp)) {
         Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
-            BrandMark()
+            BrandLogo()
             Text(uiText("Sign in"), style = MaterialTheme.typography.headlineMedium)
         }
         Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {

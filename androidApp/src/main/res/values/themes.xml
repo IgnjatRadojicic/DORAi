@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The window behind the app is the product background, so starting never flashes white in dark mode. -->
+    <style name="Theme.Dorai" parent="@android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/dorai_background</item>
+    </style>
+    <color name="dorai_background">#F7F8FA</color>
+</resources>

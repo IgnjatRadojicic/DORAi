@@ -12,7 +12,6 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -68,16 +67,6 @@ fun ControlCenterFrame(
                         }
                         Spacer(Modifier.weight(1f))
                         HorizontalDivider(color = colors.line.copy(alpha = 0.65f))
-                        Row(Modifier.padding(horizontal = 10.dp, vertical = 20.dp), verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                            Surface(Modifier.size(34.dp), shape = RoundedCornerShape(9.dp), color = colors.hover) {
-                                Box(contentAlignment = Alignment.Center) { Text("FP", fontSize = 11.sp, fontWeight = FontWeight.SemiBold) }
-                            }
-                            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                                Text("FinPay Payments", style = MaterialTheme.typography.titleSmall)
-                                Text("FinPay Payments B.V.", color = colors.muted, fontSize = 10.sp)
-                            }
-                        }
                         footer?.invoke()
                     }
                     VerticalDivider(color = colors.line.copy(alpha = 0.7f))
@@ -122,18 +111,6 @@ fun ControlCenterFrame(
                 }
             }
         }
-    }
-}
-
-@Composable
-internal fun BrandMark(modifier: Modifier = Modifier) {
-    Row(modifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(11.dp)) {
-        Surface(Modifier.size(34.dp), color = ProductStyle.colors.accent.copy(alpha = 0.1f), shape = RoundedCornerShape(10.dp)) {
-            Box(contentAlignment = Alignment.Center) {
-                Surface(Modifier.size(19.dp), shape = CircleShape, color = Color.Transparent, border = BorderStroke(4.dp, ProductStyle.colors.accent)) {}
-            }
-        }
-        Text("DORAi", fontSize = 19.sp, fontWeight = FontWeight.SemiBold, letterSpacing = (-0.4).sp)
     }
 }
 

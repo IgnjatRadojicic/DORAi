@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Android 12 and later: the system splash shows the launcher icon on the product background. -->
+    <style name="Theme.Dorai" parent="@android:style/Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/dorai_background</item>
+        <item name="android:windowSplashScreenBackground">@color/dorai_background</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>
+    </style>
+</resources>

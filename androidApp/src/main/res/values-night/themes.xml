@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.Dorai" parent="@android:style/Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/dorai_background</item>
+    </style>
+    <color name="dorai_background">#1E1F22</color>
+</resources>

@@ -35,7 +35,9 @@ fun WindowScope.DesktopTitleBar(state: WindowState, onClose: () -> Unit) {
     Surface(color = ProductStyle.colors.background) {
         Row(Modifier.fillMaxWidth().height(34.dp), verticalAlignment = Alignment.CenterVertically) {
             WindowDraggableArea(Modifier.weight(1f).fillMaxHeight().pointerInput(Unit) { detectTapGestures(onDoubleTap = { maximize() }) }) {
-                Row(Modifier.fillMaxSize().padding(start = 16.dp), verticalAlignment = Alignment.CenterVertically) {
+                Row(Modifier.fillMaxSize().padding(start = 12.dp), verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    BrandTile(16.dp)
                     Text("DORAi", fontFamily = ProductStyle.fonts.body, color = ProductStyle.colors.muted, fontSize = 11.sp)
                 }
             }

@@ -1,6 +1,7 @@
 package dorai.app.shell
 
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
@@ -194,6 +195,7 @@ class ShellViewModel(
     private fun open(session: Tokens) {
         workspace = Workspace(session, api)
         state = state.copy(section = Sections.INVENTORY)
+        history.clear()
         remember(saved.copy(server = server, username = session.username))
     }
 
@@ -204,9 +206,24 @@ class ShellViewModel(
         api.logout()
     }
 
+    /** The sections visited before the current one, newest last; Back on Android walks it. */
+    private val history = mutableStateListOf<String>()
+
+    /** True when [back] has a section to return to; otherwise Back leaves the app. */
+    val canGoBack: Boolean get() = history.isNotEmpty()
+
     fun select(section: String) {
         val allowed = workspace?.sections ?: sectionsFor(Role.Viewer)
-        if (allowed.any { it.id == section && it.enabled }) state = state.copy(section = section)
+        if (section == state.section || allowed.none { it.id == section && it.enabled }) return
+        history.remove(section)
+        history.add(state.section)
+        state = state.copy(section = section)
+    }
+
+    /** Returns to the previous section. */
+    fun back() {
+        val previous = history.removeLastOrNull() ?: return
+        state = state.copy(section = previous)
     }
 
     fun setTheme(theme: ThemeMode) {
