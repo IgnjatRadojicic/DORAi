@@ -57,6 +57,9 @@ compose.desktop {
             targetFormats(TargetFormat.Msi, TargetFormat.Dmg, TargetFormat.Deb)
             packageName = "DORAi"
             packageVersion = project.version.toString()
+            // The installers ship a reduced Java runtime. Without these modules (from :app:suggestRuntimeModules)
+            // the saved settings were never written, so every start went back to an old server.
+            modules("java.instrument", "java.management", "jdk.security.auth", "jdk.unsupported")
             // Fixed for the life of the product: it lets a new MSI upgrade an older install in place.
             windows {
                 upgradeUuid = "8f23d603-e143-41e8-901e-1074dce8fd1c"
