@@ -82,6 +82,30 @@ class ShellViewModelTest {
     }
 
     @Test
+    fun theNextSignInOpensTheLastSection() {
+        val shell = shell()
+        shell.signIn()
+        shell.select(Sections.REVIEW)
+        runImmediate { shell.logout() }
+        shell.signIn()
+        assertEquals(Sections.REVIEW, shell.state.section)
+    }
+
+    @Test
+    fun backReturnsToTheSectionBefore() {
+        val shell = shell()
+        shell.signIn()
+        shell.select(Sections.REVIEW)
+        shell.select(Sections.EXPORT)
+        assertTrue(shell.canGoBack)
+        shell.back()
+        assertEquals(Sections.REVIEW, shell.state.section)
+        shell.back()
+        assertEquals(Sections.INVENTORY, shell.state.section)
+        assertFalse(shell.canGoBack)
+    }
+
+    @Test
     fun aRefusedLoginStaysOnTheLoginPage() {
         val shell = shell(ApiResult.Failure(Problem(title = "Unauthorized", status = 401, detail = "Wrong username or password.")))
         shell.signIn()

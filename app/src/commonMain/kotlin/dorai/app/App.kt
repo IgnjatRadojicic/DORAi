@@ -21,6 +21,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import dorai.app.auth.LoginActions
 import dorai.app.auth.LoginScreen
 import dorai.app.components.ControlCenterFrame
+import dorai.app.components.WorkspaceAccount
 import dorai.app.connect.InviteField
 import dorai.app.connect.ServerLine
 import dorai.app.export.ExportViewModel
@@ -29,9 +30,7 @@ import dorai.app.export.rememberWorkspaceFiles
 import dorai.app.findings.FindingsRoute
 import dorai.app.inventory.InventoryRoute
 import dorai.app.review.ReviewRoute
-import dorai.app.shell.AccountBar
 import dorai.app.shell.AppStorage
-import dorai.app.shell.LogoutButton
 import dorai.app.shell.Sections
 import dorai.app.shell.ShellViewModel
 import dorai.app.shell.Workspace
@@ -105,14 +104,17 @@ fun App(
                     },
                 )
             } else {
-                WorkspaceShell(shell, workspace, onLogout = { scope.launch { shell.logout() } }, Modifier.weight(1f))
+                WorkspaceShell(shell, workspace, onLogout = { scope.launch { shell.logout() } }, backHandler, Modifier.weight(1f))
             }
         }
     }
 }
 
 @Composable
-private fun WorkspaceShell(shell: ShellViewModel, workspace: Workspace, onLogout: () -> Unit, modifier: Modifier) {
+private fun WorkspaceShell(
+    shell: ShellViewModel, workspace: Workspace, onLogout: () -> Unit,
+    backHandler: @Composable (enabled: Boolean, onBack: () -> Unit) -> Unit, modifier: Modifier,
+) {
     val files = rememberWorkspaceFiles()
     // File access is tied to the window or activity, so the export model lives with the composition.
     val export = remember(workspace, files) { ExportViewModel(workspace.sources.export, files, canExport = { workspace.canReview }) }
@@ -124,8 +126,13 @@ private fun WorkspaceShell(shell: ShellViewModel, workspace: Workspace, onLogout
         modifier = modifier,
         sections = workspace.sections,
         onLanguage = shell::setLanguage,
-        account = { AccountBar(workspace.session) },
-        footer = { LogoutButton(onLogout) },
+        account = WorkspaceAccount(
+            username = workspace.session.username,
+            role = workspace.session.role.name.lowercase().replaceFirstChar { it.uppercase() },
+            server = shell.connection.address,
+            onLogout = onLogout,
+        ),
+        backHandler = backHandler,
     ) { section ->
         Box(Modifier.fillMaxSize()) {
             when (section) {

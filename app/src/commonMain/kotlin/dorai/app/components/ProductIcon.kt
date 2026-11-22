@@ -14,7 +14,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import dorai.app.theme.ProductStyle
 
-enum class ProductIcon { UPLOAD, FILE, SHIELD, ALERT, CHECK, ARROW, DOWNLOAD, CLOSE, CHEVRON, BOOK, LOCATION, FILTER, REFRESH, CLOUD, SUN, MOON, ARCHIVE, GLOBE, LOGOUT }
+enum class ProductIcon { UPLOAD, FILE, SHIELD, ALERT, CHECK, ARROW, DOWNLOAD, CLOSE, CHEVRON, BOOK, LOCATION, FILTER, REFRESH, CLOUD, SUN, MOON, ARCHIVE, GLOBE, LOGOUT,
+    MENU, SPARK, TABLE, LIST, USERS, SYSTEM }
 
 @Composable
 fun LineIcon(icon: ProductIcon, modifier: Modifier = Modifier, color: Color = ProductStyle.colors.muted, size: Dp = 18.dp) {
@@ -60,6 +61,29 @@ fun LineIcon(icon: ProductIcon, modifier: Modifier = Modifier, color: Color = Pr
                 path(17f to 8f, 21f to 12f, 17f to 16f)
             }
             ProductIcon.CLOSE -> { line(6f, 6f, 18f, 18f); line(6f, 18f, 18f, 6f) }
+            ProductIcon.MENU -> { line(4f, 6f, 20f, 6f); line(4f, 12f, 20f, 12f); line(4f, 18f, 20f, 18f) }
+            ProductIcon.SPARK -> {
+                path(12f to 3f, 14f to 10f, 21f to 12f, 14f to 14f, 12f to 21f, 10f to 14f, 3f to 12f, 10f to 10f, closed = true)
+                line(19f, 3f, 19f, 6f); line(17.5f, 4.5f, 20.5f, 4.5f)
+            }
+            ProductIcon.TABLE -> {
+                drawRoundRect(color, Offset(3f * u, 4f * u), Size(18f * u, 16f * u), androidx.compose.ui.geometry.CornerRadius(2f * u), style = stroke)
+                line(3f, 9f, 21f, 9f); line(3f, 14.5f, 21f, 14.5f); line(9f, 9f, 9f, 20f)
+            }
+            ProductIcon.LIST -> {
+                line(9f, 6f, 20f, 6f); line(9f, 12f, 20f, 12f); line(9f, 18f, 20f, 18f)
+                line(4f, 6f, 4.1f, 6f); line(4f, 12f, 4.1f, 12f); line(4f, 18f, 4.1f, 18f)
+            }
+            ProductIcon.USERS -> {
+                drawCircle(color, 3.5f * u, Offset(9f * u, 8f * u), style = stroke)
+                drawArc(color, 180f, 180f, false, Offset(2.5f * u, 14f * u), Size(13f * u, 12f * u), style = stroke)
+                drawCircle(color, 2.8f * u, Offset(17f * u, 9f * u), style = stroke)
+                drawArc(color, 250f, 110f, false, Offset(14f * u, 14.5f * u), Size(8f * u, 9f * u), style = stroke)
+            }
+            ProductIcon.SYSTEM -> {
+                drawRoundRect(color, Offset(3f * u, 4f * u), Size(18f * u, 12f * u), androidx.compose.ui.geometry.CornerRadius(2f * u), style = stroke)
+                line(9f, 20f, 15f, 20f); line(12f, 16f, 12f, 20f)
+            }
             ProductIcon.CHEVRON -> path(7f to 9f, 12f to 14f, 17f to 9f)
             ProductIcon.BOOK -> { path(3f to 3f, 9f to 3f, 12f to 5f, 15f to 3f, 21f to 3f, 21f to 20f, 15f to 20f, 12f to 22f, 9f to 20f, 3f to 20f, closed = true); line(12f, 5f, 12f, 22f) }
             ProductIcon.LOCATION -> { drawCircle(color, 5f * u, Offset(12f * u, 8f * u), style = stroke); path(5f to 11f, 12f to 22f, 19f to 11f) }

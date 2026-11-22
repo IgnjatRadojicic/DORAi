@@ -23,6 +23,8 @@ data class SavedSettings(
     val username: String? = null,
     val theme: ThemeMode? = null,
     val language: AppLanguage? = null,
+    /** The workspace section open when the app closed; it opens again after the next sign-in. */
+    val section: String? = null,
 )
 
 interface SettingsStore {
@@ -49,6 +51,7 @@ class DataStoreSettings(private val store: DataStore<Preferences>) : SettingsSto
             username = prefs[USERNAME],
             theme = prefs[THEME]?.let { name -> ThemeMode.entries.firstOrNull { it.name == name } },
             language = prefs[LANGUAGE]?.let { name -> AppLanguage.entries.firstOrNull { it.name == name } },
+            section = prefs[SECTION],
         )
     } catch (e: CancellationException) {
         throw e
@@ -66,6 +69,7 @@ class DataStoreSettings(private val store: DataStore<Preferences>) : SettingsSto
                     prefs.put(USERNAME, settings.username)
                     prefs.put(THEME, settings.theme?.name)
                     prefs.put(LANGUAGE, settings.language?.name)
+                    prefs.put(SECTION, settings.section)
                 }
             }
         }
@@ -81,5 +85,6 @@ class DataStoreSettings(private val store: DataStore<Preferences>) : SettingsSto
         val USERNAME = stringPreferencesKey("username")
         val THEME = stringPreferencesKey("theme")
         val LANGUAGE = stringPreferencesKey("language")
+        val SECTION = stringPreferencesKey("section")
     }
 }

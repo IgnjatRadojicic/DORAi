@@ -61,7 +61,7 @@ fun sectionsFor(role: Role): List<WorkspaceSection> = shellSections.filter { it.
 
 data class ShellState(
     val section: String = Sections.INVENTORY,
-    val theme: ThemeMode = ThemeMode.DARK,
+    val theme: ThemeMode = ThemeMode.SYSTEM,
     val language: AppLanguage = AppLanguage.ENGLISH,
 )
 
@@ -193,8 +193,11 @@ class ShellViewModel(
     }
 
     private fun open(session: Tokens) {
-        workspace = Workspace(session, api)
-        state = state.copy(section = Sections.INVENTORY)
+        val opened = Workspace(session, api)
+        workspace = opened
+        // The section from the last run, when this role may still see it.
+        val section = saved.section?.takeIf { id -> opened.sections.any { it.id == id && it.enabled } } ?: Sections.INVENTORY
+        state = state.copy(section = section)
         history.clear()
         remember(saved.copy(server = server, username = session.username))
     }
@@ -217,13 +220,18 @@ class ShellViewModel(
         if (section == state.section || allowed.none { it.id == section && it.enabled }) return
         history.remove(section)
         history.add(state.section)
-        state = state.copy(section = section)
+        go(section)
     }
 
     /** Returns to the previous section. */
     fun back() {
         val previous = history.removeLastOrNull() ?: return
-        state = state.copy(section = previous)
+        go(previous)
+    }
+
+    private fun go(section: String) {
+        state = state.copy(section = section)
+        if (workspace != null) remember(saved.copy(section = section))
     }
 
     fun setTheme(theme: ThemeMode) {
