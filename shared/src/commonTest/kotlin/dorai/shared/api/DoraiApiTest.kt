@@ -1,6 +1,8 @@
 package dorai.shared.api
 
 import dorai.shared.Version
+import dorai.shared.model.Role
+import dorai.shared.model.Tokens
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
@@ -12,6 +14,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertNull
+import kotlin.time.Instant
 
 class DoraiApiTest {
 
@@ -51,6 +54,36 @@ class DoraiApiTest {
         val api = DoraiApi("http://server", HttpClient(MockEngine { error("connection refused") }))
         val failure = assertIs<ApiResult.Failure>(api.health())
         assertEquals(0, failure.problem.status)
+    }
+
+    private val session = Tokens("old access", Instant.fromEpochSeconds(0), "refresh", Instant.fromEpochSeconds(4_000_000_000), "ann", Role.Viewer)
+
+    /** The health call answers 401 to the old access token; the refresh answers [refresh]. */
+    private fun expiring(store: TokenStore, refresh: HttpStatusCode) = DoraiApi(
+        "http://server",
+        HttpClient(MockEngine { request ->
+            if (request.url.encodedPath == "/api/auth/refresh") respond("proxy said no", refresh, headersOf(HttpHeaders.ContentType, "text/plain"))
+            else respond("", HttpStatusCode.Unauthorized)
+        }),
+        tokens = store,
+    )
+
+    @Test
+    fun aRefreshTheServerRefusesEndsTheSession() = runTest {
+        val store = MemoryTokenStore(session)
+        val failure = assertIs<ApiResult.Failure>(expiring(store, HttpStatusCode.Unauthorized).health())
+        assertEquals(401, failure.problem.status)
+        assertNull(store.load())
+    }
+
+    @Test
+    fun aRefreshThatFailsForAnotherReasonKeepsTheSession() = runTest {
+        for (status in listOf(HttpStatusCode.BadGateway, HttpStatusCode.TooManyRequests, HttpStatusCode.Forbidden)) {
+            val store = MemoryTokenStore(session)
+            val failure = assertIs<ApiResult.Failure>(expiring(store, status).health())
+            assertEquals(status.value, failure.problem.status)
+            assertEquals(session, store.load())
+        }
     }
 
     @Test

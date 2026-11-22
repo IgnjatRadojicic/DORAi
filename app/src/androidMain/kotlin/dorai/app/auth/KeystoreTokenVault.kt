@@ -20,26 +20,31 @@ import javax.crypto.spec.GCMParameterSpec
 
 /**
  * Tokens encrypted with an AES key that lives in the Android Keystore and never leaves the device,
- * saved in the app's DataStore. A value that no longer decrypts (new key, restored backup) reads as none.
+ * saved in the app's DataStore, one value per server. A value that no longer decrypts (new key,
+ * restored backup) reads as none.
  */
 class KeystoreTokenVault(private val store: DataStore<Preferences>) : TokenVault {
-    override suspend fun read(): Tokens? = withContext(Dispatchers.IO) {
-        val sealed = store.data.first()[TOKENS]?.let { Base64.decode(it, Base64.NO_WRAP) } ?: return@withContext null
+    override suspend fun read(server: String): Tokens? = withContext(Dispatchers.IO) {
+        val sealed = store.data.first()[tokensKey(server)]?.let { Base64.decode(it, Base64.NO_WRAP) } ?: return@withContext null
         val cipher = Cipher.getInstance(TRANSFORMATION)
         cipher.init(Cipher.DECRYPT_MODE, key(), GCMParameterSpec(TAG_BITS, sealed, 0, IV_BYTES))
         DoraiJson.decodeFromString<Tokens>(cipher.doFinal(sealed, IV_BYTES, sealed.size - IV_BYTES).decodeToString())
     }
 
-    override suspend fun write(tokens: Tokens?) = withContext(Dispatchers.IO) {
-        if (tokens == null) {
-            store.edit { it.remove(TOKENS) }
-        } else {
+    override suspend fun write(server: String, tokens: Tokens?) = withContext(Dispatchers.IO) {
+        val sealed = tokens?.let {
             val cipher = Cipher.getInstance(TRANSFORMATION).apply { init(Cipher.ENCRYPT_MODE, key()) }
-            val sealed = cipher.iv + cipher.doFinal(DoraiJson.encodeToString(tokens).encodeToByteArray())
-            store.edit { it[TOKENS] = Base64.encodeToString(sealed, Base64.NO_WRAP) }
+            Base64.encodeToString(cipher.iv + cipher.doFinal(DoraiJson.encodeToString(it).encodeToByteArray()), Base64.NO_WRAP)
+        }
+        store.edit {
+            if (sealed == null) it.remove(tokensKey(server)) else it[tokensKey(server)] = sealed
+            // The single session of earlier versions, which did not say its server.
+            it.remove(LEGACY_TOKENS)
         }
         Unit
     }
+
+    private fun tokensKey(server: String) = stringPreferencesKey("tokens $server")
 
     private fun key(): SecretKey {
         val keystore = KeyStore.getInstance(KEYSTORE).apply { load(null) }
@@ -58,6 +63,6 @@ class KeystoreTokenVault(private val store: DataStore<Preferences>) : TokenVault
         const val TRANSFORMATION = "AES/GCM/NoPadding"
         const val IV_BYTES = 12
         const val TAG_BITS = 128
-        val TOKENS = stringPreferencesKey("tokens")
+        val LEGACY_TOKENS = stringPreferencesKey("tokens")
     }
 }

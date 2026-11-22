@@ -70,7 +70,8 @@ import kotlinx.coroutines.CancellationException
  *
  * With a [tokens] store, every request carries the access token. When the server answers 401, the client
  * refreshes once (the refresh token is single use, so refreshes are serialized) and repeats the request.
- * If the refresh fails, the store is cleared and the caller sees the 401: the user must log in again.
+ * If the server refuses the refresh (401), the store is cleared and the caller sees the 401: the user must
+ * log in again. Any other refresh failure (a proxy error, a restart) keeps the tokens and returns that problem.
  *
  * @param baseUrl server address without `/api`, for example `https://dorai.firm.local:8443`.
  * @param httpClient engine to use; by default OkHttp on desktop and Android, pinned when [fingerprint] is set. Tests pass their own.
@@ -265,6 +266,8 @@ class DoraiApi(
             }
         } catch (e: CancellationException) {
             throw e
+        } catch (e: RefreshUnavailable) {
+            ApiResult.Failure(e.problem)
         } catch (e: Exception) {
             val changed = generateSequence<Throwable>(e) { it.cause }.filterIsInstance<CertificateChanged>().firstOrNull()
             if (changed != null) {
@@ -284,13 +287,23 @@ class DoraiApi(
         val current = store.load() ?: return false
         if (current.accessToken != rejectedAccessToken) return true
         val response = http.post("auth/refresh") { json(RefreshRequest(current.refreshToken)) }
-        if (!response.status.isSuccess()) {
-            store.save(null)
-            return false
+        when {
+            response.status.isSuccess() -> {
+                store.save(response.body<Tokens>())
+                true
+            }
+            // Only the server saying the session ended forgets it. A proxy error, a restart or a rate limit
+            // keeps the tokens, and the next call tries again.
+            response.status == HttpStatusCode.Unauthorized -> {
+                store.save(null)
+                false
+            }
+            else -> throw RefreshUnavailable(response.toProblem())
         }
-        store.save(response.body<Tokens>())
-        true
     }
+
+    /** The session could not be renewed for now; the tokens are kept. */
+    private class RefreshUnavailable(val problem: Problem) : Exception(problem.detail ?: problem.title)
 
     private inline fun <reified B> HttpRequestBuilder.json(body: B) {
         contentType(ContentType.Application.Json)
