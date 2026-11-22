@@ -53,3 +53,6 @@ connection", set `JAVA_TOOL_OPTIONS=-Djdk.net.unixdomain.tmpdir=C:\tmp` (any sho
 - `CLAUDE.md`: how we work (read it, and so does your AI assistant)
 - `docs/plan.md`: architecture, auth, build phases
 - `docs/decisions.md`: decisions as we make them
+- [`docs/roi-generation.md`](docs/roi-generation.md): how the Register of Information is generated, table by table:
+  derived values and their trade-offs, what a person checks and writes, annex codes, rules, AI, security
+- [`docs/faq.md`](docs/faq.md): frequently asked questions
