@@ -248,9 +248,10 @@ fun MetricGrid(metrics: List<Metric>) {
         val columns = if (maxWidth < 600.dp) 2 else metrics.size
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             metrics.chunked(columns).forEach { row ->
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                // Every card in a row as tall as the tallest, so one without a subtitle does not end short.
+                Row(Modifier.height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     row.forEach { metric ->
-                        ProductPanel(Modifier.weight(1f), highlighted = metric.selected, onClick = metric.onClick) {
+                        ProductPanel(Modifier.weight(1f).fillMaxHeight(), highlighted = metric.selected, onClick = metric.onClick) {
                             Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                                 Row(verticalAlignment = Alignment.Top) {
                                     Text(uiText(metric.label), Modifier.weight(1f), color = ProductStyle.colors.muted, style = MaterialTheme.typography.bodySmall)
