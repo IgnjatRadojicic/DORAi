@@ -69,8 +69,10 @@ fun PanelHeading(overline: String, title: String, trailing: @Composable () -> Un
 
 @Composable
 fun ProductButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier,
-    outlined: Boolean = false, enabled: Boolean = true, icon: ProductIcon? = null) {
+    outlined: Boolean = false, enabled: Boolean = true, icon: ProductIcon? = null, destructive: Boolean = false) {
     val colors = ProductStyle.colors
+    // Red only for the confirm button of a dialog that deletes, disables or signs someone out.
+    val main = if (destructive) colors.red else colors.accent
     val interaction = remember { MutableInteractionSource() }
     val hovered by interaction.collectIsHoveredAsState()
     val pressed by interaction.collectIsPressedAsState()
@@ -79,15 +81,15 @@ fun ProductButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifi
     val fill by animateColorAsState(when {
         outlined && hovered && enabled -> colors.hover
         outlined -> Color.Transparent
-        !enabled -> colors.accent.copy(alpha = 0.28f)
-        hovered -> lerp(colors.accent, Color.White, 0.1f)
-        else -> colors.accent
+        !enabled -> main.copy(alpha = 0.28f)
+        hovered -> lerp(main, Color.White, 0.1f)
+        else -> main
     }, tween(ProductMotion.FEEDBACK), label = "button-fill")
     Surface(onClick = onClick, enabled = enabled, interactionSource = interaction,
         modifier = modifier.hoverable(interaction).actionPointer(enabled).graphicsLayer { scaleX = scale; scaleY = scale }, shape = RoundedCornerShape(7.dp),
         color = fill,
         contentColor = if (outlined) colors.ink else colors.background,
-        border = BorderStroke(if (focused) 2.dp else 1.dp, if (focused) colors.accent else if (outlined) colors.line else colors.accent.copy(alpha = if (enabled) 1f else 0.28f))) {
+        border = BorderStroke(if (focused) 2.dp else 1.dp, if (focused) colors.accent else if (outlined) colors.line else main.copy(alpha = if (enabled) 1f else 0.28f))) {
         Row(Modifier.defaultMinSize(minHeight = 36.dp).padding(horizontal = 14.dp, vertical = 8.dp),
             horizontalArrangement = Arrangement.spacedBy(9.dp), verticalAlignment = Alignment.CenterVertically) {
             val foreground = if (!enabled) colors.muted else if (outlined) colors.ink else colors.background

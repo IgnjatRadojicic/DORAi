@@ -32,6 +32,15 @@ class ExportViewModel(
     var state by mutableStateOf(ExportState())
         private set
 
+    /**
+     * True once the person agreed to export a register that has validation errors. Asked once per sign-in,
+     * so saving drafts doesn't train people to click through; the banner on the page stays.
+     */
+    var errorsAcknowledged by mutableStateOf(false)
+        private set
+
+    fun acknowledgeErrors() { errorsAcknowledged = true }
+
     suspend fun download(format: ExportFormat) {
         if (state.busy != null) return
         if (!canExport()) {

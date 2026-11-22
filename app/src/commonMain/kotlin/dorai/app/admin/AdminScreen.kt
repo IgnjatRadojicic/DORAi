@@ -29,6 +29,7 @@ import dorai.app.components.MetaText
 import dorai.app.components.OutlineChip
 import dorai.app.components.PageHeading
 import dorai.app.components.PanelHeading
+import dorai.app.components.ConfirmDialog
 import dorai.app.components.ProductButton
 import dorai.app.components.ProductIcon
 import dorai.app.components.ProductPanel
@@ -123,6 +124,17 @@ fun AdminScreen(state: AdminState, actions: AdminActions, modifier: Modifier = M
 
 @Composable
 private fun UsersPanel(state: AdminState, actions: AdminActions) {
+    state.confirm?.let { pending ->
+        val name = pending.username
+        when (pending.action) {
+            AdminAction.DISABLE -> ConfirmDialog("Disable $name?",
+                "$name can no longer sign in and every session ends now. There is no way to enable the user again from the app yet.",
+                "Disable $name", { actions.act(AdminAction.DISABLE, name) }, actions.cancelConfirm)
+            AdminAction.REVOKE -> ConfirmDialog("Sign out $name everywhere?",
+                "Every session of $name ends now, on all devices. $name can sign in again with the password.",
+                "Sign out everywhere", { actions.act(AdminAction.REVOKE, name) }, actions.cancelConfirm)
+        }
+    }
     ProductPanel {
         PanelHeading("Users", "${state.users.size} on this server")
         ProductTable(listOf("User", "Role", "Status", "Actions"), listOf(1f, 0.7f, 1f, 2.2f), minWidth = 900) {
@@ -140,15 +152,9 @@ private fun UsersPanel(state: AdminState, actions: AdminActions) {
                     Row(Modifier.weight(2.2f), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         if (!user.disabled) ProductButton("New invite", { actions.invite(user.username) }, outlined = true, enabled = !state.busy)
                         if (actions.canActOn(user.username)) {
-                            AdminAction.entries.forEach { action ->
-                                val asking = state.confirm == PendingConfirm(action, user.username)
-                                val label = when (action) {
-                                    AdminAction.DISABLE -> if (asking) "Confirm disable" else "Disable"
-                                    AdminAction.REVOKE -> if (asking) "Confirm sign out" else "Sign out everywhere"
-                                }
-                                ProductButton(label, { actions.act(action, user.username) }, outlined = !asking, enabled = !state.busy)
-                            }
-                            if (state.confirm?.username == user.username) ProductButton("Cancel", actions.cancelConfirm, outlined = true)
+                            // The labels never change, so the row stays still; the dialog below asks.
+                            ProductButton("Sign out everywhere", { actions.act(AdminAction.REVOKE, user.username) }, outlined = true, enabled = !state.busy)
+                            ProductButton("Disable", { actions.act(AdminAction.DISABLE, user.username) }, outlined = true, enabled = !state.busy)
                         }
                     }
                 }

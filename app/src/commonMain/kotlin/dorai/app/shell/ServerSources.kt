@@ -155,8 +155,10 @@ internal fun <T> ApiResult<T>.orFail(fallback: String): T = when (this) {
         when (problem.status) {
             0 -> "The server did not answer. Check the connection and retry."
             401, 403 -> "Your role does not allow this action."
+            400, 413, 415, 422 -> "$fallback The server could not use what was sent (HTTP ${problem.status})."
             else -> "$fallback The server answered with HTTP ${problem.status}."
-        }
+        },
+        retryable = problem.status == 0 || problem.status >= 500,
     )
 }
 

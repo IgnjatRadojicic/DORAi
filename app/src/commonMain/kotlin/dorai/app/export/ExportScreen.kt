@@ -1,6 +1,8 @@
 package dorai.app.export
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
@@ -27,6 +29,7 @@ fun ValidationExportScreen(
         }
         ValidationMetrics(validation)
         ValidationReportPanel(validation, onRefresh, isDemo)
+        validation.report?.errorCount?.takeIf { it > 0 }?.let { ExportErrorsBanner(it) }
         ExportDownloads(export, onDownload, canExport, isDemo, availableFormats)
     }
 }
@@ -110,5 +113,21 @@ private fun ExportFooter(state: ExportState, format: ExportFormat, onDownload: (
         ProductButton(if (state.busy == format) "Saving..." else if (format == ExportFormat.CSV) "Save CSV package" else "Save PDF report",
             { onDownload(format) }, outlined = format == ExportFormat.PDF, enabled = format in availableFormats && canExport && state.busy == null,
             icon = if (state.busy == format) ProductIcon.REFRESH else ProductIcon.DOWNLOAD)
+    }
+}
+
+/** Stays above the export buttons while the register has errors; the dialog only asks once per sign-in. */
+@Composable
+private fun ExportErrorsBanner(errors: Int) {
+    val colors = ProductStyle.colors
+    Surface(shape = RoundedCornerShape(12.dp), color = colors.red.copy(alpha = 0.08f), border = BorderStroke(1.dp, colors.red.copy(alpha = 0.4f))) {
+        Row(Modifier.fillMaxWidth().padding(16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            LineIcon(ProductIcon.ALERT, color = colors.red, size = 17.dp)
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(uiFormat(if (errors == 1) UiCopy.EXPORT_ERRORS_TITLE_ONE else UiCopy.EXPORT_ERRORS_TITLE_MANY, "count" to errors),
+                    style = MaterialTheme.typography.titleSmall)
+                Text(uiText(UiCopy.EXPORT_ERRORS_BODY), color = colors.muted, style = MaterialTheme.typography.bodyMedium)
+            }
+        }
     }
 }

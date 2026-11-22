@@ -50,4 +50,17 @@ class ConnectionViewModelTest {
         runImmediate { model.check() }
         assertEquals(ServerStatus.CONNECTED, model.status)
     }
+
+    @Test
+    fun aCheckCancelledByASwitchedServerKeepsWatching() {
+        var calls = 0
+        val model = ConnectionViewModel("http://localhost:8080") {
+            calls++
+            if (calls == 1) throw kotlinx.coroutines.CancellationException("client closed") else ApiResult.Success(Health("ok", "DORAi"))
+        }
+        runImmediate { model.check() }
+        assertEquals(ServerStatus.CHECKING, model.status)
+        runImmediate { model.check() }
+        assertEquals(ServerStatus.CONNECTED, model.status)
+    }
 }

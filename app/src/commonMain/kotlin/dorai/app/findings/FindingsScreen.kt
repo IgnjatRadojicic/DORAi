@@ -78,7 +78,7 @@ fun FindingsScreen(
                 }
             }
         }
-        state.error?.let { ErrorView(it, if (state.plan != null && canCheck) onCheck else null) }
+        state.error?.let { ErrorView(it, if (state.plan != null && canCheck && state.canRetry) onCheck else null) }
         ExpandDetails(state.checked && !state.busy) {
             MetricGrid(listOf(
                 Metric("All findings", state.findings.size, "", ProductIcon.FILE, selected = state.filter == null, onClick = { onFilter(null) }),

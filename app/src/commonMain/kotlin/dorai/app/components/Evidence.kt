@@ -16,7 +16,11 @@ data class EvidenceCitation(
 )
 
 /** Only messages deliberately intended for display should be passed to this exception. */
-class FrontendFailure(message: String) : Exception(message)
+/** A problem with a message safe to show. [retryable] is false when trying the same thing again can't help (the server refused the input). */
+class FrontendFailure(message: String, val retryable: Boolean = true) : Exception(message)
+
+/** False only for a [FrontendFailure] that says retrying can't help. */
+val Throwable.retryable: Boolean get() = (this as? FrontendFailure)?.retryable ?: true
 
 fun Throwable.displayMessage(fallback: String): String =
     if (this is FrontendFailure) message?.takeIf { it.isNotBlank() } ?: fallback else fallback

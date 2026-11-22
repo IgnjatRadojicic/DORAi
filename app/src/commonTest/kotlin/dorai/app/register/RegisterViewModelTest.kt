@@ -14,6 +14,7 @@ import dorai.shared.roi.RoiOption
 import kotlinx.datetime.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.time.Clock
@@ -153,5 +154,30 @@ class RegisterViewModelTest {
         assertEquals(listOf("S19"), matching(options, "cloud paas").map { it.key })
         assertEquals(3, matching(options, "").size)
         assertEquals(listOf("S08"), matching(options, "s08").map { it.key })
+    }
+
+    @Test
+    fun switchingAwayFromAChangedFormAsksFirst() {
+        val model = model(FakeSource(register()))
+        model.startNew()
+        model.type("name", "Hosting Ltd")
+        model.selectKind(ItemKind.CONTRACTS)
+        assertTrue(model.state.askDiscard)
+        assertEquals(ItemKind.PROVIDERS, model.state.kind)
+        model.keepEditing()
+        assertEquals("Hosting Ltd", model.state.form?.fields?.first { it.key == "name" }?.text)
+        model.selectKind(ItemKind.CONTRACTS)
+        model.discardChanges()
+        assertEquals(ItemKind.CONTRACTS, model.state.kind)
+        assertNull(model.state.form)
+    }
+
+    @Test
+    fun anUnchangedFormIsLeftWithoutAsking() {
+        val model = model(FakeSource(register()))
+        model.startNew()
+        model.selectKind(ItemKind.CONTRACTS)
+        assertFalse(model.state.askDiscard)
+        assertEquals(ItemKind.CONTRACTS, model.state.kind)
     }
 }

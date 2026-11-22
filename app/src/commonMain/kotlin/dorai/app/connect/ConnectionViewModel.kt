@@ -8,6 +8,8 @@ import dorai.shared.Dorai
 import dorai.shared.api.ApiResult
 import dorai.shared.model.Health
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.delay
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
@@ -40,7 +42,10 @@ class ConnectionViewModel(address: String, private val probe: ServerProbe) : Vie
                 is ApiResult.Failure -> ServerStatus.UNREACHABLE
             }
         } catch (cancelled: CancellationException) {
-            throw cancelled
+            // Switching servers closes the old client, which cancels a check still running on it. Only a cancelled
+            // caller ends here; otherwise the status waits for the next check, so the watch loop keeps going.
+            currentCoroutineContext().ensureActive()
+            return
         } catch (unexpected: Exception) {
             ServerStatus.UNREACHABLE
         }

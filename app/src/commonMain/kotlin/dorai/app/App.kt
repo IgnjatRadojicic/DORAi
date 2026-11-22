@@ -22,6 +22,7 @@ import dorai.app.auth.LoginActions
 import dorai.app.auth.LoginScreen
 import dorai.app.components.ControlCenterFrame
 import dorai.app.connect.InviteField
+import dorai.app.connect.ServerLine
 import dorai.app.export.ExportViewModel
 import dorai.app.export.ValidationExportRoute
 import dorai.app.export.rememberWorkspaceFiles
@@ -93,6 +94,8 @@ fun App(
                     },
                     modifier = Modifier.weight(1f),
                     below = {
+                        ServerLine(shell.connection.status, shell.connection.address,
+                            onChange = { if (!shell.invite.state.open) shell.invite.toggle() })
                         InviteField(
                             state = shell.invite.state,
                             onToggle = shell.invite::toggle,

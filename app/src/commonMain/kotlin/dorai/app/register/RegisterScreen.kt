@@ -18,6 +18,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import dorai.app.components.ConfirmDialog
 import dorai.app.components.EmptyView
 import dorai.app.components.ErrorView
 import dorai.app.components.LoadingView
@@ -52,6 +53,8 @@ fun RegisterRoute(model: RegisterViewModel, modifier: Modifier = Modifier) {
             cancel = model::cancel,
             delete = { scope.launch { model.delete(it) } },
             cancelDelete = model::cancelDelete,
+            keepEditing = model::keepEditing,
+            discard = model::discardChanges,
         ),
         modifier,
     )
@@ -69,6 +72,8 @@ class RegisterActions(
     val cancel: () -> Unit,
     val delete: (String) -> Unit,
     val cancelDelete: () -> Unit,
+    val keepEditing: () -> Unit,
+    val discard: () -> Unit,
 )
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -90,6 +95,14 @@ fun RegisterScreen(state: RegisterState, editable: Boolean, actions: RegisterAct
             MetaText(RoiSpec.template(state.template).name)
         }
         state.form?.let { FormPanel(it, state, actions) }
+        if (state.askDiscard) ConfirmDialog("Discard your changes?",
+            "The form has changes that are not saved. They are lost if you continue.",
+            "Discard changes", actions.discard, actions.keepEditing, dismiss = "Keep editing")
+        state.confirmDelete?.let { id ->
+            val title = state.lines.firstOrNull { it.id == id }?.title ?: id
+            ConfirmDialog("Delete $title?", "$title ($id) is removed from the register. This can't be undone.",
+                "Delete", { actions.delete(id) }, actions.cancelDelete)
+        }
         state.message?.let { MetaText(it) }
         when {
             state.busy && state.register == null -> LoadingView("Loading the register...")
@@ -118,9 +131,7 @@ private fun ListPanel(state: RegisterState, editable: Boolean, actions: Register
                             if (editable) {
                                 ProductButton("Edit", { actions.edit(line.id) }, outlined = true, enabled = !state.busy)
                                 if (state.kind != ItemKind.ENTITY) {
-                                    val asking = state.confirmDelete == line.id
-                                    ProductButton(if (asking) "Confirm delete" else "Delete", { actions.delete(line.id) }, outlined = !asking, enabled = !state.busy)
-                                    if (asking) ProductButton("Cancel", actions.cancelDelete, outlined = true)
+                                    ProductButton("Delete", { actions.delete(line.id) }, outlined = true, enabled = !state.busy)
                                 }
                             }
                         }

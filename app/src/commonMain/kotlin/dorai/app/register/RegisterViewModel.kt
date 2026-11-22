@@ -40,6 +40,8 @@ data class RegisterState(
     val problems: List<String> = emptyList(),
     /** Id of an item waiting for the second click on Delete. */
     val confirmDelete: String? = null,
+    /** True while the screen asks whether to throw away a changed form. */
+    val askDiscard: Boolean = false,
     val message: String? = null,
     val error: String? = null,
 ) {
@@ -74,6 +76,34 @@ class RegisterViewModel(
 
     val editable: Boolean get() = canEdit()
 
+    /** The form as it was opened; a form that differs from it has changes the person would lose. */
+    private var opened: ItemForm? = null
+
+    /** What the person asked for while a changed form was open; it runs once they agree to lose the changes. */
+    private var afterDiscard: (() -> Unit)? = null
+
+    private val dirty: Boolean get() = state.form != null && state.form != opened
+
+    /** Runs [action] at once, or first asks when it would throw away a changed form. */
+    private fun leaveForm(action: () -> Unit) {
+        if (!dirty) return action()
+        afterDiscard = action
+        state = state.copy(askDiscard = true)
+    }
+
+    fun keepEditing() {
+        afterDiscard = null
+        state = state.copy(askDiscard = false)
+    }
+
+    fun discardChanges() {
+        val action = afterDiscard
+        afterDiscard = null
+        opened = state.form
+        state = state.copy(askDiscard = false)
+        action?.invoke()
+    }
+
     suspend fun refresh() {
         if (state.busy) return
         state = state.copy(busy = true, error = null)
@@ -87,22 +117,31 @@ class RegisterViewModel(
         }
     }
 
-    fun selectKind(kind: ItemKind) { state = state.copy(kind = kind, form = null, problems = emptyList(), confirmDelete = null, message = null) }
+    fun selectKind(kind: ItemKind) = leaveForm {
+        state = state.copy(kind = kind, form = null, problems = emptyList(), confirmDelete = null, message = null)
+    }
 
     fun selectTemplate(template: String) {
-        if (template in RegisterForms.handTemplates) state = state.copy(template = template, form = null, problems = emptyList(), confirmDelete = null)
+        if (template in RegisterForms.handTemplates) leaveForm {
+            state = state.copy(template = template, form = null, problems = emptyList(), confirmDelete = null)
+        }
     }
 
     fun startNew() {
         val register = state.register ?: return
         if (!canEdit() || state.kind == ItemKind.ENTITY) return
-        state = state.copy(form = formFor(register, null), problems = emptyList(), message = null)
+        leaveForm { open(formFor(register, null)) }
     }
 
     fun startEdit(id: String) {
         val register = state.register ?: return
         if (!canEdit()) return
-        state = state.copy(form = formFor(register, id), problems = emptyList(), message = null, confirmDelete = null)
+        leaveForm { open(formFor(register, id)) }
+    }
+
+    private fun open(form: ItemForm) {
+        opened = form
+        state = state.copy(form = form, problems = emptyList(), message = null, confirmDelete = null)
     }
 
     fun type(key: String, text: String) { state.form?.let { state = state.copy(form = it.with(key, text), problems = emptyList()) } }

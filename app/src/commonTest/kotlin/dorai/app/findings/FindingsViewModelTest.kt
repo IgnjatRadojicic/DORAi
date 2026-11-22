@@ -85,4 +85,29 @@ class FindingsViewModelTest {
         assertFalse(model.state.busy)
         assertNull(model.state.error)
     }
+
+    @Test
+    fun aFileThatIsNoPlanKeepsTheLoadedPlan() {
+        val model = FindingsViewModel { emptyList() }
+        model.selectPlan(plan)
+        runImmediate { model.check() }
+        model.selectPlan(PlanDocument("notes.txt", byteArrayOf(1)))
+        assertEquals(plan, model.state.plan)
+        assertTrue(model.state.checked)
+        assertFalse(model.state.canRetry)
+    }
+
+    @Test
+    fun aPlanTheServerRefusesBringsBackTheEarlierResults() {
+        val finding = ChangeFinding("R1", FindingSeverity.HIGH, "Region moved", "azurerm_x.a", "detail")
+        val model = FindingsViewModel { if (it.name == "bad.json") throw FrontendFailure("Not a plan.", retryable = false) else listOf(finding) }
+        model.selectPlan(plan)
+        runImmediate { model.check() }
+        model.selectPlan(PlanDocument("bad.json", "{}".encodeToByteArray()))
+        runImmediate { model.check() }
+        assertEquals(plan, model.state.plan)
+        assertEquals(listOf(finding), model.state.findings)
+        assertFalse(model.state.canRetry)
+        assertTrue(model.state.error!!.startsWith("bad.json"))
+    }
 }
