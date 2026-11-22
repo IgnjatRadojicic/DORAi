@@ -226,6 +226,15 @@ jobs:
       - name: Checksums
         working-directory: dist
         run: sha256sum * > SHA256SUMS
+      # Our notes from .github/release-notes.md first, then GitHub's list of merged pull requests.
+      - name: Release notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          sed "s/{{VERSION}}/${GITHUB_REF_NAME#v}/g" .github/release-notes.md > "$RUNNER_TEMP/notes.md"
+          echo >> "$RUNNER_TEMP/notes.md"
+          gh api "repos/$GITHUB_REPOSITORY/releases/generate-notes" -f tag_name="$GITHUB_REF_NAME" --jq .body >> "$RUNNER_TEMP/notes.md"
+          grep -q "^## Server" "$RUNNER_TEMP/notes.md"
       - name: Draft release
         env:
           GH_TOKEN: ${{ github.token }}
@@ -235,4 +244,4 @@ jobs:
             --draft \
             --verify-tag \
             --title "DORAi ${GITHUB_REF_NAME#v}" \
-            --generate-notes
+            --notes-file "$RUNNER_TEMP/notes.md"
