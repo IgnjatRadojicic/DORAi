@@ -1,5 +1,21 @@
 package dorai.app.roi
 
+import dorai.app.components.uiText
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Surface
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.LaunchedEffect
+import dorai.app.theme.ProductShapes
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.window.Dialog
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -95,18 +111,19 @@ private fun TemplatePanel(state: RoiState, actions: RoiActions) {
             val errors = issues.count { it.severity == ValidationSeverity.Error }
             OutlineChip(if (errors == 0) "Ready" else "$errors to fix", if (errors == 0) ProductStyle.colors.accent else ProductStyle.colors.amber, dot = true)
         }
-        state.edit?.takeIf { it.template == template.code }?.let { edit -> EditBar(edit, state.saving, actions) }
+        state.edit?.takeIf { it.template == template.code }?.let { edit -> CellEditor(edit, state.saving, actions) }
         NoticeEffect(state.message)
         if (rows.isEmpty()) {
             EmptyView("No rows", "Nothing in the register feeds this template yet.")
         } else {
             val columns = template.columns
-            ProductTable(columns.map { it.header.removePrefix("c") }, columns.map { 1f }, minWidth = maxOf(850, columns.size * 130)) {
+            // Column codes always with their names: "0090 Termination reason".
+            ProductTable(columns.map { "${it.header.removePrefix("c")} ${it.name}" }, columns.map { 1f }, minWidth = maxOf(850, columns.size * 170)) {
                 rows.forEach { row ->
                     ProductTableRow {
                         columns.forEach { col ->
                             val canEdit = actions.editable(row.key, col.code)
-                            Cell(row.cells[col.code], canEdit, Modifier.weight(1f).let { if (canEdit) it.clickable { actions.edit(row.key, col.code) } else it })
+                            Cell(row.cells[col.code], col.code, canEdit, Modifier.weight(1f).let { if (canEdit) it.clickable { actions.edit(row.key, col.code) } else it })
                         }
                     }
                 }
@@ -130,10 +147,13 @@ private fun TemplatePanel(state: RoiState, actions: RoiActions) {
 }
 
 @Composable
-private fun Cell(cell: RoiCell?, editable: Boolean, modifier: Modifier) {
+private fun Cell(cell: RoiCell?, column: String, editable: Boolean, modifier: Modifier) {
     Column(modifier, verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Text(cell?.value ?: if (editable) "Add" else "", fontFamily = ProductStyle.fonts.mono, fontSize = 12.sp,
-            color = if (cell?.value == null) ProductStyle.colors.muted else ProductStyle.colors.ink)
+        val value = cell?.value
+        // A chosen code shows with its name ("S18 Cloud services: PaaS").
+        val named = value?.let { v -> RoiSpec.column(column)?.label(v)?.let { "$v $it" } ?: v }
+        Text(named ?: if (editable) uiText("Add") else "", style = MaterialTheme.typography.bodyMedium,
+            color = if (value == null) (if (editable) ProductStyle.colors.accent else ProductStyle.colors.muted) else ProductStyle.colors.ink)
         cell?.let { MetaText((it.label?.let(::labelText) ?: "derived") + (it.confirmedBy?.let { by -> " by $by" } ?: "")) }
     }
 }
@@ -145,29 +165,56 @@ private fun labelText(label: ProvenanceLabel) = when (label) {
     ProvenanceLabel.HumanConfirmed -> "human-confirmed"
 }
 
+/**
+ * Edits one cell: a bottom sheet on phones, a dialog on wider screens. Back, Escape or a tap outside cancel;
+ * Enter saves. The table underneath stays where it was.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun CellEditor(edit: CellEdit, saving: Boolean, actions: RoiActions) {
+    BoxWithConstraints {
+        if (maxWidth < 600.dp) {
+            ModalBottomSheet(onDismissRequest = actions.cancel, containerColor = ProductStyle.colors.panel, shape = ProductShapes.dialog) {
+                EditorContent(edit, saving, actions, Modifier.padding(start = 24.dp, end = 24.dp, bottom = 24.dp).imePadding())
+            }
+        } else {
+            Dialog(onDismissRequest = actions.cancel) {
+                Surface(Modifier.widthIn(max = 560.dp), shape = ProductShapes.dialog, color = ProductStyle.colors.panel) {
+                    EditorContent(edit, saving, actions, Modifier.padding(24.dp))
+                }
+            }
+        }
+    }
+}
+
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun EditBar(edit: CellEdit, saving: Boolean, actions: RoiActions) {
+private fun EditorContent(edit: CellEdit, saving: Boolean, actions: RoiActions, modifier: Modifier) {
     val column = RoiSpec.column(edit.column)
-    Column(Modifier.fillMaxWidth().padding(24.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        MetaText("${edit.column}: ${column?.name.orEmpty()}  (row ${edit.rowKey})")
+    val focus = remember { FocusRequester() }
+    LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
+    Column(modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text("${edit.column.substringAfterLast('.')} ${column?.name.orEmpty()}", style = MaterialTheme.typography.titleLarge)
+        MetaText("${edit.column.substringBeforeLast('.')}  ${uiText("Row")} ${edit.rowKey}")
+        OutlinedTextField(edit.text, actions.type, Modifier.fillMaxWidth().focusRequester(focus), singleLine = true, enabled = !saving,
+            label = { Text(uiText(if (column?.options.isNullOrEmpty()) "Value" else "Code or search")) },
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done), keyboardActions = KeyboardActions(onDone = { actions.save() }))
         // Long lists (131 licensed activities) are searched: typing filters by code or words of the label.
         column?.options?.takeIf { it.isNotEmpty() }?.let { options ->
             val picked = options.firstOrNull { it.key == edit.text.trim() }
             if (picked != null) {
-                MetaText("${picked.key} = ${picked.label}")
+                Text("${picked.key} ${picked.label}", color = ProductStyle.colors.accent, style = MaterialTheme.typography.bodyMedium)
             } else {
                 val matches = matching(options, edit.text)
                 MetaText(if (edit.text.isBlank()) "Type to search ${options.size} options, then pick one." else "${matches.size} of ${options.size} options match.")
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    matches.take(12).forEach { option -> ProductButton("${option.key}: ${option.label}", { actions.type(option.key) }, outlined = true, enabled = !saving) }
+                    matches.take(12).forEach { option -> SelectChip("${option.key} ${option.label}", false, { actions.type(option.key) }, enabled = !saving) }
                 }
             }
         }
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
-            OutlinedTextField(edit.text, actions.type, Modifier.weight(1f), singleLine = true, enabled = !saving)
-            ProductButton(if (saving) "Saving..." else "Save", actions.save, enabled = !saving)
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)) {
             ProductButton("Cancel", actions.cancel, outlined = true, enabled = !saving)
+            ProductButton(if (saving) "Saving..." else "Save", actions.save, enabled = !saving)
         }
     }
 }

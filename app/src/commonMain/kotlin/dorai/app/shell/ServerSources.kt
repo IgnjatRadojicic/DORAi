@@ -1,6 +1,7 @@
 package dorai.app.shell
 
 import dorai.shared.model.ValidationIssue
+import dorai.shared.roi.SERVICE_TYPES
 import dorai.shared.roi.RoiView
 import dorai.shared.roi.RoiItems
 import dorai.app.roi.RoiSource
@@ -233,6 +234,7 @@ internal fun Resource.toInventoryResource(suggestions: List<Suggestion>, functio
             ?: pending?.let { SourcedValue(it.value, Provenance.AI_SUGGESTED) }
     }
     fun withName(value: SourcedValue?) = value?.copy(label = functionNames[value.value])
+    fun withServiceName(value: SourcedValue?) = value?.copy(label = serviceTypeName(value.value))
     return InventoryResource(
         id = id,
         name = name,
@@ -240,7 +242,7 @@ internal fun Resource.toInventoryResource(suggestions: List<Suggestion>, functio
         provider = provider,
         location = location,
         country = country,
-        serviceType = sourced(serviceType?.takeIf { it != ServiceType.Unknown }?.name, SuggestionKind.ServiceType),
+        serviceType = withServiceName(sourced(serviceType?.takeIf { it != ServiceType.Unknown }?.name, SuggestionKind.ServiceType)),
         function = withName(sourced(functionId, SuggestionKind.BusinessFunction)),
         monthlyCost = monthlyCost,
         currency = currency,
@@ -272,6 +274,7 @@ internal fun Suggestion.toReviewSuggestion(functionNames: Map<String, String>) =
     valueLabel = when (kind) {
         SuggestionKind.BusinessFunction -> functionNames[value]
         SuggestionKind.RoiValue -> column?.let { RoiSpec.column(it)?.label(value) }
+        SuggestionKind.ServiceType -> serviceTypeName(value)
         else -> null
     },
     reason = reason,
@@ -284,3 +287,6 @@ internal fun Suggestion.toReviewSuggestion(functionNames: Map<String, String>) =
     },
     fieldLabel = column?.let { c -> RoiSpec.column(c)?.let { "${it.code} ${it.name}" } ?: c },
 )
+
+/** "S18" shows as "S18 Cloud services: PaaS": a code never stands alone. */
+internal fun serviceTypeName(code: String): String? = SERVICE_TYPES.firstOrNull { it.key == code }?.label

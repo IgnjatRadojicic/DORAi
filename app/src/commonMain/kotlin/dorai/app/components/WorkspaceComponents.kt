@@ -1,5 +1,10 @@
 package dorai.app.components
 
+import androidx.compose.foundation.clickable
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.layout.Measured
+import androidx.compose.ui.layout.HorizontalAlignmentLine
+import androidx.compose.ui.layout.Layout
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
@@ -173,7 +178,17 @@ fun CitationView(citation: EvidenceCitation) {
                     LineIcon(ProductIcon.BOOK, size = 14.dp, color = ProductStyle.colors.ink)
                     Text(listOfNotNull(citation.regulation, citation.article, citation.paragraph).joinToString(" / "), style = MaterialTheme.typography.bodySmall)
                 }
-                Text(citation.excerpt, style = MaterialTheme.typography.bodySmall, color = ProductStyle.colors.muted)
+                // Long excerpts start at three lines, so the Accept and Reject buttons stay close to the suggestion.
+                var expanded by remember(citation) { mutableStateOf(false) }
+                var long by remember(citation) { mutableStateOf(false) }
+                Text(citation.excerpt, style = MaterialTheme.typography.bodySmall, color = ProductStyle.colors.muted,
+                    maxLines = if (expanded) Int.MAX_VALUE else 3, overflow = TextOverflow.Ellipsis,
+                    onTextLayout = { if (!expanded) long = it.hasVisualOverflow })
+                if (long || expanded) {
+                    Text(uiText(if (expanded) "Show less" else "Show more"),
+                        Modifier.clickable { expanded = !expanded }.actionPointer(), color = ProductStyle.colors.accent,
+                        style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Medium)
+                }
             }
         }
     }
@@ -266,9 +281,22 @@ fun MetricGrid(metrics: List<Metric>) {
     }
 }
 
+/** The column names while a table shows as cards (narrow screens); null when it is a real table. */
+private val LocalCardTable = compositionLocalOf<List<String>?> { null }
+
+/**
+ * A table from 600 dp; below that every row becomes a card with the column names as labels,
+ * so phones never scroll sideways through a table.
+ */
 @Composable
 fun ProductTable(headers: List<String>, weights: List<Float>, minWidth: Int = 850, content: @Composable ColumnScope.() -> Unit) {
     BoxWithConstraints(Modifier.fillMaxWidth()) {
+        if (maxWidth < 600.dp) {
+            CompositionLocalProvider(LocalCardTable provides headers) {
+                Column(Modifier.fillMaxWidth().padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp), content = content)
+            }
+            return@BoxWithConstraints
+        }
         val tableWidth = maxOf(maxWidth, minWidth.dp)
         val scroll = rememberScrollState()
         Column {
@@ -277,7 +305,7 @@ fun ProductTable(headers: List<String>, weights: List<Float>, minWidth: Int = 85
                 Column(Modifier.width(tableWidth)) {
                     Row(Modifier.fillMaxWidth().background(ProductStyle.colors.tableHead).padding(horizontal = 24.dp, vertical = 15.dp),
                         horizontalArrangement = Arrangement.spacedBy(20.dp)) {
-                        headers.forEachIndexed { index, label -> MetaText(uiText(label).uppercase(), Modifier.weight(weights[index])) }
+                        headers.forEachIndexed { index, label -> MetaText(uiText(label), Modifier.weight(weights[index])) }
                     }
                     HorizontalDivider(color = ProductStyle.colors.line)
                     content()
@@ -290,6 +318,7 @@ fun ProductTable(headers: List<String>, weights: List<Float>, minWidth: Int = 85
 
 @Composable
 fun ProductTableRow(content: @Composable RowScope.() -> Unit) {
+    LocalCardTable.current?.let { headers -> return CardRow(headers, content) }
     val interaction = remember { MutableInteractionSource() }
     val hovered by interaction.collectIsHoveredAsState()
     val fill by animateColorAsState(if (hovered) ProductStyle.colors.hover else Color.Transparent,
@@ -297,6 +326,50 @@ fun ProductTableRow(content: @Composable RowScope.() -> Unit) {
     Row(Modifier.fillMaxWidth().hoverable(interaction).background(fill)
         .padding(horizontal = 24.dp, vertical = 14.dp), horizontalArrangement = Arrangement.spacedBy(20.dp), content = content)
     HorizontalDivider(color = ProductStyle.colors.line.copy(alpha = 0.7f))
+}
+
+/** Weights and row alignment mean nothing in a card: the cells simply stack. */
+private object CardRowScope : RowScope {
+    override fun Modifier.weight(weight: Float, fill: Boolean): Modifier = this
+    override fun Modifier.align(alignment: Alignment.Vertical): Modifier = this
+    override fun Modifier.alignBy(alignmentLine: HorizontalAlignmentLine): Modifier = this
+    override fun Modifier.alignByBaseline(): Modifier = this
+    override fun Modifier.alignBy(alignmentLineBlock: (Measured) -> Int): Modifier = this
+}
+
+/** One row as a card: the first cell as its title, every other cell under its column name. */
+@Composable
+private fun CardRow(headers: List<String>, content: @Composable RowScope.() -> Unit) {
+    val colors = ProductStyle.colors
+    Surface(Modifier.fillMaxWidth(), shape = ProductShapes.control, color = colors.panel, border = BorderStroke(1.dp, colors.line)) {
+        Layout(
+            content = {
+                headers.forEach { MetaText(it) }
+                CardRowScope.content()
+            },
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+        ) { measurables, constraints ->
+            val labels = measurables.take(headers.size)
+            val cells = measurables.drop(headers.size)
+            val loose = constraints.copy(minWidth = 0, minHeight = 0)
+            val gap = 10.dp.roundToPx()
+            val placed = cells.mapIndexed { index, cell ->
+                val cellPlaceable = cell.measure(loose)
+                val showLabel = index > 0 && headers.getOrNull(index)?.isNotBlank() == true && cellPlaceable.height > 0
+                (if (showLabel) labels[index].measure(loose) else null) to cellPlaceable
+            }
+            val height = placed.filter { it.second.height > 0 }.sumOf { (label, cell) -> (label?.height ?: 0) + cell.height + gap } - gap
+            layout(constraints.maxWidth, maxOf(height, 0)) {
+                var y = 0
+                placed.forEach { (label, cell) ->
+                    if (cell.height == 0) return@forEach
+                    label?.let { it.placeRelative(0, y); y += it.height }
+                    cell.placeRelative(0, y)
+                    y += cell.height + gap
+                }
+            }
+        }
+    }
 }
 
 @Composable

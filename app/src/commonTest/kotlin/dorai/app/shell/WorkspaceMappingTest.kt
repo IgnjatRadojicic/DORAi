@@ -43,7 +43,7 @@ class WorkspaceMappingTest {
     fun scannedValuesAreScannedAndFunctionsCarryTheirName() {
         val mapped = resource(ServiceType.S17, "F1").toInventoryResource(emptyList(), functions)
 
-        assertEquals(SourcedValue("S17", Provenance.SCANNED), mapped.serviceType)
+        assertEquals(SourcedValue("S17", Provenance.SCANNED, "Cloud services: IaaS"), mapped.serviceType)
         assertEquals(SourcedValue("F1", Provenance.SCANNED, "Payments"), mapped.function)
     }
 
@@ -61,7 +61,7 @@ class WorkspaceMappingTest {
         )
         val mapped = resource().toInventoryResource(suggestions, functions)
 
-        assertEquals(SourcedValue("S18", Provenance.AI_SUGGESTED), mapped.serviceType)
+        assertEquals(SourcedValue("S18", Provenance.AI_SUGGESTED, "Cloud services: PaaS"), mapped.serviceType)
         assertEquals(SourcedValue("F3", Provenance.HUMAN_CONFIRMED, "Fraud detection"), mapped.function)
     }
 
@@ -71,7 +71,7 @@ class WorkspaceMappingTest {
             suggestion(SuggestionKind.ServiceType, "S18", SuggestionStatus.Pending),
             suggestion(SuggestionKind.ServiceType, "S17", SuggestionStatus.Accepted),
         )
-        assertEquals(SourcedValue("S17", Provenance.HUMAN_CONFIRMED), resource().toInventoryResource(suggestions, functions).serviceType)
+        assertEquals(SourcedValue("S17", Provenance.HUMAN_CONFIRMED, "Cloud services: IaaS"), resource().toInventoryResource(suggestions, functions).serviceType)
     }
 
     @Test

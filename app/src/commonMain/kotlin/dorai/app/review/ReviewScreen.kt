@@ -73,6 +73,7 @@ private fun SuggestionGroup(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun SuggestionCard(
     suggestion: ReviewSuggestion,
@@ -91,9 +92,12 @@ private fun SuggestionCard(
                     ReviewStatus.REJECTED -> OutlineChip("rejected", ProductStyle.colors.red, dot = true)
                 }
             }
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                OutlineChip(suggestion.fieldLabel ?: suggestion.field.label)
-                Text(listOfNotNull(suggestion.value, suggestion.valueLabel).joinToString(" "), style = MaterialTheme.typography.bodyLarge)
+            // The field on its own line, then value and confidence, wrapping as a whole: a long label never
+            // squeezes the value to one letter per line.
+            OutlineChip(suggestion.fieldLabel ?: suggestion.field.label)
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp),
+                itemVerticalAlignment = Alignment.CenterVertically) {
+                Text(listOfNotNull(suggestion.value, suggestion.valueLabel).joinToString(" "), style = MaterialTheme.typography.titleSmall)
                 suggestion.confidence?.let { MetaText("${(it * 100).roundToInt()}% ${uiText("confidence")}") }
             }
             Text(suggestion.reason, style = MaterialTheme.typography.bodyMedium)
