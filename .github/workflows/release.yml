@@ -52,13 +52,59 @@ jobs:
           distribution: temurin
           java-version: 21
       - uses: gradle/actions/setup-gradle@v4
+      # macOS: the Developer ID certificate goes into a temporary keychain; Gradle signs, then Apple notarizes.
+      - name: Import the macOS signing certificate
+        if: matrix.format == 'dmg'
+        env:
+          CERTIFICATE_BASE64: ${{ secrets.MACOS_CERTIFICATE_P12_BASE64 }}
+          CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
+        run: |
+          if [ -z "$CERTIFICATE_BASE64" ]; then
+            echo "::warning::MACOS_CERTIFICATE_P12_BASE64 is not set: the DMG is not signed, macOS will warn users."
+            exit 0
+          fi
+          keychain="$RUNNER_TEMP/signing.keychain-db"
+          keychain_password=$(openssl rand -base64 24)
+          echo "$CERTIFICATE_BASE64" | base64 --decode > "$RUNNER_TEMP/certificate.p12"
+          security create-keychain -p "$keychain_password" "$keychain"
+          security set-keychain-settings -lut 3600 "$keychain"
+          security unlock-keychain -p "$keychain_password" "$keychain"
+          security import "$RUNNER_TEMP/certificate.p12" -P "$CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k "$keychain"
+          security set-key-partition-list -S apple-tool:,apple: -k "$keychain_password" "$keychain" > /dev/null
+          security list-keychains -d user -s "$keychain" login.keychain
+          rm "$RUNNER_TEMP/certificate.p12"
+          echo "MACOS_SIGNED=true" >> "$GITHUB_ENV"
       # Each installer can only be built on its own operating system.
       - name: Build installer
-        run: ./gradlew :app:${{ matrix.task }} --console=plain
+        env:
+          DORAI_MACOS_SIGN_IDENTITY: ${{ secrets.MACOS_SIGN_IDENTITY }}
+          DORAI_MACOS_NOTARY_APPLE_ID: ${{ secrets.MACOS_NOTARY_APPLE_ID }}
+          DORAI_MACOS_NOTARY_PASSWORD: ${{ secrets.MACOS_NOTARY_PASSWORD }}
+          DORAI_MACOS_TEAM_ID: ${{ secrets.MACOS_TEAM_ID }}
+        run: |
+          ./gradlew :app:${{ matrix.task }} --console=plain
+          if [ "${MACOS_SIGNED:-}" = "true" ]; then ./gradlew :app:notarizeDmg --console=plain; fi
       - name: Name the asset
         run: |
           mkdir dist
           cp app/build/compose/binaries/main/${{ matrix.format }}/*.${{ matrix.format }} "dist/${{ matrix.asset }}"
+      # Windows: signtool from the Windows SDK signs the MSI with the code-signing certificate and a timestamp,
+      # so the signature stays valid after the certificate expires.
+      - name: Sign the Windows installer
+        if: matrix.format == 'msi'
+        env:
+          CERTIFICATE_BASE64: ${{ secrets.WINDOWS_CERTIFICATE_PFX_BASE64 }}
+          CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
+        run: |
+          if [ -z "$CERTIFICATE_BASE64" ]; then
+            echo "::warning::WINDOWS_CERTIFICATE_PFX_BASE64 is not set: the MSI is not signed, Windows SmartScreen will warn users."
+            exit 0
+          fi
+          echo "$CERTIFICATE_BASE64" | base64 --decode > "$RUNNER_TEMP/certificate.pfx"
+          signtool=$(ls "/c/Program Files (x86)/Windows Kits/10/bin/"*/x64/signtool.exe | sort | tail -1)
+          "$signtool" sign //fd SHA256 //td SHA256 //tr http://timestamp.digicert.com             //f "$RUNNER_TEMP/certificate.pfx" //p "$CERTIFICATE_PASSWORD" "dist/${{ matrix.asset }}"
+          "$signtool" verify //pa "dist/${{ matrix.asset }}"
+          rm "$RUNNER_TEMP/certificate.pfx"
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.asset }}

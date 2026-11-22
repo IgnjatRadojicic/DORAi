@@ -19,7 +19,7 @@ import kotlin.math.roundToLong
  * it out from other values (a sum, a join, a CIR default such as `9999-12-31` for "no end date").
  */
 @Serializable
-data class RoiCell(val value: String, val label: ProvenanceLabel?)
+data class RoiCell(val value: String, val label: ProvenanceLabel?, val confirmedBy: String? = null)
 
 /** Facts about a row that the CIR's "mandatory if" conditions depend on and that are not cells of the row. */
 @Serializable
@@ -88,7 +88,7 @@ object RoiTables {
         fun field(f: RegisterField?): RoiCell? {
             val v = f?.value?.trim()
             if (v.isNullOrEmpty() || f.provenance.label == ProvenanceLabel.AiSuggested) return null
-            return RoiCell(v, f.provenance.label)
+            return RoiCell(v, f.provenance.label, f.provenance.confirmedBy)
         }
 
         fun confirmed(v: String?): RoiCell? = v?.trim()?.takeIf { it.isNotEmpty() }?.let { RoiCell(it, ProvenanceLabel.HumanConfirmed) }

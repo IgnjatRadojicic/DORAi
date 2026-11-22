@@ -23,6 +23,8 @@ import dorai.app.review.ReviewViewModel
 import dorai.app.theme.ThemeMode
 import dorai.app.validation.ValidationViewModel
 import dorai.app.roi.RoiViewModel
+import dorai.app.admin.AdminViewModel
+import dorai.app.register.RegisterViewModel
 import dorai.shared.api.DoraiApi
 import dorai.shared.api.TokenStore
 import dorai.shared.model.Role
@@ -36,13 +38,25 @@ object Sections {
     const val FINDINGS = "findings"
     const val EXPORT = "export"
     const val ROI = "roi"
+    const val REGISTER = "register"
+    const val ADMIN = "admin"
 }
 
-/** The workspace sections in Matija's frame: Luka's 01 and 02, Matija's 03 and 04, then the RoI (05). */
+/**
+ * The workspace sections in Matija's frame: Luka's 01 and 02, Matija's 03 and 04, the RoI (05),
+ * the register items (06) and, for admins only, the administration (07).
+ */
 val shellSections: List<WorkspaceSection> = listOf(
     WorkspaceSection(Sections.INVENTORY, "Cloud inventory", "01"),
     WorkspaceSection(Sections.REVIEW, "AI review", "02"),
-) + matijaSections + WorkspaceSection(Sections.ROI, "Register of Information", "05")
+) + matijaSections + listOf(
+    WorkspaceSection(Sections.ROI, "Register of Information", "05"),
+    WorkspaceSection(Sections.REGISTER, "Register items", "06"),
+    WorkspaceSection(Sections.ADMIN, "Administration", "07"),
+)
+
+/** The sections [role] sees: the administration only for admins. */
+fun sectionsFor(role: Role): List<WorkspaceSection> = shellSections.filter { it.id != Sections.ADMIN || role == Role.Admin }
 
 data class ShellState(
     val section: String = Sections.INVENTORY,
@@ -58,6 +72,9 @@ class Workspace(val session: Tokens, api: DoraiApi) {
     val findings = FindingsViewModel(sources.findings)
     val validation = ValidationViewModel(sources.validation)
     val roi = RoiViewModel(sources.roi, canEdit = { session.role >= Role.Reviewer })
+    val register = RegisterViewModel(sources.register, canEdit = { session.role >= Role.Reviewer })
+    val admin = AdminViewModel(sources.admin, me = session.username)
+    val sections: List<WorkspaceSection> = sectionsFor(session.role)
 
     /** The app only hides what the role can't use; the server checks every call. */
     val canReview: Boolean get() = session.role >= Role.Reviewer
@@ -89,8 +106,18 @@ class ShellViewModel(
     var ready by mutableStateOf(false)
         private set
 
-    /** Forgetting the tokens (logout, or a refresh the server refused) always ends on the login page. */
-    private val tokens = SavedTokenStore(storage.tokens).apply { onCleared = { workspace = null } }
+    /**
+     * Forgetting the tokens always ends on the login page. A logout has already closed the workspace;
+     * when it is still open the server refused the refresh, so the login page says the session ended.
+     */
+    private val tokens = SavedTokenStore(storage.tokens).apply {
+        onCleared = {
+            if (workspace != null) {
+                workspace = null
+                login.sessionEnded()
+            }
+        }
+    }
 
     private var server = ServerLink(address)
     private var saved = SavedSettings()
@@ -178,7 +205,8 @@ class ShellViewModel(
     }
 
     fun select(section: String) {
-        if (shellSections.any { it.id == section && it.enabled }) state = state.copy(section = section)
+        val allowed = workspace?.sections ?: sectionsFor(Role.Viewer)
+        if (allowed.any { it.id == section && it.enabled }) state = state.copy(section = section)
     }
 
     fun setTheme(theme: ThemeMode) {

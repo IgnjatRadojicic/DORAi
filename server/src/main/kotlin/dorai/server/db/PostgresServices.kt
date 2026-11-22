@@ -27,5 +27,6 @@ fun postgresServices(db: Database, data: FixtureData = FixtureData.load()): Serv
     return fixtureServices(data).copy(
         register = PostgresRegisterRepository(db),
         suggestions = PostgresSuggestionRepository(db),
+        plans = PostgresPlanRepository(db),
     )
 }

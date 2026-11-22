@@ -1,6 +1,7 @@
 package dorai.app.shell
 
 import dorai.app.auth.FakeLoginGateway
+import dorai.app.auth.LoginViewModel
 import dorai.app.auth.MemoryTokenVault
 import dorai.app.components.AppLanguage
 import dorai.app.components.runImmediate
@@ -87,6 +88,8 @@ class ShellRestoreTest {
         // What DoraiApi does when the server refuses the refresh token.
         runImmediate { opened.tokens!!.save(null) }
         assertNull(shell.workspace)
+        assertEquals(LoginViewModel.SESSION_ENDED, shell.login.state.error)
+        assertEquals("luka", shell.login.state.username)
     }
 
     @Test

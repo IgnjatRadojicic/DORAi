@@ -50,6 +50,21 @@ compose.desktop {
             packageVersion = project.version.toString()
             // Fixed for the life of the product: it lets a new MSI upgrade an older install in place.
             windows { upgradeUuid = "8f23d603-e143-41e8-901e-1074dce8fd1c" }
+            // Signed and notarized only when the release workflow has Apple's certificate (see docs/plan-releases.md).
+            macOS {
+                bundleID = "dorai.desktop"
+                System.getenv("DORAI_MACOS_SIGN_IDENTITY")?.takeIf { it.isNotBlank() }?.let { id ->
+                    signing {
+                        sign.set(true)
+                        identity.set(id)
+                    }
+                    notarization {
+                        appleID.set(System.getenv("DORAI_MACOS_NOTARY_APPLE_ID"))
+                        password.set(System.getenv("DORAI_MACOS_NOTARY_PASSWORD"))
+                        teamID.set(System.getenv("DORAI_MACOS_TEAM_ID"))
+                    }
+                }
+            }
         }
     }
 }

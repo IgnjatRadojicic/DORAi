@@ -77,13 +77,23 @@ on the subscriptions, an AWS IAM user or role with read-only access to tagging a
 - If a cloud cannot be scanned, the scan fails with 502 and the stored inventory stays as it was.
   If cost is unavailable, the scan continues without that cloud's cost.
 - Cost of deleted resources is ignored in the concentration report.
+- **Scheduled scans**: `DORAI_SCAN_EVERY=24h` (any duration of at least 1h, for example `6h` or `PT12H`) scans in
+  the background on that interval, the first run one interval after the start. A failed run is logged and the
+  stored inventory stays; the next run is on time. Unset or `off` means scans run only from the app.
 
 ### AI settings (`DORAI_AI_PROVIDER`)
 - `fake` (default) answers offline from fixed keyword rules, with no key and no outbound traffic. Its
   answers say they come from the fake model.
 - `openai` uses OpenAI through Koog: `DORAI_AI_OPENAI_KEY` (required), `DORAI_AI_CHAT_MODEL` (default
   `gpt-4.1-mini`) and, for another OpenAI-compatible endpoint, `DORAI_AI_OPENAI_BASE_URL`. Embeddings use
-  `text-embedding-3-small`. Azure OpenAI is not supported yet.
+  `text-embedding-3-small`.
+- Azure OpenAI works through the same `openai` setting: deploy `gpt-4.1-mini` and `text-embedding-3-small`
+  under those names, set `DORAI_AI_OPENAI_BASE_URL=https://<resource>.openai.azure.com/openai/` (ending at
+  `/openai/`: the client adds `v1/...` itself) and the resource's key as `DORAI_AI_OPENAI_KEY`. Checked
+  end to end on 2026-11-22.
+- Cost: Azure reports cost in the subscription's billing currency. If that differs from
+  `DORAI_COST_CURRENCY` (default EUR), set `DORAI_FX_<CURRENCY>` (for example `DORAI_FX_USD`) or those rows
+  are left out with a warning.
 - On every start the server loads the DORA regulation and the register templates into PostgreSQL in the
   background (`DORAI_AI_INGEST_ON_STARTUP=false` skips it). Text already loaded for the same embedding model
   is skipped, so only the first start, or a change of provider, calls the embedding API for the whole text.

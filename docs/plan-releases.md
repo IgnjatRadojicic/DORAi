@@ -70,8 +70,14 @@ New `.github/workflows/release.yml`, started by a `v*` tag, next to the existing
   secrets (`ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`,
   `ANDROID_KEY_PASSWORD`), which Ignjat adds as repository admin. The key is backed up somewhere safe:
   if it is lost, users must uninstall before the next update installs. Local builds keep debug signing.
-- **Not signed or notarized for desktop.** Windows shows SmartScreen and macOS Gatekeeper warns on first
-  open (right-click, Open). Fine for the hackathon; code signing certificates are a later decision.
+- **Desktop signing, when the certificates are there.** Windows: a code-signing certificate (from a
+  certificate authority such as DigiCert or Sectigo) as `WINDOWS_CERTIFICATE_PFX_BASE64` and
+  `WINDOWS_CERTIFICATE_PASSWORD`; `signtool` signs the MSI with a timestamp. macOS: an Apple Developer ID
+  Application certificate as `MACOS_CERTIFICATE_P12_BASE64` and `MACOS_CERTIFICATE_PASSWORD`, its name as
+  `MACOS_SIGN_IDENTITY`, and for Apple's notarization `MACOS_NOTARY_APPLE_ID`, `MACOS_NOTARY_PASSWORD` (an
+  app-specific password) and `MACOS_TEAM_ID`. Without them the installer is built unsigned and the run shows a
+  warning: Windows SmartScreen and macOS Gatekeeper then warn on first open. The Linux package is not signed;
+  `SHA256SUMS` lets users check it.
   `macos-latest` builds for Apple Silicon only.
 - Uses only `gh` (already on the runners) and the actions the repo already uses; no new third-party action.
 

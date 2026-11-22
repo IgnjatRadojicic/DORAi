@@ -19,6 +19,8 @@ data class Services(
     val planChecker: PlanChecker,
     /** Terraform plan checked when `/check` gets no plan. */
     val demoPlan: String,
+    /** The plans the firm sent to `/check`; the PDF report uses the latest. */
+    val plans: PlanRepository = InMemoryPlanRepository(),
     val classifier: ResourceClassifier,
     val functionSuggester: FunctionSuggester,
     val explainer: FindingExplainer,

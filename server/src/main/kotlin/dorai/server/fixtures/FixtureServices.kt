@@ -2,6 +2,8 @@ package dorai.server.fixtures
 
 import dorai.server.export.RoiExporter
 import dorai.server.core.AiAnswer
+import dorai.server.core.CheckedPlan
+import dorai.server.core.InMemoryPlanRepository
 import dorai.server.core.CloudCollector
 import dorai.server.core.CollectResult
 import dorai.server.core.CostEntry
@@ -35,6 +37,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.datetime.LocalDate
 import kotlin.time.Clock
+import kotlin.time.Instant
 
 /** Fixture wiring: FinPay data, in-memory storage, the real rules and validator, and an AI that never answers. */
 fun fixtureServices(data: FixtureData = FixtureData.load()): Services {
@@ -47,6 +50,8 @@ fun fixtureServices(data: FixtureData = FixtureData.load()): Services {
         validator = RulesRegisterValidator(),
         planChecker = RulesPlanChecker(),
         demoPlan = data.planEastus.decodeToString(),
+        // Fixture mode only: the demo plan counts as checked, so the demo PDF has findings.
+        plans = InMemoryPlanRepository(CheckedPlan(data.planEastus.decodeToString(), "demo", Instant.fromEpochSeconds(0))),
         classifier = NoAi,
         functionSuggester = NoAi,
         explainer = NoAi,
@@ -100,10 +105,10 @@ class InMemorySuggestionRepository(
 
     override suspend fun add(suggestions: List<Suggestion>) = lock.withLock { suggestions.forEach { items[it.id] = it } }
 
-    override suspend fun decide(id: String, status: SuggestionStatus): Decision = lock.withLock {
+    override suspend fun decide(id: String, status: SuggestionStatus, by: String): Decision = lock.withLock {
         val current = items[id] ?: return@withLock Decision.NotFound
         if (current.status != SuggestionStatus.Pending) return@withLock Decision.AlreadyDecided(current)
-        current.copy(status = status, decidedAt = clock.now()).also { items[id] = it }.let(Decision::Done)
+        current.copy(status = status, decidedAt = clock.now(), decidedBy = by).also { items[id] = it }.let(Decision::Done)
     }
 }
 

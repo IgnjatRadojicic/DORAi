@@ -48,6 +48,9 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import org.slf4j.LoggerFactory
+import dorai.server.scan.ScanSchedule
+import dorai.server.scan.runScan
+import kotlinx.coroutines.launch
 
 fun main() {
     val log = LoggerFactory.getLogger("dorai.server")
@@ -69,7 +72,19 @@ fun main() {
                 sslConnector(keyStore, Tls.ALIAS, { tls.password.toCharArray() }, { tls.password.toCharArray() }) { this.port = tls.port }
             }
         },
-        module = { module(services) },
+        module = {
+            module(services)
+            ScanSchedule.fromEnv()?.let { every ->
+                log.info("Scheduled scan every {}.", every)
+                // Application is a coroutine scope: the loop stops with the server.
+                launch {
+                    ScanSchedule.loop(every, { runScan(services) }) { result ->
+                        result.onSuccess { log.info("Scheduled scan: {} resources ({}).", it.resourceCount, it.mode) }
+                            .onFailure { log.warn("Scheduled scan failed: {}", it.message) }
+                    }
+                }
+            }
+        },
     ).start(wait = true)
 }
 
@@ -154,9 +169,13 @@ private fun Route.exportRoutes(services: Services) = route("export") {
     get("pdf") {
         val exporter = services.exporter ?: throw exportUnavailable()
         val register = services.register.register()
-        val findings = services.planChecker.check(services.demoPlan, register)
+        // The firm's latest checked plan, never the demo one: without a plan the report says so.
+        val plan = services.plans.latest()
+        val findings = plan?.let { services.planChecker.check(it.json, register) }.orEmpty()
+        val source = plan?.let { "Findings from the Terraform plan ${it.checkedBy} checked at ${it.checkedAt}." }
+            ?: "No Terraform plan has been checked on this server yet, so there are no plan findings. Check a plan under Findings first."
         // Built before the attachment header, so a failure is answered as problem details.
-        val bytes = exporter.pdf(register, services.register.resources(), call.referenceDate(), findings)
+        val bytes = exporter.pdf(register, services.register.resources(), call.referenceDate(), findings, source)
         call.response.header(HttpHeaders.ContentDisposition, attachment("dorai-report.pdf"))
         call.respondBytes(bytes, ContentType.Application.Pdf)
     }

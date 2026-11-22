@@ -4,6 +4,15 @@ import dorai.shared.model.ValidationIssue
 import dorai.shared.roi.RoiView
 import dorai.shared.roi.RoiItems
 import dorai.app.roi.RoiSource
+import dorai.app.admin.AdminSource
+import dorai.app.register.RegisterSource
+import dorai.shared.model.BusinessFunction
+import dorai.shared.model.Contract
+import dorai.shared.model.CreateUserRequest
+import dorai.shared.model.FinancialEntity
+import dorai.shared.model.Provider
+import dorai.shared.model.RoiRow
+import dorai.shared.model.Role
 import dorai.shared.roi.RoiSpec
 import dorai.app.components.EvidenceCitation
 import dorai.app.components.FindingSeverity
@@ -69,14 +78,42 @@ class ServerSources(private val api: DoraiApi) {
         }
     }
 
-    /** The client returns only bytes; each endpoint serves one fixed media type, so the format supplies it. */
+    val register = object : RegisterSource {
+        override suspend fun load() = api.register().orFail("The register could not be loaded.")
+        override suspend fun saveEntity(entity: FinancialEntity) { api.putEntity(entity).orFail("The entity could not be saved.") }
+        override suspend fun saveProvider(provider: Provider) { api.putProvider(provider).orFail("The provider could not be saved.") }
+        override suspend fun deleteProvider(id: String) = api.deleteProvider(id).orFail("The provider could not be deleted.")
+        override suspend fun saveContract(contract: Contract) { api.putContract(contract).orFail("The contract could not be saved.") }
+        override suspend fun deleteContract(id: String) = api.deleteContract(id).orFail("The contract could not be deleted.")
+        override suspend fun saveFunction(function: BusinessFunction) { api.putFunction(function).orFail("The function could not be saved.") }
+        override suspend fun deleteFunction(id: String) = api.deleteFunction(id).orFail("The function could not be deleted.")
+        override suspend fun saveRow(template: String, row: RoiRow) { api.putRow(template, row).orFail("The row could not be saved.") }
+        override suspend fun deleteRow(template: String, id: String) = api.deleteRow(template, id).orFail("The row could not be deleted.")
+    }
+
+    val admin = object : AdminSource {
+        override suspend fun users() = api.users().orFail("Users could not be loaded.")
+        override suspend fun invites() = api.invites().orFail("Invites could not be loaded.")
+        override suspend fun createUser(username: String, role: Role, temporaryPassword: String?) =
+            api.createUser(CreateUserRequest(username, role, temporaryPassword)).orFail("The user could not be created.")
+        override suspend fun disable(username: String) { api.disableUser(username).orFail("The user could not be disabled.") }
+        override suspend fun revoke(username: String) = api.revokeSessions(username).orFail("The sessions could not be ended.")
+        override suspend fun invite(username: String) = api.createInvite(username).orFail("The invite could not be created.")
+    }
+
+    /**
+     * Each endpoint serves one fixed media type, so the format supplies it. The package keeps the name the
+     * server gives it (the EBA filing name, `DRAFT_` in front of a draft), so a draft is never saved as final.
+     */
     val export = ExportSource { format ->
-        val result = when (format) {
+        when (format) {
             // A draft until the register is complete, so the user can always see the package.
-            ExportFormat.CSV -> api.exportCsv(draft = (api.roi() as? ApiResult.Success)?.value?.ready != true)
-            ExportFormat.PDF -> api.exportPdf()
+            ExportFormat.CSV -> {
+                val file = api.exportCsvFile(draft = (api.roi() as? ApiResult.Success)?.value?.ready != true).orFail("The export could not be downloaded.")
+                ExportDocument(file.bytes, format.mediaType, file.fileName)
+            }
+            ExportFormat.PDF -> ExportDocument(api.exportPdf().orFail("The export could not be downloaded."), format.mediaType)
         }
-        ExportDocument(result.orFail("The export could not be downloaded."), format.mediaType)
     }
 
     val inventory = object : InventorySource {

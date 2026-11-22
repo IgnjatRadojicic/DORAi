@@ -56,6 +56,7 @@ import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
+import io.ktor.http.ContentDisposition
 import io.ktor.http.ContentType
 import io.ktor.http.Headers
 import io.ktor.http.HttpHeaders
@@ -234,6 +235,14 @@ class DoraiApi(
         }
     }
 
+    /** As [exportCsv], with the package name the server gives (EBA filing name, `DRAFT_` in front of a draft). */
+    suspend fun exportCsvFile(referenceDate: LocalDate? = null, draft: Boolean = false): ApiResult<DownloadedFile> = call {
+        http.get("export/csv") {
+            referenceDate?.let { parameter("date", it.toString()) }
+            if (draft) parameter("draft", "true")
+        }
+    }
+
     suspend fun exportPdf(referenceDate: LocalDate? = null): ApiResult<ByteArray> =
         call { http.get("export/pdf") { referenceDate?.let { parameter("date", it.toString()) } } }
 
@@ -249,6 +258,7 @@ class DoraiApi(
             when {
                 !response.status.isSuccess() -> ApiResult.Failure(response.toProblem())
                 T::class == Unit::class -> ApiResult.Success(Unit as T)
+                T::class == DownloadedFile::class -> ApiResult.Success(DownloadedFile(response.attachmentName(), response.body<ByteArray>()) as T)
                 else -> ApiResult.Success(response.body<T>())
             }
         } catch (e: CancellationException) {
@@ -285,9 +295,17 @@ class DoraiApi(
         setBody(body)
     }
 
+    /** The file name of a `Content-Disposition: attachment` header, without any folder part. */
+    private fun HttpResponse.attachmentName(): String? =
+        headers[HttpHeaders.ContentDisposition]?.let { runCatching { ContentDisposition.parse(it).parameter(ContentDisposition.Parameters.FileName) }.getOrNull() }
+            ?.substringAfterLast('/')?.substringAfterLast('\\')?.takeIf { it.isNotBlank() }
+
     private suspend fun HttpResponse.toProblem(): Problem {
         val text = bodyAsText()
         return runCatching { DoraiJson.decodeFromString<Problem>(text) }
             .getOrElse { Problem(title = status.description, status = status.value, detail = text.ifBlank { null }) }
     }
 }
+
+/** A file the server sent and the name it gave it, when it gave one. */
+class DownloadedFile(val fileName: String?, val bytes: ByteArray)

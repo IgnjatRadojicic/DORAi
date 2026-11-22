@@ -103,11 +103,11 @@ class RegisterEditor(private val repo: RegisterRepository, private val clock: Cl
      * entity (by LEI). The value becomes `human-confirmed`, keeping the AI's citation and reason.
      */
     suspend fun acceptValue(itemId: String, column: String, value: String, citation: Citation?, reason: String, who: String) =
-        writeValue(itemId, column) { now -> RegisterField(value, Provenance(ProvenanceLabel.HumanConfirmed, now, citation, "Accepted by $who: $reason")) }
+        writeValue(itemId, column) { now -> RegisterField(value, Provenance(ProvenanceLabel.HumanConfirmed, now, citation, "Accepted by $who: $reason", confirmedBy = who)) }
 
     /** One cell typed by a person; blank clears the cell so the derived or scanned value shows again. */
     suspend fun setValue(itemId: String, column: String, value: String?, who: String) =
-        writeValue(itemId, column) { now -> value?.trim()?.ifEmpty { null }?.let { RegisterField(it, Provenance(ProvenanceLabel.HumanConfirmed, now, reason = "Set by $who")) } }
+        writeValue(itemId, column) { now -> value?.trim()?.ifEmpty { null }?.let { RegisterField(it, Provenance(ProvenanceLabel.HumanConfirmed, now, reason = "Set by $who", confirmedBy = who)) } }
 
     private suspend fun writeValue(itemId: String, column: String, make: (Instant) -> RegisterField?) = edit { r, now ->
         if (RoiSpec.column(column) == null) bad("Unknown RoI column $column.")
@@ -155,7 +155,7 @@ class RegisterEditor(private val repo: RegisterRepository, private val clock: Cl
         /** Keeps the stored field when the value did not change; otherwise a person set it now. */
         fun stamp(old: RegisterField?, new: RegisterField, now: Instant, who: String): RegisterField =
             if (old != null && old.value == new.value) old
-            else RegisterField(new.value, Provenance(ProvenanceLabel.HumanConfirmed, now, reason = "Set by $who"))
+            else RegisterField(new.value, Provenance(ProvenanceLabel.HumanConfirmed, now, reason = "Set by $who", confirmedBy = who))
 
         fun stampAll(old: RoiFields?, new: RoiFields, now: Instant, who: String): RoiFields =
             new.mapValues { (code, f) -> stamp(old?.get(code), f, now, who) }.filterValues { !it.value.isNullOrBlank() }

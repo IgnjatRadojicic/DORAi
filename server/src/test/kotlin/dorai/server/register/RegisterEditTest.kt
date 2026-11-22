@@ -53,6 +53,7 @@ class RegisterEditTest {
         val saved = api.putProvider(sent).ok()
         assertEquals("NL", saved.headquartersCountry.value)
         assertEquals("Set by development", saved.headquartersCountry.provenance.reason)
+        assertEquals("development", saved.headquartersCountry.provenance.confirmedBy)
         assertEquals(before.lei, saved.lei, "LEI was not changed, so its provenance stays")
     }
 

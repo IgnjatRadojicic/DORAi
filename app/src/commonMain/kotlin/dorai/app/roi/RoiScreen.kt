@@ -39,6 +39,7 @@ import dorai.shared.model.ProvenanceLabel
 import dorai.shared.model.ValidationSeverity
 import dorai.shared.roi.RoiCell
 import dorai.shared.roi.RoiSpec
+import dorai.app.register.matching
 
 /** Callbacks of the RoI screen; the screen never talks to the server itself. */
 class RoiActions(
@@ -131,7 +132,7 @@ private fun Cell(cell: RoiCell?, editable: Boolean, modifier: Modifier) {
     Column(modifier, verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Text(cell?.value ?: if (editable) "Add" else "", fontFamily = ProductStyle.fonts.mono, fontSize = 12.sp,
             color = if (cell?.value == null) ProductStyle.colors.muted else ProductStyle.colors.ink)
-        cell?.let { MetaText(it.label?.let(::labelText) ?: "derived") }
+        cell?.let { MetaText((it.label?.let(::labelText) ?: "derived") + (it.confirmedBy?.let { by -> " by $by" } ?: "")) }
     }
 }
 
@@ -142,13 +143,24 @@ private fun labelText(label: ProvenanceLabel) = when (label) {
     ProvenanceLabel.HumanConfirmed -> "human-confirmed"
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun EditBar(edit: CellEdit, saving: Boolean, actions: RoiActions) {
     val column = RoiSpec.column(edit.column)
     Column(Modifier.fillMaxWidth().padding(24.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         MetaText("${edit.column}: ${column?.name.orEmpty()}  (row ${edit.rowKey})")
+        // Long lists (131 licensed activities) are searched: typing filters by code or words of the label.
         column?.options?.takeIf { it.isNotEmpty() }?.let { options ->
-            MetaText("Options: " + options.take(12).joinToString("; ") { "${it.key} = ${it.label}" } + if (options.size > 12) "; ..." else "")
+            val picked = options.firstOrNull { it.key == edit.text.trim() }
+            if (picked != null) {
+                MetaText("${picked.key} = ${picked.label}")
+            } else {
+                val matches = matching(options, edit.text)
+                MetaText(if (edit.text.isBlank()) "Type to search ${options.size} options, then pick one." else "${matches.size} of ${options.size} options match.")
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    matches.take(12).forEach { option -> ProductButton("${option.key}: ${option.label}", { actions.type(option.key) }, outlined = true, enabled = !saving) }
+                }
+            }
         }
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
             OutlinedTextField(edit.text, actions.type, Modifier.weight(1f), singleLine = true, enabled = !saving)

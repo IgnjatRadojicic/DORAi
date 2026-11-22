@@ -63,6 +63,12 @@ class LoginViewModel(private val gateway: LoginGateway) : ViewModel() {
         state = LoginState()
     }
 
+    /** The server ended the session (a refused refresh): sign-in card with the username kept and a note why. */
+    fun sessionEnded() {
+        temporaryPassword = null
+        state = LoginState(username = state.username, error = SESSION_ENDED)
+    }
+
     /** Leaves the password change and returns to an empty sign-in card. */
     fun backToSignIn() {
         if (state.busy) return
@@ -162,5 +168,6 @@ class LoginViewModel(private val gateway: LoginGateway) : ViewModel() {
         const val PASSWORDS_DIFFER = "The two passwords do not match."
         const val SIGN_IN_AGAIN = "Your temporary password is no longer valid. Sign in again."
         const val UNEXPECTED = "Sign-in failed. Try again."
+        const val SESSION_ENDED = "Your session has ended. Sign in again."
     }
 }

@@ -1,6 +1,8 @@
 package dorai.server.db
 
+import dorai.server.core.CheckedPlan
 import dorai.server.core.CostEntry
+import dorai.server.core.PlanRepository
 import dorai.server.core.RegisterRepository
 import dorai.server.core.SuggestionRepository
 import dorai.server.core.SuggestionRepository.Decision
@@ -20,6 +22,7 @@ import dorai.shared.model.Resource
 import dorai.shared.model.Suggestion
 import dorai.shared.model.SuggestionStatus
 import org.jetbrains.exposed.v1.core.ResultRow
+import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.Database
@@ -57,6 +60,24 @@ class PostgresRegisterRepository(private val db: Database) : RegisterRepository 
     }
 }
 
+/** Every checked plan is kept (the history shows what was checked when); reports read the latest. */
+class PostgresPlanRepository(private val db: Database) : PlanRepository {
+    override suspend fun latest(): CheckedPlan? = db.tx {
+        CheckedPlans.selectAll().orderBy(CheckedPlans.id, SortOrder.DESC).limit(1).singleOrNull()?.let {
+            CheckedPlan(it[CheckedPlans.planJson], it[CheckedPlans.checkedBy], it[CheckedPlans.checkedAt])
+        }
+    }
+
+    override suspend fun save(plan: CheckedPlan) = db.tx {
+        CheckedPlans.insert {
+            it[planJson] = plan.json
+            it[checkedBy] = plan.checkedBy
+            it[checkedAt] = plan.checkedAt
+        }
+        Unit
+    }
+}
+
 class PostgresSuggestionRepository(private val db: Database, private val clock: Clock = Clock.System) : SuggestionRepository {
 
     override suspend fun all(): List<Suggestion> = db.tx {
@@ -75,7 +96,7 @@ class PostgresSuggestionRepository(private val db: Database, private val clock: 
 
     override suspend fun add(suggestions: List<Suggestion>) = db.tx { writeSuggestions(suggestions) }
 
-    override suspend fun decide(id: String, status: SuggestionStatus): Decision = db.tx {
+    override suspend fun decide(id: String, status: SuggestionStatus, by: String): Decision = db.tx {
         // FOR UPDATE: two reviewers deciding at once wait for each other, so only one wins.
         val current = Suggestions.selectAll().where { Suggestions.id eq id }.forUpdate().singleOrNull()?.toSuggestion()
             ?: return@tx Decision.NotFound
@@ -84,6 +105,7 @@ class PostgresSuggestionRepository(private val db: Database, private val clock: 
         Suggestions.update({ Suggestions.id eq id }) {
             it[Suggestions.status] = status
             it[Suggestions.decidedAt] = decidedAt
+            it[Suggestions.decidedBy] = by
         }
         // Read back, so the answer carries the timestamp as stored (Postgres keeps microseconds).
         Decision.Done(Suggestions.selectAll().where { Suggestions.id eq id }.single().toSuggestion())
@@ -171,6 +193,7 @@ private fun ResultRow.toSuggestion() = Suggestion(
     status = this[Suggestions.status],
     createdAt = this[Suggestions.createdAt],
     decidedAt = this[Suggestions.decidedAt],
+    decidedBy = this[Suggestions.decidedBy],
     column = this[Suggestions.roiColumn],
 )
 
@@ -306,6 +329,7 @@ internal fun JdbcTransaction.writeSuggestions(suggestions: List<Suggestion>) {
             it[status] = s.status
             it[createdAt] = s.createdAt
             it[decidedAt] = s.decidedAt
+            it[decidedBy] = s.decidedBy
             it[roiColumn] = s.column
         }
     }

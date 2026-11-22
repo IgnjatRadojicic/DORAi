@@ -131,11 +131,12 @@ object Suggestions : Table("suggestions") {
     val status = enumerationByName<SuggestionStatus>("status", 32)
     val createdAt = timestamp("created_at")
     val decidedAt = timestamp("decided_at").nullable()
+    val decidedBy = text("decided_by").nullable()
     val roiColumn = text("roi_column").nullable()
     override val primaryKey = PrimaryKey(id)
 }
 
-/** The five columns of one register field: its value and its provenance. */
+/** The six columns of one register field: its value and its provenance. */
 class FieldColumns(table: Table, name: String) {
     // nullable() is a member of Table, hence with(table).
     val value = with(table) { text(name).nullable() }
@@ -143,6 +144,7 @@ class FieldColumns(table: Table, name: String) {
     val updatedAt = table.timestamp("${name}_updated_at")
     val citation = with(table) { jsonb("${name}_citation").nullable() }
     val reason = with(table) { text("${name}_reason").nullable() }
+    val confirmedBy = with(table) { text("${name}_confirmed_by").nullable() }
 
     fun read(row: ResultRow) = RegisterField(
         value = row[value],
@@ -151,6 +153,7 @@ class FieldColumns(table: Table, name: String) {
             updatedAt = row[updatedAt],
             citation = row[citation]?.let { DoraiJson.decodeFromString<Citation>(it) },
             reason = row[reason],
+            confirmedBy = row[confirmedBy],
         ),
     )
 
@@ -160,7 +163,16 @@ class FieldColumns(table: Table, name: String) {
         to[updatedAt] = field.provenance.updatedAt
         to[citation] = field.provenance.citation?.let { DoraiJson.encodeToString(it) }
         to[reason] = field.provenance.reason
+        to[confirmedBy] = field.provenance.confirmedBy
     }
+}
+
+object CheckedPlans : Table("checked_plans") {
+    val id = long("id").autoIncrement()
+    val planJson = text("plan_json")
+    val checkedBy = text("checked_by")
+    val checkedAt = timestamp("checked_at")
+    override val primaryKey = PrimaryKey(id)
 }
 
 /** A jsonb column holding JSON text; the value is cast to jsonb in SQL, so no driver types are needed. */

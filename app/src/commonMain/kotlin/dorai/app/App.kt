@@ -1,6 +1,8 @@
 package dorai.app
 
 import dorai.app.roi.RoiRoute
+import dorai.app.admin.AdminRoute
+import dorai.app.register.RegisterRoute
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -26,7 +28,6 @@ import dorai.app.shell.LogoutButton
 import dorai.app.shell.Sections
 import dorai.app.shell.ShellViewModel
 import dorai.app.shell.Workspace
-import dorai.app.shell.shellSections
 import dorai.app.theme.DoraiTheme
 import kotlinx.coroutines.launch
 
@@ -97,7 +98,7 @@ private fun WorkspaceShell(shell: ShellViewModel, workspace: Workspace, onLogout
         theme = shell.state.theme,
         onTheme = shell::setTheme,
         modifier = modifier,
-        sections = shellSections,
+        sections = workspace.sections,
         onLanguage = shell::setLanguage,
         account = { AccountBar(workspace.session) },
         footer = { LogoutButton(onLogout) },
@@ -108,6 +109,8 @@ private fun WorkspaceShell(shell: ShellViewModel, workspace: Workspace, onLogout
                 Sections.REVIEW -> ReviewRoute(workspace.review, canDecide = workspace.canReview)
                 Sections.FINDINGS -> FindingsRoute(workspace.findings, files, canCheck = workspace.canReview)
                 Sections.ROI -> RoiRoute(workspace.roi)
+                Sections.REGISTER -> RegisterRoute(workspace.register)
+                Sections.ADMIN -> AdminRoute(workspace.admin)
                 else -> ValidationExportRoute(workspace.validation, export, canExport = workspace.canReview)
             }
         }

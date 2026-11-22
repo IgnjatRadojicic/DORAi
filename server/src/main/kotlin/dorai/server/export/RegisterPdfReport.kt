@@ -32,8 +32,11 @@ class RegisterPdfReport(
     private val clock: Clock = Clock.System,
     private val draftTimeoutMillis: Long = 10_000,
 ) {
-    /** [roi]: the 15 RoI templates and their readiness; without it the report covers the register only. */
-    suspend fun generate(register: Register, findings: List<Finding>, roi: RoiView? = null): ByteArray {
+    /**
+     * [roi]: the 15 RoI templates and their readiness; without it the report covers the register only.
+     * [planSource]: which Terraform plan the findings come from, printed above them.
+     */
+    suspend fun generate(register: Register, findings: List<Finding>, roi: RoiView? = null, planSource: String? = null): ByteArray {
         val validation = validator.validate(register)
         val draft = draft(register, findings)
         val prepared = clock.now().toString()
@@ -110,6 +113,7 @@ class RegisterPdfReport(
                 page.note(audit.missingKnownFields.joinToString("\n").ifEmpty { "None" })
                 page.heading("07", "Rule findings")
                 page.note("Findings below are produced by deterministic rules. The AI cannot add, remove or change their severity.")
+                planSource?.let(page::note)
                 if (findings.isEmpty()) page.note("No findings were supplied for this report. This does not establish the absence of all risks.")
                 val notes = draft?.value?.findings.orEmpty().associateBy { it.ruleId to it.resourceAddress }
                 findings.forEach { finding ->
@@ -192,7 +196,7 @@ class RegisterPdfReport(
                 rows.flatMap { row ->
                     t.columns.mapNotNull { col ->
                         val cell = row.cells[col.code] ?: return@mapNotNull null
-                        listOf(row.key, col.header + " " + col.name, cell.value, cell.label?.let(::source) ?: "derived")
+                        listOf(row.key, col.header + " " + col.name, cell.value, (cell.label?.let(::source) ?: "derived") + (cell.confirmedBy?.let { " by $it" } ?: ""))
                     }
                 })
             issues[t.code].orEmpty().filter { it.severity == ValidationSeverity.Error }.forEach { page.note("Error: " + it.message) }
@@ -239,7 +243,7 @@ class RegisterPdfReport(
         ProvenanceLabel.Scanned -> "Scanned"
         ProvenanceLabel.Planned -> "Planned"
         ProvenanceLabel.AiSuggested -> "AI-suggested / omitted"
-        ProvenanceLabel.HumanConfirmed -> "Human-confirmed"
+        ProvenanceLabel.HumanConfirmed -> "Human-confirmed" + (field.provenance.confirmedBy?.let { " by $it" } ?: "")
     }
 
     private fun usable(citation: Citation) = citation.id.isNotBlank() && citation.regulation.isNotBlank() && citation.article.isNotBlank() && citation.excerpt.isNotBlank()

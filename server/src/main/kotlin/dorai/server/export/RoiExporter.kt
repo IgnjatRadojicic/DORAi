@@ -30,6 +30,6 @@ class RoiExporter(
         return RoiPackage.write(report, register.entity.lei, register.entity.country, currency, createdAt, draft)
     }
 
-    override suspend fun pdf(register: Register, resources: List<Resource>, referenceDate: LocalDate, findings: List<Finding>): ByteArray =
-        report.generate(register, findings, RoiView.of(register, resources, referenceDate))
+    override suspend fun pdf(register: Register, resources: List<Resource>, referenceDate: LocalDate, findings: List<Finding>, planSource: String): ByteArray =
+        report.generate(register, findings, RoiView.of(register, resources, referenceDate), planSource)
 }
