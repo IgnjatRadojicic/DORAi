@@ -13,6 +13,51 @@ What it does:
 - Validates the register and exports it (EBA CSV) plus a PDF report.
 - `dorai check plan.json --register register.json` runs the same rules in CI and fails the build on High findings; the GitHub Action posts them as a pull request comment ([docs/ci-check.md](docs/ci-check.md)).
 
+## Architecture at a glance
+
+```mermaid
+flowchart LR
+    subgraph Staff["Staff devices"]
+        direction TB
+        Desktop["Desktop app<br/>Windows, macOS, Linux"]
+        Android["Android app"]
+    end
+    subgraph Firm["Firm's own infrastructure"]
+        direction TB
+        Server["DORAi server<br/>Ktor, JVM 21"]
+        DB[("PostgreSQL 16<br/>+ pgvector")]
+        Backup["Nightly backup<br/>pg_dump, 14 days"]
+        Server --- DB
+        Backup --- DB
+    end
+    subgraph Outside["Outside services"]
+        direction LR
+        Clouds["Cloud APIs, read-only<br/>Azure, AWS: resources and cost"]
+        IdP["Identity providers, read-only<br/>Entra ID, Okta: SaaS apps"]
+        LLM["AI provider, optional<br/>OpenAI or Azure OpenAI"]
+        GLEIF["GLEIF, on request<br/>LEI lookup"]
+    end
+    subgraph CI["Firm's CI pipeline"]
+        direction TB
+        RegFile["register.json<br/>exported from the server"]
+        CLI["dorai CLI<br/>checks the Terraform plan"]
+        RegFile --> CLI
+    end
+    Desktop -- "HTTPS, pinned certificate" --> Server
+    Android -- "HTTPS, pinned certificate" --> Server
+    Firm -- "outbound only" --> Outside
+    CI -. "uses the exported register" .-> Firm
+```
+
+One self-hosted Ktor server holds all data and is the only part that talks to the clouds and the AI provider. A
+shared Kotlin Multiplatform module carries the JSON contract, the API client, the rules and the RoI builder, so the
+server, the Compose apps (desktop and Android) and the CLI give identical answers. Rules decide findings; the AI only
+drafts and explains, always with a citation, and a person accepts or rejects every value.
+
+Read more: [architecture and why it fits the use case](docs/architecture.md) ·
+[how the Register of Information is generated](docs/roi-generation.md) · [FAQ](docs/faq.md) ·
+[decisions](docs/decisions.md)
+
 ## Modules
 
 | Module | What | Runs on |
@@ -54,6 +99,8 @@ connection", set `JAVA_TOOL_OPTIONS=-Djdk.net.unixdomain.tmpdir=C:\tmp` (any sho
 - [`docs/architecture.md`](docs/architecture.md): architecture with diagrams, why it fits the use case, key decisions and trade-offs
 - `docs/plan.md`: original plan, API and auth details
 - `docs/decisions.md`: decisions as we make them
+- [`CONTRIBUTING.md`](CONTRIBUTING.md): lanes, branches, pull requests, code and test rules
+- [`SECURITY.md`](SECURITY.md): how to report a vulnerability, and the security model in short
 - [`docs/roi-generation.md`](docs/roi-generation.md): how the Register of Information is generated, table by table:
   derived values and their trade-offs, what a person checks and writes, annex codes, rules, AI, security
 - [`docs/faq.md`](docs/faq.md): frequently asked questions
