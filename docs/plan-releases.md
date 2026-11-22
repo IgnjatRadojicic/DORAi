@@ -54,15 +54,26 @@ New `.github/workflows/release.yml`, started by a `v*` tag, next to the existing
 | Job | Runner | Builds | Asset name |
 |---|---|---|---|
 | `check` | ubuntu | Fails if the tag is not `v` + `dorai.version` | |
-| `desktop` (matrix) | windows-latest | `:app:packageMsi` | `DORAi-windows.msi` |
-| | macos-latest | `:app:packageDmg` | `DORAi-macos.dmg` |
-| | ubuntu-latest | `:app:packageDeb` | `DORAi-linux.deb` |
-| `android` | ubuntu | `:androidApp:assembleRelease`, signed | `DORAi-android.apk` |
-| `cli` | ubuntu | `:cli:distZip` | `dorai-cli.zip` |
-| `release` | ubuntu | Collects all assets, writes `SHA256SUMS`, runs `gh release create --draft` | |
+| `server` | ubuntu | Zips `deploy/` (compose, `.env.example` pinned to the version, backup script, guide) | `dorai-server-docker-compose.zip` |
+| `desktop` (matrix) | windows-latest | `:app:packageMsi` | `dorai-app-windows-amd64.msi` |
+| | windows-11-arm | `:app:packageMsi` | `dorai-app-windows-arm64.msi` |
+| | macos-latest | `:app:packageDmg` | `dorai-app-darwin-arm64.dmg` |
+| | macos-15-intel | `:app:packageDmg` | `dorai-app-darwin-amd64.dmg` |
+| | ubuntu-latest | `:app:packageDeb` | `dorai-app-linux-amd64.deb` |
+| | ubuntu-24.04-arm | `:app:packageDeb` | `dorai-app-linux-arm64.deb` |
+| `android` | ubuntu | `:androidApp:assembleRelease`, signed | `dorai-app-android-universal.apk` |
+| `cli` | ubuntu | `:cli:distZip` | `dorai-cli-jvm.zip` |
+| `release` | ubuntu | Collects all assets, writes `SHA256SUMS`, fills `.github/release-notes.md`, runs `gh release create --draft` | |
 
-- **Asset names carry no version**, so the website can link to
-  `https://github.com/<owner>/<repo>/releases/latest/download/DORAi-windows.msi` and never change.
+- **Asset names follow `dorai-<part>-<os>-<arch>.<format>`** (part is `server`, `app` or `cli`; os is
+  `windows`, `darwin`, `linux` or `android`; arch is `amd64` or `arm64`) and carry no version, so the website
+  can link to `https://github.com/<owner>/<repo>/releases/latest/download/dorai-app-windows-amd64.msi` and
+  never change.
+- **The notes have a Server part and an Apps part**, from `.github/release-notes.md` with `{{VERSION}}` filled
+  in, and GitHub's list of merged pull requests below them.
+- **Each desktop installer is built on its own machine type**, because it bundles a Java runtime for that
+  processor. One failing platform does not stop the others (`fail-fast: false`), but the release job then
+  does not run, so a draft never ships with a platform missing.
   The version is in the release title and in the app itself.
 - **The release starts as a draft.** A person checks it and publishes it, ticking "pre-release" for a beta.
   `latest/download` only ever points at the newest published, non-pre-release version.
@@ -78,7 +89,6 @@ New `.github/workflows/release.yml`, started by a `v*` tag, next to the existing
   app-specific password) and `MACOS_TEAM_ID`. Without them the installer is built unsigned and the run shows a
   warning: Windows SmartScreen and macOS Gatekeeper then warn on first open. The Linux package is not signed;
   `SHA256SUMS` lets users check it.
-  `macos-latest` builds for Apple Silicon only.
 - Uses only `gh` (already on the runners) and the actions the repo already uses; no new third-party action.
 
 ### Android release key (once)
@@ -99,11 +109,11 @@ a message naming the missing secret. The build reads them as `DORAI_ANDROID_*` e
 1. PR that bumps `dorai.version` (and nothing else), merged to `main`.
 2. `git tag v1.2.0 <merge commit>` and `git push origin v1.2.0`.
 3. `server-image` publishes the image; `release` builds the draft.
-4. Check the draft (all six files there, the APK installs over the previous one), then publish it.
+4. Check the draft (all ten files there, the APK installs over the previous one), then publish it.
 
 ### Done when
 
-- A test tag on a fork produces a draft release with all six files and the server image.
+- A test tag on a fork produces a draft release with all ten files and the server image.
 - The MSI upgrades an older install in place; the APK installs over the previous release.
 - `./gradlew build` passes; versions in the server, apps and CLI all print the same number.
 
