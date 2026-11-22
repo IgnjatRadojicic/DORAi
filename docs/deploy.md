@@ -39,7 +39,8 @@ The admin creates users in the app (or `POST /api/admin/users`) with a role: vie
 password and an invite link valid for 72 hours; send them through different channels. Access tokens
 last 15 minutes, sessions 30 days. Disabling a user, or revoking their sessions
 (`POST /api/admin/users/{username}/revoke`, which signs them out everywhere but lets them log in again),
-takes effect on their next call. The server checks the session on every API call.
+takes effect on their next call. The server checks the session on every API call. A disabled user
+can be enabled again (`POST /api/admin/users/{username}/enable`) and then signs in with the same password.
 
 Login limits: five wrong passwords for one username within 15 minutes lock that username for 15 minutes,
 the right password included (revoking the user's sessions lifts it early). Redeem, login and password

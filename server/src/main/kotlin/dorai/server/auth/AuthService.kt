@@ -87,7 +87,9 @@ class AuthService(
         if (invite == null || invite[Invites.redeemedAt] != null || invite[Invites.expiresAt] <= now) {
             throw AuthException(404, "This invite code is not valid. Ask your administrator for a new link.")
         }
-        val user = user(invite[Invites.username]) ?: throw AuthException(404, "This invite code is not valid.")
+        // A disabled user gets the same answer as a wrong code: the link must not say the account exists.
+        val user = user(invite[Invites.username])?.takeUnless { it[Users.disabled] }
+            ?: throw AuthException(404, "This invite code is not valid. Ask your administrator for a new link.")
         Invites.update({ Invites.id eq invite[Invites.id] }) { it[redeemedAt] = now }
         RedeemResponse(Dorai.NAME, user[Users.username], user[Users.role])
     }
@@ -178,6 +180,14 @@ class AuthService(
         user(name)!!.toUser()
     }
 
+    /** Lets a disabled user sign in again with their password; sessions ended by the disable stay ended. */
+    suspend fun enable(username: String): User = db.tx {
+        val name = Usernames.normalize(username)
+        if (Users.update({ Users.username eq name }) { it[disabled] = false } == 0) throw AuthException(404, "No user '$name'.")
+        throttle.clear(name)
+        user(name)!!.toUser()
+    }
+
     /** Signs the user out everywhere at once and lifts a login lockout; they can log in again. */
     suspend fun revokeSessions(username: String): Unit = db.tx {
         val name = Usernames.normalize(username)
@@ -191,7 +201,8 @@ class AuthService(
     /** A new invite for an existing user; earlier unused invites stay valid until they expire. */
     suspend fun createInvite(username: String): Invite = db.tx {
         val name = Usernames.normalize(username)
-        if (user(name) == null) throw AuthException(404, "No user '$name'.")
+        val user = user(name) ?: throw AuthException(404, "No user '$name'.")
+        if (user[Users.disabled]) throw AuthException(409, "'$name' is disabled. Enable the user before sending an invite.")
         invite(name)
     }
 

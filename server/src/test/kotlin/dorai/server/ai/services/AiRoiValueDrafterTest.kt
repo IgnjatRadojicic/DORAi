@@ -64,6 +64,19 @@ class AiRoiValueDrafterTest {
     }
 
     @Test
+    fun `every drafted service has a name of its own`() {
+        val data = FixtureData.load()
+        val services = RoiDrafts.targets(data.register, data.resources, LocalDate(2026, 12, 31), emptySet())
+            .filter { it.column.code.startsWith("B_02.02") }
+        assertTrue(services.size > 1)
+        // Two cards for different services must never read the same; the name starts with the service id.
+        assertTrue(services.all { it.itemName.startsWith(it.itemId) })
+        services.groupBy { it.column.code }.values.forEach { group ->
+            assertEquals(group.size, group.map { it.itemName }.toSet().size)
+        }
+    }
+
+    @Test
     fun `generate adds RoI drafts and accepting one writes it as the reviewer's value`() = testApplication {
         val drafter = AiRoiValueDrafter(FakeChatModel(), StubSearch(relianceColumn))
         application { module(fixtureServices().copy(roiDrafter = drafter)) }

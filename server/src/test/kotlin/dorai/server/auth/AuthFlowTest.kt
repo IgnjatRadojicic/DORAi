@@ -155,6 +155,14 @@ class AuthFlowTest {
         assertNull(store.load())
         assertEquals(401, dan.login("dan", "dan password 2026").status())
         assertEquals(401, runCatching { auth.refresh(refresh) }.exceptionOrNull().let { (it as AuthException).status })
+        // The unused invite of a disabled user is refused like a wrong code, and no new one can be made.
+        assertEquals(404, api(MemoryTokenStore()).redeem(created.invite.code!!).status())
+        assertEquals(409, admin.createInvite("dan").status())
+        // Enabled again, dan signs in with the password; the sessions the disable ended stay ended.
+        assertFalse(admin.enableUser("dan").ok().disabled)
+        assertEquals(401, runCatching { auth.refresh(refresh) }.exceptionOrNull().let { (it as AuthException).status })
+        dan.login("dan", "dan password 2026").ok()
+        assertTrue(dan.validation().ok().isValid)
 
         val adminStore = MemoryTokenStore()
         val again = api(adminStore)

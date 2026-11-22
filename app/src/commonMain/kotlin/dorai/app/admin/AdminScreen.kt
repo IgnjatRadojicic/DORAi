@@ -62,6 +62,7 @@ fun AdminRoute(model: AdminViewModel, modifier: Modifier = Modifier) {
             create = { scope.launch { model.create() } },
             invite = { scope.launch { model.invite(it) } },
             act = { action, user -> scope.launch { model.act(action, user) } },
+            enable = { scope.launch { model.enable(it) } },
             cancelConfirm = model::cancelConfirm,
             closeHandover = model::closeHandover,
             canActOn = { name -> model.state.users.firstOrNull { it.username == name }?.let(model::canActOn) == true },
@@ -79,6 +80,7 @@ class AdminActions(
     val create: () -> Unit,
     val invite: (String) -> Unit,
     val act: (AdminAction, String) -> Unit,
+    val enable: (String) -> Unit,
     val cancelConfirm: () -> Unit,
     val closeHandover: () -> Unit,
     val canActOn: (String) -> Boolean,
@@ -163,6 +165,7 @@ private fun UsersPanel(state: AdminState, actions: AdminActions) {
                     }
                     FlowRow(Modifier.weight(2.2f), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         if (!user.disabled) ProductButton("New invite", { actions.invite(user.username) }, outlined = true, enabled = !state.busy)
+                        else ProductButton("Enable", { actions.enable(user.username) }, outlined = true, enabled = !state.busy)
                         if (actions.canActOn(user.username)) {
                             // The labels never change, so the row stays still; the dialog below asks.
                             ProductButton("Sign out everywhere", { actions.act(AdminAction.REVOKE, user.username) }, outlined = true, enabled = !state.busy)

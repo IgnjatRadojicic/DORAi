@@ -29,6 +29,10 @@ class AdminViewModelTest {
             calls += "disable $username"
             users.replaceAll { if (it.username == username) it.copy(disabled = true) else it }
         }
+        override suspend fun enable(username: String) {
+            calls += "enable $username"
+            users.replaceAll { if (it.username == username) it.copy(disabled = false) else it }
+        }
         override suspend fun revoke(username: String) { calls += "revoke $username" }
         override suspend fun invite(username: String): Invite {
             calls += "invite $username"
@@ -75,6 +79,20 @@ class AdminViewModelTest {
         assertEquals(listOf("disable luka"), source.calls)
         assertTrue(model.state.users.first { it.username == "luka" }.disabled)
         assertNull(model.state.confirm)
+    }
+
+    @Test
+    fun aDisabledUserCanBeEnabledAgain() {
+        val source = FakeAdmin()
+        val model = model(source)
+        runImmediate { model.act(AdminAction.DISABLE, "luka") }
+        runImmediate { model.act(AdminAction.DISABLE, "luka") }
+        runImmediate { model.enable("luka") }
+        assertEquals(listOf("disable luka", "enable luka"), source.calls)
+        assertFalse(model.state.users.first { it.username == "luka" }.disabled)
+        // Enabling someone who is not disabled does nothing.
+        runImmediate { model.enable("luka") }
+        assertEquals(2, source.calls.size)
     }
 
     @Test

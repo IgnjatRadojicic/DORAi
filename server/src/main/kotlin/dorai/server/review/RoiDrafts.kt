@@ -44,7 +44,10 @@ object RoiDrafts {
                         val serviceId = row.key.substringBefore('#')
                         val contract = serviceContract[serviceId] ?: return@mapNotNull null
                         val function = functions[row.value("B_02.02.0050")]
-                        Target(serviceId, "${contract.id} ${row.value("B_02.02.0060").orEmpty()}".trim(), column, buildMap {
+                        // Named by the service, not the contract: one contract often has several services of one type.
+                        val type = row.value("B_02.02.0060")
+                        val typeName = type?.let { t -> listOfNotNull(t, RoiSpec.column("B_02.02.0060")?.label(t)).joinToString(" ") }
+                        Target(serviceId, typeName?.let { "$serviceId ($it)" } ?: serviceId, column, buildMap {
                             put("serviceType", row.value("B_02.02.0060").orEmpty())
                             put("function", function?.name.orEmpty())
                             put("critical", row.facts.critical.toString())

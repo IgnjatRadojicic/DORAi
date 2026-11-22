@@ -36,13 +36,24 @@ fun InventoryScreen(state: InventoryState, onScan: () -> Unit, onRefresh: () -> 
 
 @Composable
 private fun InventoryMetrics(resources: List<InventoryResource>) {
+    // An AI guess nobody accepted yet is not a value: it counts as missing, and the subtitle says how many have one.
+    val noType = resources.filter { !it.serviceType.settled }
+    val noFunction = resources.filter { !it.function.settled }
+    val waiting = resources.count { it.pendingReview }
     MetricGrid(listOf(
         Metric("Resources", resources.size, "", ProductIcon.CLOUD),
-        Metric("No service type", resources.count { it.serviceType == null }, "", ProductIcon.ALERT, resources.any { it.serviceType == null }),
-        Metric("No business function", resources.count { it.function == null }, "", ProductIcon.ALERT, resources.any { it.function == null }),
-        Metric("Awaiting review", resources.count { it.pendingReview }, "", ProductIcon.BOOK, resources.any { it.pendingReview }),
+        Metric("No service type", noType.size, aiGuesses(noType.count { it.serviceType != null }), ProductIcon.ALERT, noType.isNotEmpty()),
+        Metric("No business function", noFunction.size, aiGuesses(noFunction.count { it.function != null }), ProductIcon.ALERT, noFunction.isNotEmpty()),
+        // Resources, not suggestions: AI review also lists the RoI cells of register items, so its count is higher.
+        Metric("Resources to review", waiting, if (waiting > 0) "On the AI review page" else "", ProductIcon.BOOK, waiting > 0),
     ))
 }
+
+@Composable
+private fun aiGuesses(count: Int) = if (count == 0) "" else uiFormat(UiCopy.AI_GUESSES, "count" to count)
+
+private val SourcedValue?.settled: Boolean
+    get() = this != null && provenance != Provenance.AI_SUGGESTED
 
 private val InventoryResource.pendingReview: Boolean
     get() = serviceType?.provenance == Provenance.AI_SUGGESTED || function?.provenance == Provenance.AI_SUGGESTED

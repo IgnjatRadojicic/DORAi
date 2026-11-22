@@ -57,6 +57,7 @@ fun Route.authRoutes(auth: AuthService) {
         }
     }
     post("admin/users/{username}/disable") { handle { call.respond(auth.disable(call.parameters["username"].orEmpty())) } }
+    post("admin/users/{username}/enable") { handle { call.respond(auth.enable(call.parameters["username"].orEmpty())) } }
     post("admin/users/{username}/revoke") {
         handle { auth.revokeSessions(call.parameters["username"].orEmpty()); call.respond(HttpStatusCode.NoContent) }
     }

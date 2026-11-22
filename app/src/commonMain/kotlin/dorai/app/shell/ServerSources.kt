@@ -98,6 +98,7 @@ class ServerSources(private val api: DoraiApi) {
         override suspend fun createUser(username: String, role: Role, temporaryPassword: String?) =
             api.createUser(CreateUserRequest(username, role, temporaryPassword)).orFail("The user could not be created.")
         override suspend fun disable(username: String) { api.disableUser(username).orFail("The user could not be disabled.") }
+        override suspend fun enable(username: String) { api.enableUser(username).orFail("The user could not be enabled.") }
         override suspend fun revoke(username: String) = api.revokeSessions(username).orFail("The sessions could not be ended.")
         override suspend fun invite(username: String) = api.createInvite(username).orFail("The invite could not be created.")
     }

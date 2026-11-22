@@ -17,6 +17,7 @@ interface AdminSource {
     suspend fun invites(): List<Invite>
     suspend fun createUser(username: String, role: Role, temporaryPassword: String?): CreatedUser
     suspend fun disable(username: String)
+    suspend fun enable(username: String)
     suspend fun revoke(username: String)
     suspend fun invite(username: String): Invite
 }
@@ -117,6 +118,16 @@ class AdminViewModel(private val source: AdminSource, private val me: String) : 
                 AdminAction.REVOKE -> source.revoke(username)
             }
             state = state.copy(confirm = null, message = if (action == AdminAction.DISABLE) "$username is disabled." else "$username is signed out everywhere.")
+        }
+    }
+
+    /** Lets a disabled user sign in again. Not destructive, so it acts on the first click. */
+    suspend fun enable(username: String) {
+        val user = state.users.firstOrNull { it.username == username } ?: return
+        if (!user.disabled || user.username == me) return
+        run("The user could not be enabled.") {
+            source.enable(username)
+            state = state.copy(message = "$username can sign in again.")
         }
     }
 
