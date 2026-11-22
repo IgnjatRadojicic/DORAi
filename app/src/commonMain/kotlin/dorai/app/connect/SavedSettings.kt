@@ -13,18 +13,35 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.buildJsonArray
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.put
 
 /** The server an app talks to: its address and, for `https`, the certificate fingerprint from the invite link. */
 data class ServerLink(val address: String, val fingerprint: String? = null)
 
-/** What the app remembers between starts. None of it is secret; the tokens live in a [dorai.app.auth.TokenVault]. */
+/** A server the app has reached through an invite, with the last username used there. */
+data class SavedServer(val link: ServerLink, val username: String? = null)
+
+/**
+ * What the app remembers between starts. None of it is secret; the tokens live in a [dorai.app.auth.TokenVault],
+ * one session per server.
+ */
 data class SavedSettings(
+    /** The server in use, and the username last used on it. */
     val server: ServerLink? = null,
     val username: String? = null,
     val theme: ThemeMode? = null,
     val language: AppLanguage? = null,
     /** The workspace section open when the app closed; it opens again after the next sign-in. */
     val section: String? = null,
+    /** Every server reached through an invite, so switching back needs no new invite. */
+    val servers: List<SavedServer> = emptyList(),
 )
 
 interface SettingsStore {
@@ -46,9 +63,12 @@ class DataStoreSettings(private val store: DataStore<Preferences>) : SettingsSto
 
     override suspend fun load(): SavedSettings = try {
         val prefs = store.data.first()
+        val server = prefs[SERVER]?.let { ServerLink(it, prefs[FINGERPRINT]) }
         SavedSettings(
-            server = prefs[SERVER]?.let { ServerLink(it, prefs[FINGERPRINT]) },
+            server = server,
             username = prefs[USERNAME],
+            // Earlier versions kept only the server in use; it becomes the first on the list.
+            servers = prefs[SERVERS]?.let(::decodeServers) ?: listOfNotNull(server?.let { SavedServer(it, prefs[USERNAME]) }),
             theme = prefs[THEME]?.let { name -> ThemeMode.entries.firstOrNull { it.name == name } },
             language = prefs[LANGUAGE]?.let { name -> AppLanguage.entries.firstOrNull { it.name == name } },
             section = prefs[SECTION],
@@ -67,6 +87,7 @@ class DataStoreSettings(private val store: DataStore<Preferences>) : SettingsSto
                     prefs.put(SERVER, settings.server?.address)
                     prefs.put(FINGERPRINT, settings.server?.fingerprint)
                     prefs.put(USERNAME, settings.username)
+                    prefs.put(SERVERS, encodeServers(settings.servers))
                     prefs.put(THEME, settings.theme?.name)
                     prefs.put(LANGUAGE, settings.language?.name)
                     prefs.put(SECTION, settings.section)
@@ -79,7 +100,30 @@ class DataStoreSettings(private val store: DataStore<Preferences>) : SettingsSto
         if (value == null) remove(key) else set(key, value)
     }
 
+    private fun encodeServers(servers: List<SavedServer>): String = buildJsonArray {
+        servers.forEach { saved ->
+            add(buildJsonObject {
+                put("address", saved.link.address)
+                saved.link.fingerprint?.let { put("fingerprint", it) }
+                saved.username?.let { put("username", it) }
+            })
+        }
+    }.toString()
+
+    /** A list that does not parse is dropped, like the rest of an unreadable file. */
+    private fun decodeServers(text: String): List<SavedServer> = runCatching {
+        Json.parseToJsonElement(text).jsonArray.mapNotNull { element ->
+            val fields = element.jsonObject
+            val address = fields["address"]?.jsonPrimitive?.contentOrNull ?: return@mapNotNull null
+            SavedServer(
+                ServerLink(address, fields["fingerprint"]?.jsonPrimitive?.contentOrNull),
+                fields["username"]?.jsonPrimitive?.contentOrNull,
+            )
+        }
+    }.getOrDefault(emptyList())
+
     private companion object {
+        val SERVERS = stringPreferencesKey("servers")
         val SERVER = stringPreferencesKey("server")
         val FINGERPRINT = stringPreferencesKey("fingerprint")
         val USERNAME = stringPreferencesKey("username")

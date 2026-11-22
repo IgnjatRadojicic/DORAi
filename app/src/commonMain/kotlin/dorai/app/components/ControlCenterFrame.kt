@@ -40,7 +40,14 @@ val matijaSections = listOf(
 )
 
 /** Who is signed in, shown in the account menu of the top bar. */
-data class WorkspaceAccount(val username: String, val role: String, val server: String, val onLogout: () -> Unit)
+data class WorkspaceAccount(
+    val username: String,
+    val role: String,
+    val server: String,
+    val onLogout: () -> Unit,
+    /** Back to the login page to pick another saved server, keeping this session; null hides the item. */
+    val onSwitchServer: (() -> Unit)? = null,
+)
 
 /** Phones get a drawer, middle widths an icon rail, wide windows the grouped sidebar. */
 private enum class NavMode { DRAWER, RAIL, SIDEBAR }
@@ -253,6 +260,14 @@ private fun AccountMenu(account: WorkspaceAccount, theme: ThemeMode, onTheme: (T
                 AppLanguage.entries.forEach { option -> MenuChoice(option.nativeName, ProductIcon.GLOBE, option == language) { onLanguage(option) } }
             }
             HorizontalDivider(Modifier.padding(vertical = 4.dp), color = colors.line)
+            account.onSwitchServer?.let { onSwitch ->
+                DropdownMenuItem(
+                    text = { Text(uiText("Switch server")) },
+                    leadingIcon = { LineIcon(ProductIcon.CLOUD, color = colors.ink, size = 17.dp) },
+                    onClick = { open = false; onSwitch() },
+                    modifier = Modifier.actionPointer(),
+                )
+            }
             DropdownMenuItem(
                 text = { Text(uiText("Log out")) },
                 leadingIcon = { LineIcon(ProductIcon.LOGOUT, color = colors.ink, size = 17.dp) },

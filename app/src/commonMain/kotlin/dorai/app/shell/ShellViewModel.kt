@@ -14,6 +14,7 @@ import dorai.app.components.matijaSections
 import dorai.app.connect.ConnectionViewModel
 import dorai.app.connect.InviteGateway
 import dorai.app.connect.InviteViewModel
+import dorai.app.connect.SavedServer
 import dorai.app.connect.SavedSettings
 import dorai.app.connect.ServerLink
 import dorai.app.connect.ServerProbe
@@ -107,23 +108,34 @@ class ShellViewModel(
     var ready by mutableStateOf(false)
         private set
 
+    private var server = ServerLink(address)
+    private var saved by mutableStateOf(SavedSettings())
+
+    /** The servers to switch between on the login page, the one in use included. */
+    val servers: List<SavedServer> get() = saved.servers
+
+    /** The address in use, to mark it on the list. */
+    val serverAddress: String get() = server.address
+
+    /** The session of the server in use; each server keeps its own. */
+    private var tokens = sessionFor(server.address)
+
     /**
-     * Forgetting the tokens always ends on the login page. A logout has already closed the workspace;
-     * when it is still open the server refused the refresh, so the login page says the session ended.
+     * Forgetting the tokens of the server in use always ends on the login page. A logout has already closed
+     * the workspace; when it is still open the server refused the refresh, so the login page says the session ended.
      */
-    private val tokens = SavedTokenStore(storage.tokens).apply {
-        onCleared = {
-            if (workspace != null) {
+    private fun sessionFor(address: String): SavedTokenStore {
+        val store = SavedTokenStore(storage.tokens, address)
+        store.onCleared = {
+            if (store === tokens && workspace != null) {
                 workspace = null
                 login.sessionEnded()
             }
         }
+        return store
     }
 
-    private var server = ServerLink(address)
-    private var saved = SavedSettings()
-
-    /** Client for the current server; replaced when an invite link names another one. */
+    /** Client for the current server; replaced when another server is chosen. */
     private var api: DoraiApi = openApi(server, tokens)
 
     val connection = ConnectionViewModel(address, probe ?: ServerProbe { api.health() })
@@ -135,18 +147,54 @@ class ShellViewModel(
     val invite = InviteViewModel(invites ?: InviteGateway { api.redeem(it) })
 
     /**
-     * Opens an invite link (pasted on desktop, tapped on Android): switches to its server, redeems the
-     * one-time code and leaves an empty login page. Problems show in the invite field.
+     * Opens an invite link (pasted on desktop, tapped on Android): switches to its server, adds it to the
+     * saved servers, redeems the one-time code and leaves an empty login page. Problems show in the invite field.
+     * Other servers keep their sessions; on the invited server the invite is for a new user, so any session
+     * there ends.
      */
     suspend fun openInvite(text: String = invite.state.text) {
         if (invite.state.busy) return
         val link = invite.read(text) ?: return
-        logout()
+        leave()
         switchServer(ServerLink(link.server, link.fingerprint))
-        remember(saved.copy(server = server, username = null))
+        if (tokens.load() != null) api.logout()
+        remember(saved.copy(server = server, username = null, servers = saved.servers.with(SavedServer(server))))
         login.reset()
         invite.redeem(link.code)
         connection.check()
+    }
+
+    /**
+     * Switches to a saved server without an invite. Its own session opens the workspace straight away
+     * while it can still be refreshed; otherwise the login page asks for that server's password.
+     */
+    suspend fun useServer(next: ServerLink, now: Instant = Clock.System.now()) {
+        val entry = saved.servers.firstOrNull { it.link == next } ?: return
+        leave()
+        switchServer(next)
+        remember(saved.copy(server = next, username = entry.username))
+        login.reset()
+        entry.username?.let(login::onUsernameChange)
+        connection.check()
+        resume(now)
+    }
+
+    /**
+     * Takes a server off the list and ends its session there. The server in use stays; switch away first.
+     * An unreachable server only loses the session on this device.
+     */
+    suspend fun forgetServer(link: ServerLink) {
+        if (link == server || saved.servers.none { it.link == link }) return
+        remember(saved.copy(servers = saved.servers.filter { it.link != link }))
+        val store = sessionFor(link.address)
+        if (store.load() == null) return
+        val other = openApi(link, store)
+        try {
+            other.logout()
+        } finally {
+            other.close()
+            store.save(null)
+        }
     }
 
     /**
@@ -160,20 +208,29 @@ class ShellViewModel(
         saved.server?.let(::switchServer)
         state = state.copy(theme = saved.theme ?: state.theme, language = saved.language ?: state.language)
         saved.username?.let(login::onUsernameChange)
-        val session = tokens.load()
-        if (session != null) {
-            if (session.refreshExpiresAt > now) open(session) else tokens.save(null)
-        }
+        resume(now)
         ready = true
+    }
+
+    /** Opens the workspace with the saved session of the server in use, when it can still be refreshed. */
+    private suspend fun resume(now: Instant) {
+        val session = tokens.load() ?: return
+        if (session.refreshExpiresAt > now) open(session) else tokens.save(null)
     }
 
     private fun switchServer(next: ServerLink) {
         if (next == server) return
         api.close()
         server = next
+        tokens = sessionFor(next.address)
         api = openApi(next, tokens)
         connection.switchTo(next.address)
     }
+
+    /** Adds [entry] to the list, or replaces the entry with the same address in its place. */
+    private fun List<SavedServer>.with(entry: SavedServer): List<SavedServer> =
+        if (any { it.link.address == entry.link.address }) map { if (it.link.address == entry.link.address) entry else it }
+        else this + entry
 
     /** Saves in the background, only when something changed. */
     private fun remember(next: SavedSettings) {
@@ -199,7 +256,8 @@ class ShellViewModel(
         val section = saved.section?.takeIf { id -> opened.sections.any { it.id == id && it.enabled } } ?: Sections.INVENTORY
         state = state.copy(section = section)
         history.clear()
-        remember(saved.copy(server = server, username = session.username))
+        remember(saved.copy(server = server, username = session.username,
+            servers = saved.servers.with(SavedServer(server, session.username))))
     }
 
     /** Back to the login page at once, then ends the session on the server. */
@@ -207,6 +265,11 @@ class ShellViewModel(
         if (workspace == null) return
         workspace = null
         api.logout()
+    }
+
+    /** Back to the login page to pick another server; the session here stays for switching back. */
+    fun leave() {
+        workspace = null
     }
 
     /** The sections visited before the current one, newest last; Back on Android walks it. */

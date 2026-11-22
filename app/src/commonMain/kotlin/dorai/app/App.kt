@@ -23,6 +23,7 @@ import dorai.app.auth.LoginScreen
 import dorai.app.components.ControlCenterFrame
 import dorai.app.components.WorkspaceAccount
 import dorai.app.connect.InviteField
+import dorai.app.connect.SavedServerList
 import dorai.app.connect.ServerLine
 import dorai.app.export.ExportViewModel
 import dorai.app.export.ValidationExportRoute
@@ -95,6 +96,12 @@ fun App(
                     below = {
                         ServerLine(shell.connection.status, shell.connection.address,
                             onChange = { if (!shell.invite.state.open) shell.invite.toggle() })
+                        SavedServerList(
+                            servers = shell.servers,
+                            inUse = shell.serverAddress,
+                            onUse = { scope.launch { shell.useServer(it) } },
+                            onForget = { scope.launch { shell.forgetServer(it) } },
+                        )
                         InviteField(
                             state = shell.invite.state,
                             onToggle = shell.invite::toggle,
@@ -131,6 +138,7 @@ private fun WorkspaceShell(
             role = workspace.session.role.name.lowercase().replaceFirstChar { it.uppercase() },
             server = shell.connection.address,
             onLogout = onLogout,
+            onSwitchServer = shell::leave,
         ),
         backHandler = backHandler,
     ) { section ->

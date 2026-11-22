@@ -7,8 +7,10 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
@@ -21,6 +23,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import dorai.app.components.NoticeEffect
 import dorai.app.components.SelectChip
@@ -97,10 +100,13 @@ fun AdminScreen(state: AdminState, actions: AdminActions, modifier: Modifier = M
         ProductPanel {
             PanelHeading("New user", "Create a user and an invite link")
             Column(Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    OutlinedTextField(state.newUsername, actions.username, Modifier.width(240.dp), label = { Text(uiText("Username")) }, singleLine = true, enabled = !state.busy,
+                // Two equal fields on one line; a label too long for its half is cut, never wrapped, so both keep one height.
+                Row(Modifier.widthIn(max = 640.dp).fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    OutlinedTextField(state.newUsername, actions.username, Modifier.weight(1f),
+                        label = { Text(uiText("Username"), maxLines = 1, overflow = TextOverflow.Ellipsis) }, singleLine = true, enabled = !state.busy,
                         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next))
-                    OutlinedTextField(state.newPassword, actions.password, Modifier.width(260.dp), label = { Text(uiText("Temporary password (blank: generated)")) },
+                    OutlinedTextField(state.newPassword, actions.password, Modifier.weight(1f),
+                        label = { Text(uiText("Temporary password (blank: generated)"), maxLines = 1, overflow = TextOverflow.Ellipsis) },
                         singleLine = true, enabled = !state.busy, visualTransformation = PasswordVisualTransformation(),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Go),
                         keyboardActions = KeyboardActions(onGo = { if (state.canCreate) actions.create() }))

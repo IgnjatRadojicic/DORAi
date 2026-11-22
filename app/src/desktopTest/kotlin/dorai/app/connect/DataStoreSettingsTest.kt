@@ -34,6 +34,15 @@ class DataStoreSettingsTest {
     }
 
     @Test
+    fun savedServersComeBackInOrder() {
+        val first = SavedServer(ServerLink("https://dorai.firm.local:8443", "AB".repeat(32)), "luka")
+        val second = SavedServer(ServerLink("https://dorai.example.com"))
+        val saved = SavedSettings(second.link, servers = listOf(first, second))
+        settings.save(saved)
+        eventually(saved)
+    }
+
+    @Test
     fun theLastSaveWinsAndClearedValuesAreRemoved() {
         settings.save(SavedSettings(ServerLink("https://a:8443", "AB".repeat(32)), "luka", ThemeMode.LIGHT))
         settings.save(SavedSettings(ServerLink("http://localhost:8080"), username = null))

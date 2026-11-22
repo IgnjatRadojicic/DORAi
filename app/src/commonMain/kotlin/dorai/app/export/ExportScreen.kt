@@ -7,6 +7,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -21,11 +23,19 @@ fun ValidationExportScreen(
     modifier: Modifier = Modifier, canExport: Boolean = true, isDemo: Boolean = false,
     availableFormats: Set<ExportFormat> = if (isDemo) emptySet() else ExportFormat.entries.toSet(),
 ) {
-    Column(modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(bottom = 24.dp),
+    val scroll = rememberScrollState()
+    val scope = rememberCoroutineScope()
+    Column(modifier.fillMaxSize().verticalScroll(scroll).padding(bottom = 24.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp)) {
         PageHeading("Validation & export") {
-            ProductButton(if (validation.busy) "Validating..." else "Refresh validation", onRefresh, outlined = true,
-                enabled = !validation.busy, icon = ProductIcon.REFRESH)
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp),
+                itemVerticalAlignment = Alignment.CenterVertically) {
+                ProductButton(if (validation.busy) "Validating..." else "Refresh validation", onRefresh, outlined = true,
+                    enabled = !validation.busy, icon = ProductIcon.REFRESH)
+                // The export buttons sit under the validation report; this jumps straight to them.
+                ProductButton("Go to Export", { scope.launch { scroll.animateScrollTo(scroll.maxValue) } },
+                    outlined = true, icon = ProductIcon.DOWNLOAD)
+            }
         }
         ValidationMetrics(validation)
         ValidationReportPanel(validation, onRefresh, isDemo)
