@@ -51,5 +51,6 @@ connection", set `JAVA_TOOL_OPTIONS=-Djdk.net.unixdomain.tmpdir=C:\tmp` (any sho
 
 ## Docs
 - `CLAUDE.md`: how we work (read it, and so does your AI assistant)
-- `docs/plan.md`: architecture, auth, build phases
+- [`docs/architecture.md`](docs/architecture.md): architecture with diagrams, why it fits the use case, key decisions and trade-offs
+- `docs/plan.md`: original plan, API and auth details
 - `docs/decisions.md`: decisions as we make them
