@@ -92,7 +92,7 @@ class DataStoreSettings(private val store: DataStore<Preferences>) : SettingsSto
                     prefs.put(LANGUAGE, settings.language?.name)
                     prefs.put(SECTION, settings.section)
                 }
-            }
+            }.onFailure { println("DORAi: could not save the settings: $it") }
         }
     }
 
