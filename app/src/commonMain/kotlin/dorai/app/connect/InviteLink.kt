@@ -4,7 +4,8 @@ import io.ktor.http.decodeURLQueryComponent
 
 /**
  * An invite from the admin: `dorai://connect?server=...&code=...&fp=sha256:...` (plan section 5).
- * [fingerprint] is the SHA-256 of the server certificate as 64 uppercase hex characters, or null for a local http server.
+ * [fingerprint] is the SHA-256 of the server certificate as 64 uppercase hex characters, or null for a local http
+ * server and for an https server behind a proxy with a public certificate.
  */
 data class InviteLink(val server: String, val code: String, val fingerprint: String?)
 
@@ -39,7 +40,8 @@ fun parseInviteLink(text: String): InviteLinkResult {
         if (!SHA256_HEX.matches(hex)) return InviteLinkResult.Invalid(INCOMPLETE)
         hex
     }
-    if (https && fingerprint == null) return InviteLinkResult.Invalid(INCOMPLETE)
+    // An https link without a pin is a server behind a proxy with a public certificate (a Cloudflare
+    // Tunnel): the connection is checked against the system's certificate authorities, like a browser does.
     if (http && host !in LOCAL_HOSTS) return InviteLinkResult.Invalid(INSECURE)
     return InviteLinkResult.Valid(InviteLink(server, code, fingerprint))
 }

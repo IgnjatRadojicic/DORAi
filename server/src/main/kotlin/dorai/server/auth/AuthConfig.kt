@@ -24,8 +24,10 @@ data class AuthConfig(
     val maxFailedLogins: Int = 5,
     val failedLoginWindow: Duration = 15.minutes,
     val lockout: Duration = 15.minutes,
+    /** What stands between the apps and the server; decides the invite link and the client address. */
+    val proxy: Proxy = Proxy.NONE,
 ) {
-    override fun toString() = "AuthConfig(publicUrl=$publicUrl, adminUsername=$adminUsername)"
+    override fun toString() = "AuthConfig(publicUrl=$publicUrl, adminUsername=$adminUsername, proxy=$proxy)"
 
     companion object {
         const val MIN_SECRET_LENGTH = 32
@@ -35,11 +37,35 @@ data class AuthConfig(
             val secret = get("DORAI_JWT_SECRET")
                 ?: error("DORAI_JWT_SECRET is required when the server has a database (auth is on).")
             require(secret.length >= MIN_SECRET_LENGTH) { "DORAI_JWT_SECRET must be at least $MIN_SECRET_LENGTH characters." }
+            val proxy = Proxy.parse(get("DORAI_PROXY"))
+            val publicUrl = (get("DORAI_PUBLIC_URL") ?: defaultPublicUrl).trimEnd('/')
+            require(proxy == Proxy.NONE || publicUrl.startsWith("https://")) {
+                "DORAI_PROXY=${proxy.name.lowercase()} needs DORAI_PUBLIC_URL to be the https address the proxy serves."
+            }
             return AuthConfig(
                 jwtSecret = secret,
-                publicUrl = (get("DORAI_PUBLIC_URL") ?: defaultPublicUrl).trimEnd('/'),
+                publicUrl = publicUrl,
                 adminUsername = Usernames.normalize(get("DORAI_ADMIN_USERNAME") ?: "admin"),
+                proxy = proxy,
             )
+        }
+    }
+}
+
+/**
+ * `NONE`: the apps reach the server directly and invite links pin its own certificate.
+ * `CLOUDFLARE`: the apps reach it through a Cloudflare Tunnel. They see Cloudflare's public certificate,
+ * so links carry no pin and the apps check the certificate like a browser does; the client address
+ * comes from Cloudflare's `CF-Connecting-IP` header.
+ */
+enum class Proxy {
+    NONE, CLOUDFLARE;
+
+    companion object {
+        fun parse(value: String?): Proxy = when (value?.lowercase()) {
+            null, "none" -> NONE
+            "cloudflare" -> CLOUDFLARE
+            else -> throw IllegalArgumentException("DORAI_PROXY must be none or cloudflare, got '$value'.")
         }
     }
 }

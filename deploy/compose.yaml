@@ -46,7 +46,8 @@ services:
       - server-data:/var/lib/dorai
     ports:
       # HTTPS for the apps; the certificate fingerprint goes in invite links.
-      - "${DORAI_HTTPS_PORT:-8443}:8443"
+      # Behind a Cloudflare Tunnel set DORAI_HTTPS_BIND=127.0.0.1: nothing outside needs it then.
+      - "${DORAI_HTTPS_BIND:-0.0.0.0}:${DORAI_HTTPS_PORT:-8443}:8443"
       # Plain HTTP stays on this host only (health checks, local admin).
       - "127.0.0.1:${DORAI_HTTP_PORT:-8080}:8080"
     logging: *logging

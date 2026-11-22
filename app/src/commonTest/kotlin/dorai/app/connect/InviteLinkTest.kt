@@ -50,9 +50,16 @@ class InviteLinkTest {
     }
 
     @Test
-    fun httpsWithoutAValidFingerprintIsRefused() {
-        assertEquals(INCOMPLETE, invalid("dorai://connect?server=https%3A%2F%2Fdorai.firm.local&code=C"))
+    fun aBrokenFingerprintIsRefused() {
         assertEquals(INCOMPLETE, invalid("dorai://connect?server=https%3A%2F%2Fdorai.firm.local&code=C&fp=sha256:ABC"))
+    }
+
+    @Test
+    fun httpsWithoutAFingerprintIsAServerBehindATunnel() {
+        // Behind a Cloudflare Tunnel the link has no pin; the app then checks the public certificate.
+        val link = valid("dorai://connect?server=https%3A%2F%2Fdorai.example.com&code=K7Q2-9XPA")
+        assertEquals("https://dorai.example.com", link.server)
+        assertEquals(null, link.fingerprint)
     }
 
     @Test

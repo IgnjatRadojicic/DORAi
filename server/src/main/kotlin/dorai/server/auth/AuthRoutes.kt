@@ -28,8 +28,31 @@ val AUTH_RATE_LIMIT = RateLimitName("dorai-auth")
 fun Application.installAuthRateLimit(auth: AuthService) = install(RateLimit) {
     register(AUTH_RATE_LIMIT) {
         rateLimiter(limit = auth.config.authCallsPerMinute, refillPeriod = 1.minutes)
-        requestKey { call -> call.request.origin.remoteAddress }
+        requestKey { call ->
+            clientAddress(call.request.origin.remoteAddress, call.request.headers["CF-Connecting-IP"], auth.config.proxy)
+        }
     }
+}
+
+/**
+ * The address a request really came from. Behind a Cloudflare Tunnel every connection arrives from
+ * cloudflared on this host (loopback, or the Docker network's gateway), so the visitor's address is read
+ * from `CF-Connecting-IP`. The header is believed only from such a local peer: anyone else could send it
+ * to slip past the limit.
+ */
+internal fun clientAddress(peer: String, cloudflareHeader: String?, proxy: Proxy): String {
+    if (proxy != Proxy.CLOUDFLARE || !isLocalPeer(peer)) return peer
+    return cloudflareHeader?.trim()?.takeIf { it.isNotEmpty() && it.length <= 45 } ?: peer
+}
+
+/** Loopback or a private network address (Docker's bridge gateway is in 172.16.0.0/12). */
+internal fun isLocalPeer(address: String): Boolean {
+    val a = address.trim().removePrefix("[").removeSuffix("]").lowercase()
+    if (a == "localhost" || a == "::1" || a == "0:0:0:0:0:0:0:1" || a.startsWith("127.")) return true
+    if (a.startsWith("10.") || a.startsWith("192.168.")) return true
+    if (a.startsWith("172.")) return a.split('.').getOrNull(1)?.toIntOrNull() in 16..31
+    if (a.startsWith("fc") || a.startsWith("fd")) return true
+    return a.startsWith("::ffff:") && isLocalPeer(a.removePrefix("::ffff:"))
 }
 
 /** /auth (public) and /admin (admin role, enforced by [accessControl]). */

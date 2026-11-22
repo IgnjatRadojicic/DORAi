@@ -44,11 +44,38 @@ can be enabled again (`POST /api/admin/users/{username}/enable`) and then signs 
 
 Login limits: five wrong passwords for one username within 15 minutes lock that username for 15 minutes,
 the right password included (revoking the user's sessions lifts it early). Redeem, login and password
-change are limited to 10 calls per minute from one address; behind a reverse proxy every user shares the
-proxy's address, so keep the server reachable directly.
+change are limited to 10 calls per minute from one address. Behind a reverse proxy every user would share
+the proxy's address, so keep the server reachable directly, or use a Cloudflare Tunnel with
+`DORAI_PROXY=cloudflare` (below), which counts each visitor's own address.
 
 The invite link pins the certificate fingerprint. If `tls/keystore.p12` in the `server-data` volume is
 deleted, the server makes a new certificate and every app must connect again with a new invite.
+
+### Behind a Cloudflare Tunnel (`DORAI_PROXY=cloudflare`)
+A Cloudflare Tunnel lets staff reach the server at a public name, for example `https://dorai.firm.com`,
+without opening any port: cloudflared on the host connects out to Cloudflare and forwards the name to the
+server's plain HTTP port on this host. Cloudflare serves HTTPS with its own public certificate.
+1. In `.env`:
+   - `DORAI_PROXY=cloudflare`
+   - `DORAI_PUBLIC_URL=https://dorai.firm.com` (the tunnel's address, no port)
+   - `DORAI_HTTPS_BIND=127.0.0.1`, so port 8443 stays closed to everyone
+   - `DORAI_HTTP_PORT` set to a free local port (8080 by default)
+2. In the tunnel, route the name to `http://127.0.0.1:<DORAI_HTTP_PORT>`. In a locally managed
+   `config.yml` this is an ingress rule:
+   ```
+   - hostname: dorai.firm.com
+     service: http://127.0.0.1:8080
+   ```
+   In the Cloudflare dashboard it is a public hostname with service type HTTP and that URL.
+3. Run `docker compose up -d`. Invite links now carry no certificate pin. The apps check Cloudflare's
+   certificate against the system's certificate authorities, as a browser does. Links made before the
+   switch still pin the server's own certificate, so make new invites.
+4. The rate limit on redeem, login and password change counts the visitor's address from Cloudflare's
+   `CF-Connecting-IP` header. The server believes that header only from loopback or a private network
+   address (cloudflared on the host, or Docker's gateway), never from a direct connection.
+
+Cloudflare ends a request that sends nothing for 100 seconds. If a live scan from the app takes longer,
+set `DORAI_SCAN_EVERY` so scans run in the background on the server instead.
 
 Cloud credentials for live scans should be read-only: an Azure service principal with Reader
 on the subscriptions, an AWS IAM user or role with read-only access to tagging and cost data.

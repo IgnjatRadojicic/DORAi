@@ -253,11 +253,14 @@ class AuthService(
         return Invite(id, username, now + config.inviteTtl, code = code, link = link(code))
     }
 
-    /** `dorai://connect?server=...&code=...&fp=sha256:...` (plan section 5). */
+    /**
+     * `dorai://connect?server=...&code=...&fp=sha256:...` (plan section 5). Behind a proxy the apps never
+     * see this server's certificate, so the link carries no pin and they check the proxy's public one.
+     */
     private fun link(code: String) = buildString {
         append("dorai://connect?server=").append(URLEncoder.encode(config.publicUrl, Charsets.UTF_8))
         append("&code=").append(code)
-        fingerprint?.let { append("&fp=sha256:").append(it) }
+        if (config.proxy == Proxy.NONE) fingerprint?.let { append("&fp=sha256:").append(it) }
     }
 
     private fun JdbcTransaction.checkPassword(username: String, password: String): ResultRow {
