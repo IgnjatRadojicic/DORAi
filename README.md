@@ -5,7 +5,7 @@ The firm hosts the DORAi server itself. Staff connect from the desktop or Androi
 invite link from their administrator.
 
 
-<img width="196" height="110" alt="Adobe Express - 2026-11-28 15-33-51" src="https://github.com/user-attachments/assets/9e59f2f2-b732-425b-be02-b8a76f86f8de" />
+<img width="800" height="450" alt="2026-11-28 15-33-51" src="https://github.com/user-attachments/assets/29ff24b5-5ce8-45fc-a248-e4fe187daebd" />
 
 
 
