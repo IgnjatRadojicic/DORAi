@@ -4,6 +4,11 @@ DORAi keeps a financial entity's DORA Register of Information in step with its r
 The firm hosts the DORAi server itself. Staff connect from the desktop or Android app through an
 invite link from their administrator.
 
+
+<img width="196" height="110" alt="Adobe Express - 2026-11-28 15-33-51" src="https://github.com/user-attachments/assets/9e59f2f2-b732-425b-be02-b8a76f86f8de" />
+
+
+
 What it does:
 - Scans the cloud (Azure, AWS) and reads Terraform plans before they are applied.
 - Compares what runs against the register with fixed rules and reports findings
